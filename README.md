@@ -1,5 +1,5 @@
-# <div style="text-align:center;"> NodeVision </div>
-<div style="text-align:center;">NodeVision is a new way to describe your data </div>
+<div style="text-align:center;"> #NodeVision </div>
+<div style="text-align:center;"> NodeVision is a new way to describe your data </div>
 
 A new database manager for graph / node database
 
