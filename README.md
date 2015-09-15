@@ -13,3 +13,4 @@ Librairie :
 * D3.js (Typescript)
 * JQuery (Typescript)
 * Socket.IO (Typescript)
+* Bootstrap (Typescript)
