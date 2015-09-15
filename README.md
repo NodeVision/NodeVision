@@ -1,4 +1,4 @@
-#<div style="text-align:center;">NodeVision<div>
+#NodeVision
 NodeVision is a new way to describe your data
 
 A new database manager for graph / node database
