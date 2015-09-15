@@ -13,4 +13,4 @@ FrameWork :
 Librairie : 
 * D3.js (Typescript)
 * JQuery (Typescript)
-* SocketIO (Typescript)
+* Socket.IO (Typescript)
