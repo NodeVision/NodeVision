@@ -1,6 +1,6 @@
 #NodeVision
 
-A new database manager for graph / node database
+A new database manager for graphe / node database
 
 Technologie :
 * Typescript
