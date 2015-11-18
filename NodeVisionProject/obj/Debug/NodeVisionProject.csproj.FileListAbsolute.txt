@@ -1,0 +1,6 @@
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\bin\NodeVisionProject.dll.config
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\bin\NodeVisionProject.dll
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\bin\NodeVisionProject.pdb
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\obj\Debug\NodeVisionProject.dll
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\obj\Debug\NodeVisionProject.pdb
+C:\Users\benja\Desktop\NodeVisionProject\NodeVisionProject\obj\Debug\NodeVisionProject.csprojResolveAssemblyReference.cache
