@@ -17,4 +17,3 @@ var ctrlgrpah = new Ctrlgraph();
 var uigraph = new UIgraph();
 uigraph.init(ctrlgrpah);
 ctrlgrpah.updateView(uigraph);
-var toto;
