@@ -1,4 +1,5 @@
-﻿class UIAttribute{
+﻿// Attributs des noeuds
+class UIAttribute{
     private ctrlattribute = new Ctrlattribute();
     private attribute = new Attribute();
 

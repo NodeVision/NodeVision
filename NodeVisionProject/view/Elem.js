@@ -1,3 +1,4 @@
+// Identifiant des differents modaux (bootstrap)
 var Modal;
 (function (Modal) {
     Modal[Modal["graph"] = 0] = "graph";
@@ -6,6 +7,8 @@ var Modal;
     Modal[Modal["edge"] = 3] = "edge";
     Modal[Modal["user"] = 4] = "user";
 })(Modal || (Modal = {}));
+// Classe qui permet de déclarer un nouvel élément HTML
+// ex: var element = new Elem('type'[,class,attribut])
 var Elem = (function () {
     function Elem(typeElement, className, attributes) {
         this.e = document.createElement(typeElement);

@@ -1,3 +1,4 @@
+// construit un modal vide
 var UIModal = (function () {
     function UIModal(id) {
         var mf = new Elem('div', 'modal fade', [new Attribute('tabindex', '-1'),
