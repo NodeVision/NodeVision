@@ -6,6 +6,7 @@
                 //TODO socket emit -> callback
                 //////////////////////////////////////////////////////////
                 var branch = new Branch(999);//last number de la database;
+                branch.name = 'undefined';
                 //////////////////////////////////////////////////////////
 
 

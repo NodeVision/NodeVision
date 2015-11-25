@@ -1,8 +1,5 @@
-// Identifiant des differents modaux (bootstrap)
 enum Modal { graph, branch, node, edge, user }
 
-// Classe qui permet de déclarer un nouvel élément HTML
-// ex: var element = new Elem('type'[,class,attribut])
 class Elem<T extends HTMLElement> {
         public e : T;
         public class : string;

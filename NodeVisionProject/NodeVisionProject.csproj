@@ -960,8 +960,8 @@
     <TypeScriptCompile Include="server.ts" />
     <TypeScriptCompile Include="view\Elem.ts" />
     <TypeScriptCompile Include="view\UIattribute.ts" />
-    <TypeScriptCompile Include="view\UIbar.ts" />
-    <TypeScriptCompile Include="view\UIbranch.ts" />
+    <TypeScriptCompile Include="view\UIbare.ts" />
+    <TypeScriptCompile Include="view\UIbranche.ts" />
     <TypeScriptCompile Include="view\UIgraph.ts" />
     <TypeScriptCompile Include="view\UImodal.ts" />
     <TypeScriptCompile Include="view\UInode.ts" />
