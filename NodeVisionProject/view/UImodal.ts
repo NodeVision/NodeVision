@@ -1,3 +1,4 @@
+// construit un modal vide
 class UIModal{
     private mhead : Elem<HTMLElement>;
     private mbody : Elem<HTMLElement>;

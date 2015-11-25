@@ -1,4 +1,4 @@
-﻿enum Action {create, read, update, delete }
+﻿enum Action { create, read, update, delete }
 enum Status { sucess, warning, fail }
 class response<T> {
     public state: Status;

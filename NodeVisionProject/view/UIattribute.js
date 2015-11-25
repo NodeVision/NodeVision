@@ -1,3 +1,4 @@
+// Attributs des noeuds
 var UIAttribute = (function () {
     function UIAttribute(attribute) {
         this.ctrlattribute = new Ctrlattribute();

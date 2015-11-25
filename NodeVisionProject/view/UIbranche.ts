@@ -1,14 +1,22 @@
 ﻿class UIbranch {
+    private ctrlgraph = new Ctrlgraph();
     private ctrlbranch = new Ctrlbranch();
     private ctrlbar = new Ctrlbar();
     private ctrluser = new Ctrluser();
     private branch: Branch;
-    
+
     public setui(branchModal: UIModal) {
         this.modal_menu(branchModal);
-       // this.dropdown_menu();
-    }
+        var branches = new Array<Branch>();
         
+        //appel du graph
+        this.ctrlgraph.updateModel(new request(Action.read)).data.nodes.forEach(n => {
+            //si le noeud contient une branche pas répertorié dans le tableau array l'ajoute au tableau
+            if (branches.indexOf(n.branch) == -1) branches.push(n.branch);
+        });
+        this.dropdown_branches_menu(branches);
+    }
+
     public getui() {
         return new Elem('li', 'dropdown');
     }
@@ -19,36 +27,38 @@
         ////////////////this.ctrlbar.updateBranch(this.branch);
                 
         //MODAL HEAD
+        //MODAL BODY
+        this.branch.name = 'undefined';//TODO enlever
         var d_row_h = new Elem('div', 'row');
-        var d_col1 = new Elem('div', 'col-md-8');
-        var d_col2 = new Elem('div', 'col-md-4');
-        var h3 = new Elem('h3').e; h3.innerHTML = 'New Branch : ';
+        var d_col1 = new Elem('div', 'col-md-12');
+        var h3 = new Elem('h3'); h3.e.innerHTML = 'New Branch: ';
         var input_name = <HTMLInputElement>new Elem('input').e; input_name.placeholder = 'branch name';
-        var h3_name = new Elem('h3').e;
+        var h3_name = new Elem('h3'); h3_name.e.innerHTML = this.branch.name;
         //Update branch name
         input_name.onblur = () => {
             this.branch.name = input_name.value;
             var res = this.ctrlbranch.updateModel(new request(Action.update, this.branch));
             this.branch = res.data;
-            h3_name.innerHTML = this.branch.name;
-            h3_name.ondblclick = () => {
-                input_name = <HTMLInputElement>new Elem('input', '', [new Attribute('typename', 'text'), new Attribute('value', this.branch.name)]).e;
-                jQuery(h3_name).replaceWith(input_name);
-            }
-            jQuery(input_name).replaceWith(h3_name);
+            h3_name.e.innerHTML = this.branch.name;
+            jQuery(input_name).replaceWith(h3_name.e);
         }
-        branchModal.gethead().appendChild(d_row_h.appendChild(d_col1.appendChild([h3, h3_name]).e).e);    
-        //MODAL BODY
+        h3_name.e.ondblclick = () => {
+            jQuery(h3_name.e).replaceWith(input_name);
+
+        }
+        
+        branchModal.getbody().appendChild(d_row_h.appendChild(d_col1.appendChild(h3.appendChild(h3_name.e).e).e).e);    
         //Color
         var input_color = <HTMLInputElement>new Elem('input', '', [new Attribute('type', 'text'), new Attribute('id', 'color')]).e;
         branchModal.getbody().appendChild(input_color);
         var colorpicker = jQuery('#color').colorpicker();
         //affiche le modal
         jQuery('#' + Modal.branch).modal('show');
-    
+
 
     }
-   /* public dropdown_menu() {
+    public dropdown_branches_menu(branches: Array<Branch>) {
+        //div du menu des branches
         var dropdown = new Elem('li', 'dropdown');
         var span = new Elem('span', 'caret');
         var a_drop = new Elem('a', 'dropdown-toggle', [
@@ -58,22 +68,27 @@
             new Attribute('aria-expanded', 'false')
         ]); a_drop.e.innerHTML = 'Branches';
         var ul_drop_menu = new Elem('ul', 'dropdown-menu');
-
+        //appel des parametres de vision que l utilisateur souhaites
         var res = this.ctrluser.updateModel(new request(Action.read));
-        var settings = res.data.branchesvisibility; //branch_vsblty:Branch[]
-
-        branches.foreach(branch => {
-
+        var settings = res.data.branchesvisibility;
+        settings = [new Branch(1), new Branch(2), new Branch(3), new Branch(4)]//TODO enlever
+        branches.forEach(branch => {
+            //divs pour chaque branche auquel à access l utilisateur
             var li = new Elem('li');
-            var a = new Elem('a'); a.e.innerHTML = branch.getname();
+            var a = new Elem('a'); a.e.innerHTML = branch.name;
             var vsblty = false; var style = new Attribute('style', 'color:grey');
-            if (settings.branch_vsblty.indexof(branch) != -1) vsblty = true; style.value='color:red';
+            //filtre sur les settings de l utilisateur
+            if (settings.indexOf(branch) != -1) {
+                vsblty = true;
+                style.value = 'color:red';
+            }
+            //affichage des divs de filtrage
             var span_display = new Elem('span', 'glyphicon glyphicon-eye-open', [
                 new Attribute('aria-hidden', 'true'),
                 new Attribute('display', "" + vsblty), style]);
             span_display.e.onclick = () => {
                 //this.ctrlbar.updateBranchSettings....
-                //this.ctrlgraph.updatemodel(State.read,  MAYBE les settings en paramètre
+                //this.ctrlgraph.updatemodel(State.read,  MAYBE les settings en parametre
             }
             var span_edit = new Elem('span', 'glyphicon glyphicon-pencil', new Attribute('aria-hidden', 'true'));
             span_edit.e.onclick = () => {
@@ -88,15 +103,16 @@
             }
             are_u_sure.appendChild(yes.e);
 
-            var span_remove = new Elem('span', 'glyphicon glyphicon-trash', [
+            /*var span_remove = new Elem('span', 'glyphicon glyphicon-trash', [
                 new Attribute('aria-hidden', 'true'),
                 new Attribute('role', 'button'),
                 new Attribute('tabindex', '0'),
                 new Attribute('data-toggle=', 'popover'),
                 new Attribute('data-trigger', 'focus'),
-                new Attribute('data-content', )
+                new Attribute('data-content',)//TODO manque de l attribut class
             ]);
+            */
         });
     }
-    */
+    /**/
 }

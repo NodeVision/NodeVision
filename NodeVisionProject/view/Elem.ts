@@ -1,4 +1,5 @@
 enum Modal { graph, branch, node, edge, user }
+
 class Elem<T extends HTMLElement> {
         public e : T;
         public class : string;
