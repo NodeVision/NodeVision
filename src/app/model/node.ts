@@ -29,7 +29,7 @@ export class NVNode implements d3.layout.force.Node{
         //get & set
         get name() { return this._name }
         set name(name: string) { this._name = name; }
-        get id_node(){ return this._id }
+        get id(){ return this._id }
         get parent_node(){ return this._parent_node }
         get attributes(){return this._node_attributs }   
         get viewvers(){return this._id_owner }

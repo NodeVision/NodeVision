@@ -1,10 +1,8 @@
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -178,6 +176,14 @@ var GraphUI = (function () {
     };
     GraphUI.prototype.show_branch = function (branch) {
     };
+    GraphUI.prototype.add_branch = function (name, color) {
+        var br = new branch_1.Branch(name, "ffffff"); //TODO récuperer la couleur du picker
+        var nd = new node_1.NVNode(13, "Nouveau noeud", br, this.allUsers, this.allUsers, null, null, null);
+        this.branches.push(br);
+        this.graph.nodes.push(nd);
+        this.redraw();
+        this.branchmodalstate = false;
+    };
     GraphUI.prototype.update_branch = function (branch) {
         this.branchmodalstate = true;
         this.branch = branch;
@@ -185,7 +191,30 @@ var GraphUI = (function () {
     GraphUI.prototype.update_users_node = function (user) {
     };
     GraphUI.prototype.delete_branch = function (branch) {
+        var _this = this;
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
+        var nodesbranch = Array();
+        this.graph.nodes.forEach(function (element) {
+            if (element.branch == branch) {
+                console.log(element.branch.name + " : " + branch.name);
+                nodesbranch.push(element);
+            }
+        });
+        //supprime la branche(groupe)
+        this.branches.splice(this.branches.indexOf(nodesbranch[0].branch), 1);
+        //supprime les edges de la branche
+        nodesbranch.forEach(function (elt) {
+            _this.graph.edges.forEach(function (element) {
+                if (element.source == elt || element.target == elt)
+                    _this.graph.edges.splice(_this.graph.edges.indexOf(element), 1);
+            });
+        });
+        //supprime les noeuds de la branche
+        nodesbranch.forEach(function (element) {
+            _this.graph.nodes.splice(_this.graph.nodes.indexOf(element), 1);
+        });
+        console.log(this.graph.nodes);
+        this.redraw();
     };
     GraphUI.prototype.delete_edge = function () {
     };
@@ -199,10 +228,10 @@ var GraphUI = (function () {
             new user_1.User('0005', 'thomas', 'valentin', null, null),
             new user_1.User('0005', 'wahiba', 'bidah', null, null)];
         this.graph = new graph_1.Graph(1, 'first');
-        var b1 = new branch_1.Branch(1);
+        var b1 = new branch_1.Branch();
         b1.name = 'branch 1';
         b1.color = '#234587';
-        var b2 = new branch_1.Branch(2);
+        var b2 = new branch_1.Branch();
         b2.name = 'branch 2';
         b2.color = '#123120';
         var nodes = new Array();

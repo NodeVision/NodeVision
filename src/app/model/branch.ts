@@ -5,8 +5,11 @@ export class Branch {
     private _name: string;
     private _color: string; //#1f77b4
 
-    constructor(id: number) {
-        this._id = id;
+    constructor(name?: string, color?: string) {
+        if (name)
+            this._name = name;
+        if (color)
+            this._color = color;
     }
     get id() { return this._id }
     get name() { return this._name }
