@@ -1,0 +1,102 @@
+<nav class="navbar navbar-inverse">
+        <div class="container-fluid" >
+            <div class="navbar-header">
+                <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">Branches <span class="caret" > </span></a>
+                        <ul class="dropdown-menu">
+                            <li *ng-for="#branch of branches">
+                                <div class="row">
+                                    <div class="col-md-6">{{branch.name}}</div>
+                                    <div class="col-md-6"> 
+                                        <span class="glyphicon glyphicon-eye-open" aria-hidden="true" (click)="show_branch(branch)"></span>
+                                        <span class="glyphicon glyphicon-pencil" aria-hidden="true" (click)="update_branch(branch)"></span>
+                                        <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_branch(branch)"></span>
+                                    </div>     
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav> 
+    <div class="modal fade in" *ng-if="nodemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{nodemodal}}" style="display:block; padding-left:15px;" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{node.name}}</h3>
+                            <input #node_name *ng-if="title_state" class="form-control" value="{{node.name}}" placeholder="Node Name"                                       
+                                (keyup.enter)="update_node(node_name.value)" 
+                                (blur)="update_node(node_name.value)"
+                                >
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group pull-right" role= "group">
+                                <button class="btn btn-info btn-lg" type= "button" (click)="add_attribute()"> 
+                                    <img src="lib/img/add_attribute.png" > 
+                                </button>
+                                <button class="btn btn-success btn-lg" type="button" (click)="add_node()"> 
+                                    <img src="lib/img/add_child.png" >
+                                </button>
+                                <button class="btn btn-danger btn-lg" type="button" (click)="delete_node_and_son()"> 
+                                    <img src="lib/img/delete_node_and_son.png"> 
+                                </button>
+                                <button class="btn btn-danger btn-lg" type="button" (click)="delete_node()"> 
+                                    <img src="lib/img/delete_node.png">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <label class="col-md-3"> name </label>
+                        <label class="col-md-3"> value </label>
+                        <label class="col-md-3"> type </label>
+                    </div>
+                    <div class="form-group row" *ng-for="#attribute of node.attributes">
+                        <div class="col-md-3"><input class="form-control" value="{{attribute.name}}" typename="text"></div> 
+                        <div class="col-md-3"><input class="form-control" value="{{attribute.value}}" typename="text"></div> 
+                        <div class="col-md-3"><input class="form-control" value="{{attribute.type}}" typename="text"></div> 
+                        <div class="col-md-1">
+                            <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_attribute(attribute)" ></span>
+                        </div> 
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-default" (click)="nodemodalstate=false;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade in" *ng-if="branchmodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{branchmodal}}" style="display: block;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>New branch</h3>
+                </div><div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Branch name :</label>
+                        <div class="col-sm-3">
+                            <input class="form-control" type="text" placeholder="branch name" value="{{branch.name}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Color :</label>
+                        <div class="col-sm-3">
+                            <input class="form-control" type="text" id="color" placeholder="color"  value="{{branch.color}}"></input>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success btn-lg" type="button">Validate</button>
+                <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
