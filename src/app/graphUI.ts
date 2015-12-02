@@ -39,7 +39,7 @@ export class GraphUI {
     //branch Modal
     private branchmodalstate = false;
     private branchmodal = Modal.branch;
-    private branch = new Branch(-1);
+    private branch = new Branch();
     //edge
     private edge: NVEdge;    
     //navbar
@@ -202,7 +202,12 @@ export class GraphUI {
 
     }
     public add_branch(name: string, color: string) {
-        var br = new Branch(name, "ffffff") //TODO récuperer la couleur du picker
+        if(this.branch == null)
+            var br = new Branch() 
+            else
+            var br = this.branch
+        this.branch.name = name;
+        this.branch.color = 'ffffff';
         var nd = new NVNode(13, "Nouveau noeud", br, this.allUsers, this.allUsers, null, null, null);
         this.branches.push(br);
         this.graph.nodes.push(nd);
@@ -224,9 +229,7 @@ export class GraphUI {
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
-            if (element.branch == branch)
-                {
-                    console.log(element.branch.name+" : "+branch.name);
+            if (element.branch == branch) {
                 nodesbranch.push(element);
             }
         });
@@ -246,9 +249,9 @@ export class GraphUI {
         nodesbranch.forEach(element => {
             this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         });
-        
+
         console.log(this.graph.nodes);
-        
+
         this.redraw();
     }
 

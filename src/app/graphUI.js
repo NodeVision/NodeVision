@@ -30,7 +30,7 @@ var GraphUI = (function () {
         //branch Modal
         this.branchmodalstate = false;
         this.branchmodal = enum_1.Modal.branch;
-        this.branch = new branch_1.Branch(-1);
+        this.branch = new branch_1.Branch();
         //navbar
         this.branches = new Array();
         this.test(); //TODO remove appel de la base de données  
@@ -177,7 +177,12 @@ var GraphUI = (function () {
     GraphUI.prototype.show_branch = function (branch) {
     };
     GraphUI.prototype.add_branch = function (name, color) {
-        var br = new branch_1.Branch(name, "ffffff"); //TODO récuperer la couleur du picker
+        if (this.branch == null)
+            var br = new branch_1.Branch();
+        else
+            var br = this.branch;
+        this.branch.name = name;
+        this.branch.color = 'ffffff';
         var nd = new node_1.NVNode(13, "Nouveau noeud", br, this.allUsers, this.allUsers, null, null, null);
         this.branches.push(br);
         this.graph.nodes.push(nd);
@@ -196,7 +201,6 @@ var GraphUI = (function () {
         var nodesbranch = Array();
         this.graph.nodes.forEach(function (element) {
             if (element.branch == branch) {
-                console.log(element.branch.name + " : " + branch.name);
                 nodesbranch.push(element);
             }
         });
