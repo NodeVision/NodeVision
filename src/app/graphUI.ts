@@ -142,9 +142,11 @@ export class GraphUI {
             .attr("y2",this.m[1]);
     }
     public add_edge(source: NVNode, target: NVNode) {
-        //ajouter a la base de données récup l'id    
-        var edge = new NVEdge(2264, 'undfined', source, target);      
-        this.graph.edges.push(edge);
+        //ajouter a la base de données récup l'id  
+        if(source != target){  
+            var edge = new NVEdge(2264, 'undfined', source, target);      
+            this.graph.edges.push(edge);
+        }
         
     }
     public add_attribute() {

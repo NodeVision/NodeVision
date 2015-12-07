@@ -131,9 +131,11 @@ var GraphUI = (function () {
             .attr("y2", this.m[1]);
     };
     GraphUI.prototype.add_edge = function (source, target) {
-        //ajouter a la base de données récup l'id    
-        var edge = new edge_1.NVEdge(2264, 'undfined', source, target);
-        this.graph.edges.push(edge);
+        //ajouter a la base de données récup l'id  
+        if (source != target) {
+            var edge = new edge_1.NVEdge(2264, 'undfined', source, target);
+            this.graph.edges.push(edge);
+        }
     };
     GraphUI.prototype.add_attribute = function () {
         this.node.attributes.push(new attribute_1.Attribute('', '', ''));
