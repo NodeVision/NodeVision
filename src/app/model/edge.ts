@@ -2,7 +2,7 @@ import {Injectable} from 'angular2/angular2';
 import {NVNode} from './node';
 export enum EDGE_TYPE{ hierarchy, custom }
 @Injectable()
-export class NVEdge implements d3.layout.force.Link<d3.layout.force.Node>{
+export class NVEdge implements d3.layout.force.Link<NVNode>{
 
     private _id: number;
     private _name: string;

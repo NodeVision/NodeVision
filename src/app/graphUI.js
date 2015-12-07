@@ -1,8 +1,10 @@
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
+    switch (arguments.length) {
+        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
+        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
+        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
+    }
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -44,7 +46,6 @@ var GraphUI = (function () {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on("mouseup", function () { _this.mouseup(); })
             .on('contextmenu', function () { _this.branchmodalstate = true; });
         this.init_graph();
     }
@@ -69,43 +70,14 @@ var GraphUI = (function () {
             .style('fill', function (n) { return n.branch.color; })
             .style('stroke', function (n) { return n.branch.color; })
             .on("mousedown", function (n) { _this.mousedown(n); })
-            .on("mouseover", function (n) { _this.mouseover(n); })
+            .on("mouseup", function (n) { _this.mouseupNode(n); })
             .on("click", function (n) { _this.node = n; })
             .on("dblclick", function (n) { _this.nodemodalstate = true; });
         this.nodes.append("title").text(function (n) { return n.name; });
     };
-    GraphUI.prototype.mouseover = function (n) {
-        if (this.new_link) {
-            this.add_edge(this.node, n);
-        }
-    };
-    GraphUI.prototype.mousedown = function (n) {
-        var _this = this;
-        if (d3.event.ctrlKey) {
-            this.new_link = true;
-            this.line = this.svg.append("line")
-                .attr("class", "link")
-                .attr("x1", n.x)
-                .attr("y1", n.y)
-                .attr("x2", n.x)
-                .attr("y2", n.y);
-            this.svg.on("mousemove", function () { _this.mousemove(); });
-        }
-    };
-    GraphUI.prototype.mousemove = function () {
-        this.m = d3.mouse(d3.event.currentTarget);
-        this.line.attr("x2", this.m[0])
-            .attr("y2", this.m[1]);
-    };
-    GraphUI.prototype.mouseup = function () {
-        if (d3.event.ctrlKey) {
-            this.new_link = false;
-            this.svg.on("mousemove", null);
-            this.line.attr("class", "drag_line_hidden");
-        }
-    };
     GraphUI.prototype.redraw = function () {
         var _this = this;
+        this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
         links.enter().insert("line", ".node").attr("class", "link");
         links.exit().remove();
@@ -131,10 +103,37 @@ var GraphUI = (function () {
         this.nodes.attr("cx", function (n) { return n.x; })
             .attr("cy", function (n) { return n.y; });
     };
+    GraphUI.prototype.mouseupNode = function (n) {
+        if (this.new_link) {
+            this.add_edge(this.node, n);
+            this.redraw();
+            this.svg.on("mousemove", null);
+            this.new_link = false;
+        }
+    };
+    GraphUI.prototype.mousedown = function (n) {
+        var _this = this;
+        if (d3.event.ctrlKey) {
+            this.new_link = true;
+            this.line = this.svg.append("line")
+                .attr("class", "link")
+                .attr("x1", n.x)
+                .attr("y1", n.y)
+                .attr("x2", n.x)
+                .attr("y2", n.y);
+            this.svg.on("mousemove", function () { _this.mousemove(); });
+        }
+    };
+    GraphUI.prototype.mousemove = function () {
+        this.m = d3.mouse(d3.event.currentTarget);
+        this.line
+            .attr("x2", this.m[0])
+            .attr("y2", this.m[1]);
+    };
     GraphUI.prototype.add_edge = function (source, target) {
-        //ajouter a la base de données récup l'id
-        this.graph.edges.push(new edge_1.NVEdge(2264, 'undfined', source, target));
-        this.redraw();
+        //ajouter a la base de données récup l'id    
+        var edge = new edge_1.NVEdge(2264, 'undfined', source, target);
+        this.graph.edges.push(edge);
     };
     GraphUI.prototype.add_attribute = function () {
         this.node.attributes.push(new attribute_1.Attribute('', '', ''));
@@ -153,11 +152,9 @@ var GraphUI = (function () {
     };
     GraphUI.prototype.delete_node = function () {
         var _this = this;
-        console.log(this.graph);
         //this.graph.edges.splice(this.graph.edges.findIndex(x => x.source.id_node == this.node.id_node),1);
         //this.graph.edges.splice(this.graph.edges.findIndex(x => x.target.id_node == this.node.id_node),1);
         this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
-        console.log(this.graph);
         var toSplice = this.graph.edges.filter(function (l) { return (l.source === _this.node) || (l.target === _this.node); });
         toSplice.map(function (l) { _this.graph.edges.splice(_this.graph.edges.indexOf(l), 1); });
         this.redraw();

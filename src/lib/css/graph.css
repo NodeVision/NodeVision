@@ -10,9 +10,6 @@
   stroke: #999;
   stroke-width: 3;
   pointer-events: none;
-}
-.link_hidden {
-  stroke: #999;
-  stroke-width: 0;
-  pointer-events: none;
+  z-index: -9999;
+    position: relative;
 }

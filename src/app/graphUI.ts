@@ -47,7 +47,6 @@ export class GraphUI {
 
     constructor() {
         this.test(); //TODO remove appel de la base de données  
-      
         //navbar branches
         this.graph.nodes.forEach(n => {
             if (this.branches.indexOf(n.branch) == -1) {
@@ -58,12 +57,9 @@ export class GraphUI {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on("mouseup", () => { this.mouseup() })
             .on('contextmenu', () => { this.branchmodalstate = true });
-
         this.init_graph();
     }
-
     public init_graph() {
         //initialisation du graph           
         this.force
@@ -84,43 +80,14 @@ export class GraphUI {
             .style('fill', (n: NVNode) => { return n.branch.color })
             .style('stroke', (n: NVNode) => { return n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
-            .on("mouseover", (n: NVNode) => { this.mouseover(n) })
-        //.call(this.force.drag)
+            .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
+            //.call(this.force.drag)
             .on("click", (n: NVNode) => { this.node = n; })
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
     }
-    public mouseover(n: NVNode) {
-        if (this.new_link) {
-            this.add_edge(this.node, n);
-        }
-    }
-    public mousedown(n: NVNode) {
-        if (d3.event.ctrlKey) {
-            this.new_link = true;
-            this.line = this.svg.append("line")
-                .attr("class", "link")
-                .attr("x1", n.x)
-                .attr("y1", n.y)
-                .attr("x2", n.x)
-                .attr("y2", n.y);
-            this.svg.on("mousemove", () => { this.mousemove() });
-        }
-    }
-    public mousemove() {
-        this.m = d3.mouse(d3.event.currentTarget);
-        this.line.attr("x2", this.m[0])
-            .attr("y2", this.m[1]);
-    }
-    public mouseup() {
-        if (d3.event.ctrlKey) {
-            this.new_link = false;
-            this.svg.on("mousemove", null);
-            this.line.attr("class", "drag_line_hidden");
-        }
-    }
     public redraw() {
-
+        this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
         links.enter().insert("line", ".node").attr("class", "link");
         links.exit().remove();
@@ -138,9 +105,9 @@ export class GraphUI {
         this.links = this.svg.selectAll(".link");
         this.nodes = this.svg.selectAll(".node");
         this.force.start();
-
     }
     public tick() {
+     
         this.links.attr("x1", (e: NVEdge) => { return e.source.x; })
             .attr("y1", (e: NVEdge) => { return e.source.y; })
             .attr("x2", (e: NVEdge) => { return e.target.x; })
@@ -148,11 +115,37 @@ export class GraphUI {
         this.nodes.attr("cx", (n: NVNode) => { return n.x; })
             .attr("cy", (n: NVNode) => { return n.y; });
     }
+     public mouseupNode(n: NVNode) {
+        if (this.new_link) {
+            this.add_edge(this.node, n);
+            this.redraw();
+            this.svg.on("mousemove", null);
+            this.new_link = false;
+        }
+    }
+    public mousedown(n: NVNode) {
+        if (d3.event.ctrlKey) {
+            this.new_link = true;
+            this.line = this.svg.append("line")
+                .attr("class", "link")
+                .attr("x1", n.x)
+                .attr("y1", n.y)
+                .attr("x2", n.x)
+                .attr("y2", n.y);
+            this.svg.on("mousemove", () => { this.mousemove() });
+        }
+    }
+    public mousemove() {
+        this.m = d3.mouse(d3.event.currentTarget);
+        this.line
+            .attr("x2",this.m[0])
+            .attr("y2",this.m[1]);
+    }
     public add_edge(source: NVNode, target: NVNode) {
-        //ajouter a la base de données récup l'id
-                    
-        this.graph.edges.push(new NVEdge(2264, 'undfined', source, target))
-        this.redraw();
+        //ajouter a la base de données récup l'id    
+        var edge = new NVEdge(2264, 'undfined', source, target);      
+        this.graph.edges.push(edge);
+        
     }
     public add_attribute() {
         this.node.attributes.push(new Attribute('', '', ''));
@@ -171,12 +164,9 @@ export class GraphUI {
         this.redraw();
     }
     public delete_node() {
-        console.log(this.graph);
-        
         //this.graph.edges.splice(this.graph.edges.findIndex(x => x.source.id_node == this.node.id_node),1);
         //this.graph.edges.splice(this.graph.edges.findIndex(x => x.target.id_node == this.node.id_node),1);
         this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
-        console.log(this.graph);
         var toSplice = this.graph.edges.filter((l) => { return (l.source === this.node) || (l.target === this.node); });
         toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
 
