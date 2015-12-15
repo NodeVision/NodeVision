@@ -11,10 +11,10 @@ export class NVNode implements d3.layout.force.Node{
         private _branch: Branch;
         //private _parent_node: NVNode;
 
-        index:number;x: number;y: number;px: number;py: number;fixed: boolean;weight: number;
+        x: number;y: number;px: number;py: number;fixed: boolean;weight: number;
 
         constructor(id: number, name: string, branch: Branch, node_attributs: Array<Attribute>/*, parent_node: NVNode, node_relationships: Array<NVNode>*/) {
-            this._id = this.index = id;
+            this._id = id;
             this._name = name;
             this._node_attributs = node_attributs;
             //this._parent_node = parent_node;

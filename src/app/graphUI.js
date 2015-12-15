@@ -218,13 +218,22 @@ var GraphUI = (function () {
     };
     GraphUI.prototype.update_edge = function () {
     };
+    GraphUI.prototype.found = function (array, value) {
+        var tamp;
+        array.forEach(function (element) {
+            if (element.id == value)
+                tamp = element;
+        });
+        return tamp;
+    };
     GraphUI.prototype.test = function () {
-        var neo_init = "MATCH (u:User)-[r:RELTYPE*]->(n:Node) WHERE u.mail = 'benjamin.troquereau@gmail.com' RETURN n,r";
+        var _this = this;
+        var neo_init = "";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
         var user = new user_1.User('benjamin.troquereau@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// request to init the graph
-        var neo_init = "MATCH (u:User),(n:Node) WHERE u.mail = '" + user.matricule + "' AND (u)-[*]->(n) RETURN n";
+        var neo_init = "MATCH (u:User)-[r:KNOWS | RELTYPE*]->(n:Node) WHERE u.mail = 'benjamin.troquereau@gmail.com' RETURN n,r";
         var response;
         jQuery.ajax({
             type: "POST",
@@ -236,33 +245,20 @@ var GraphUI = (function () {
                 response = data.data;
             }
         });
-        console.log(response);
+        this.graph = new graph_1.Graph(1, 'first');
         // hydratation des noeuds
-        var nodes = new Array();
         response.forEach(function (n) {
-            n.forEach(function (o) {
-                console.log(typeof o);
-                nodes.push(new node_1.NVNode(o.metadata.id, o.data.name, new branch_1.Branch('name', 'ffffff', 'Standard'), new Array()));
+            _this.graph.nodes.push(new node_1.NVNode(n[0].metadata.id, n[0].data.name, new branch_1.Branch('name', 'ffffff', 'Standard'), new Array()));
+        });
+        // hydratation des arcs
+        response.forEach(function (r) {
+            r[1].forEach(function (e) {
+                var source = _this.found(_this.graph.nodes, e.start.split("/")[e.start.split("/").length - 1]);
+                var target = _this.found(_this.graph.nodes, e.end.split("/")[e.end.split("/").length - 1]);
+                if (source && target)
+                    _this.graph.edges.push(new edge_1.NVEdge(e.metadata.id, e.data.name, source, target));
             });
         });
-        // hydratation des aretes
-        var edges = new Array();
-        //console.log(nodes)
-        ///////////////////////TEST///////////////////////
-        this.graph = new graph_1.Graph(1, 'first');
-        var e1 = new edge_1.NVEdge(1, 'link1', nodes[0], nodes[1]);
-        var e2 = new edge_1.NVEdge(2, 'link2', nodes[0], nodes[2]);
-        edges.push(e1, e2);
-        this.graph.nodes = nodes;
-        this.graph.edges = edges;
-        ///////////////////////////////////////////////////
-        /* this.node = new NVNode(1,
-             'fire',
-             b1,
-             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
-             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
-             [new Attribute('Test', 'Test', 'Test')], null, null);*/
-        ///////////////////////////////////////////////////
     };
     GraphUI = __decorate([
         angular2_1.View({

@@ -13,7 +13,7 @@ var angular2_1 = require('angular2/angular2');
 var branch_1 = require('./branch');
 var NVNode = (function () {
     function NVNode(id, name, branch, node_attributs /*, parent_node: NVNode, node_relationships: Array<NVNode>*/) {
-        this._id = this.index = id;
+        this._id = id;
         this._name = name;
         this._node_attributs = node_attributs;
         //this._parent_node = parent_node;
