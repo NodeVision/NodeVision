@@ -57,7 +57,8 @@ export class GraphUI {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on('contextmenu', () => { this.branchmodalstate = true });
+            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
+
         this.init_graph();
     }
     public init_graph() {
@@ -80,9 +81,9 @@ export class GraphUI {
             .style('fill', (n: NVNode) => { return n.branch.color })
             .style('stroke', (n: NVNode) => { return n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
+            .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            //.call(this.force.drag)
-            .on("click", (n: NVNode) => { this.node = n; })
+            .call(this.force.drag)
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
     }
@@ -91,21 +92,25 @@ export class GraphUI {
         var links = this.links.data(this.force.links());
         links.enter().insert("line", ".node").attr("class", "link");
         links.exit().remove();
+        
         var nodes = this.nodes.data(this.force.nodes());
         nodes.enter().append("circle")
             .attr("class", "node")
             .attr("r", 10)
             .style('fill', (n: NVNode) => { return n.branch.color })
             .style('stroke', (n: NVNode) => { return n.branch.color })
-            .on("click", (n: NVNode) => { this.node = n })
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true })
+            .on("mousedown", (n: NVNode) => { this.mousedown(n) })
+            .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
+            .call(this.force.drag)
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
-
         nodes.exit().remove();
+        
         this.links = this.svg.selectAll(".link");
         this.nodes = this.svg.selectAll(".node");
         this.force.start();
     }
+    
     public tick() {
      
         this.links.attr("x1", (e: NVEdge) => { return e.source.x; })
@@ -120,11 +125,16 @@ export class GraphUI {
             this.add_edge(this.node, n);
             this.redraw();
             this.svg.on("mousemove", null);
-            this.new_link = false;
+            this.new_link = false;           
         }
+        this.nodes.call(this.force.drag);
     }
     public mousedown(n: NVNode) {
+        this.node = n;
         if (d3.event.ctrlKey) {
+            this.nodes
+                .on('mousedown.drag', null)
+                .on('touchstart.drag', null);
             this.new_link = true;
             this.line = this.svg.append("line")
                 .attr("class", "link")
@@ -157,7 +167,7 @@ export class GraphUI {
     }
     public add_node() {
         //appel bdd (TEST)
-        var node = new NVNode(9999, 'test', this.node.branch, this.node.owners, this.node.viewvers, null, this.node, null)//TODO Rempalcer
+        var node = new NVNode(9999, 'test', this.node.branch, Array<Attribute>())//TODO Rempalcer
         var edge = new NVEdge(9999, 'blabla', this.node, node)//TODO Rempalcer
         
         //reconstruction
@@ -181,27 +191,16 @@ export class GraphUI {
         this.node.name = node_name;
         this.title_state = false;
     }
-    public add_user_or_group() {
-
-    }
-    public delete_user_or_group() {
-
-    }
-    public update_user_or_group() {
-
-    }
     public show_branch(branch: Branch) {
 
     }
     public add_branch(name: string, color: string) {
-        if(this.branch == null)
-            var br = new Branch() 
-            else
-            var br = this.branch
+     
         this.branch.name = name;
-        this.branch.color = 'ffffff';
-        var nd = new NVNode(13, "Nouveau noeud", br, this.allUsers, this.allUsers, null, null, null);
-        this.branches.push(br);
+        this.branch.color = color;
+        
+        var nd = new NVNode(13, "Nouveau noeud", this.branch, Array<Attribute>());
+        this.branches.push(this.branch);
         this.graph.nodes.push(nd);
         this.redraw();
         this.branchmodalstate = false;
@@ -211,11 +210,6 @@ export class GraphUI {
         this.branchmodalstate = true;
         this.branch = branch
     }
-
-    public update_users_node(user: User) {
-
-    }
-
     public delete_branch(branch: Branch) {
         
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
@@ -252,42 +246,67 @@ export class GraphUI {
     }
     public update_edge() {
 
+
     }
 
     public test() {
-        ///////////////////////TEST///////////////////////
-        this.allUsers = [new User('0002', 'laumondais', 'thomas', null, null),
-            new User('0003', 'chaumont', 'pierre', null, null),
-            new User('0004', 'chipaux', 'germain', null, null),
-            new User('0005', 'thomas', 'valentin', null, null),
-            new User('0005', 'wahiba', 'bidah', null, null)]
-        this.graph = new Graph(1, 'first');
-        var b1 = new Branch(); b1.name = 'branch 1'; b1.color = '#234587';
-        var b2 = new Branch(); b2.name = 'branch 2'; b2.color = '#123120';
+        var neo_init ="MATCH (u:User)-[r:RELTYPE*]->(n:Node) WHERE u.mail = 'benjamin.troquereau@gmail.com' RETURN n,r";
+        
+        
+        ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
+        var user = new User('benjamin.troquereau@gmail.com', 'Troquereau', 'Benjamin', null, null);
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        
+        /// request to init the graph
+        var neo_init = "MATCH (u:User),(n:Node) WHERE u.mail = '"+user.matricule+"' AND (u)-[*]->(n) RETURN n"
+        var response;
+        jQuery.ajax({
+                    type: "POST",
+                    async: false,
+                    url: "http://5.196.66.87/db/data/cypher",
+                    contentType: "application/json",
+                    data: JSON.stringify({"query":neo_init, "params": {}}),
+                    success: (data) => {
+                        response = data.data;
+                    }
+                 });
+        console.log(response)         
+        // hydratation des noeuds
         var nodes = new Array<NVNode>();
+        response.forEach(n => {
+            n.forEach(o => {
+                console.log(typeof o);
+                    nodes.push(new NVNode(o.metadata.id,o.data.name,new Branch('name','ffffff','Standard'),new Array<Attribute>()));
+               
+            });
+        });
+        // hydratation des aretes
         var edges = new Array<NVEdge>();
-        var n1 = new NVNode(1, 'un', b1, null, null, [new Attribute('one string', 'a string', 'string')], null, null);
-        var n2 = new NVNode(2, 'deux', b1, null, null, [new Attribute('one number', '12', 'number')], n1, null);
-        var n3 = new NVNode(3, 'trois', b1, null, null, [new Attribute('one boolean', 'true', 'boolean')], n1, null);
-        var n4 = new NVNode(4, 'un', b2, null, null, [new Attribute('one string', 'a string', 'string')], null, null);
-        var n5 = new NVNode(5, 'deux', b2, null, null, [new Attribute('one number', '12', 'number')], n4, null);
-        var n6 = new NVNode(6, 'trois', b2, null, null, [new Attribute('one boolean', 'true', 'boolean')], n4, null);
-        var e1 = new NVEdge(1, 'link1', n1, n2);
-        var e2 = new NVEdge(2, 'link2', n1, n3);
-        var e3 = new NVEdge(3, 'link3', n4, n5);
-        var e4 = new NVEdge(4, 'link4', n4, n6);
-        nodes.push(n1, n2, n3, n4, n5, n6);
-        edges.push(e1, e2, e3, e4);
+        
+        
+        //console.log(nodes)
+        ///////////////////////TEST///////////////////////
+        
+        this.graph = new Graph(1, 'first');
+        
+        var e1 = new NVEdge(1, 'link1', nodes[0], nodes[1]);
+        var e2 = new NVEdge(2, 'link2', nodes[0], nodes[2]);
+
+        edges.push(e1, e2);
         this.graph.nodes = nodes;
         this.graph.edges = edges;
-                
+               
+               
+              
+               
+
         ///////////////////////////////////////////////////
-        this.node = new NVNode(1,
+       /* this.node = new NVNode(1,
             'fire',
             b1,
             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
-            [new Attribute('Test', 'Test', 'Test')], null, null);
+            [new Attribute('Test', 'Test', 'Test')], null, null);*/
         ///////////////////////////////////////////////////
     }
 }

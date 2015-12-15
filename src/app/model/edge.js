@@ -11,11 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var angular2_1 = require('angular2/angular2');
 var node_1 = require('./node');
-(function (EDGE_TYPE) {
-    EDGE_TYPE[EDGE_TYPE["hierarchy"] = 0] = "hierarchy";
-    EDGE_TYPE[EDGE_TYPE["custom"] = 1] = "custom";
-})(exports.EDGE_TYPE || (exports.EDGE_TYPE = {}));
-var EDGE_TYPE = exports.EDGE_TYPE;
 var NVEdge = (function () {
     function NVEdge(id, name, source, target) {
         this._id = id;

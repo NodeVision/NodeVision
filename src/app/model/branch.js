@@ -11,11 +11,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var angular2_1 = require('angular2/angular2');
 var Branch = (function () {
-    function Branch(name, color) {
+    function Branch(name, color, type) {
+        this.types = ['Standard', 'User', 'Group', 'Temporal'];
         if (name)
             this._name = name;
         if (color)
             this._color = color;
+        if (type)
+            this._type = 'Standard';
     }
     Object.defineProperty(Branch.prototype, "id", {
         get: function () { return this._id; },
@@ -34,9 +37,15 @@ var Branch = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(Branch.prototype, "type", {
+        get: function () { return this._type; },
+        set: function (type) { this._type = type; },
+        enumerable: true,
+        configurable: true
+    });
     Branch = __decorate([
         angular2_1.Injectable(), 
-        __metadata('design:paramtypes', [String, String])
+        __metadata('design:paramtypes', [String, String, String])
     ], Branch);
     return Branch;
 })();

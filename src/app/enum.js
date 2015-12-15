@@ -19,4 +19,9 @@ var Status = exports.Status;
     Modal[Modal["user"] = 4] = "user";
 })(exports.Modal || (exports.Modal = {}));
 var Modal = exports.Modal;
+(function (EDGE_TYPE) {
+    EDGE_TYPE[EDGE_TYPE["hierarchy"] = 0] = "hierarchy";
+    EDGE_TYPE[EDGE_TYPE["custom"] = 1] = "custom";
+})(exports.EDGE_TYPE || (exports.EDGE_TYPE = {}));
+var EDGE_TYPE = exports.EDGE_TYPE;
 //# sourceMappingURL=enum.js.map

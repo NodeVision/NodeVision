@@ -16,7 +16,6 @@ var node_1 = require('./model/node');
 var edge_1 = require('./model/edge');
 var graph_1 = require('./model/graph');
 var attribute_1 = require('./model/attribute');
-var preferencepopup_1 = require('./model/preferencepopup');
 var enum_1 = require('./enum');
 var GraphUI = (function () {
     function GraphUI() {
@@ -46,7 +45,7 @@ var GraphUI = (function () {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on('contextmenu', function () { _this.branchmodalstate = true; });
+            .on('contextmenu', function () { _this.branchmodalstate = true; _this.branch = new branch_1.Branch('', '', 'Standard'); });
         this.init_graph();
     }
     GraphUI.prototype.init_graph = function () {
@@ -70,8 +69,9 @@ var GraphUI = (function () {
             .style('fill', function (n) { return n.branch.color; })
             .style('stroke', function (n) { return n.branch.color; })
             .on("mousedown", function (n) { _this.mousedown(n); })
+            .call(this.force.drag)
             .on("mouseup", function (n) { _this.mouseupNode(n); })
-            .on("click", function (n) { _this.node = n; })
+            .call(this.force.drag)
             .on("dblclick", function (n) { _this.nodemodalstate = true; });
         this.nodes.append("title").text(function (n) { return n.name; });
     };
@@ -87,7 +87,9 @@ var GraphUI = (function () {
             .attr("r", 10)
             .style('fill', function (n) { return n.branch.color; })
             .style('stroke', function (n) { return n.branch.color; })
-            .on("click", function (n) { _this.node = n; })
+            .on("mousedown", function (n) { _this.mousedown(n); })
+            .on("mouseup", function (n) { _this.mouseupNode(n); })
+            .call(this.force.drag)
             .on("dblclick", function (n) { _this.nodemodalstate = true; });
         this.nodes.append("title").text(function (n) { return n.name; });
         nodes.exit().remove();
@@ -110,10 +112,15 @@ var GraphUI = (function () {
             this.svg.on("mousemove", null);
             this.new_link = false;
         }
+        this.nodes.call(this.force.drag);
     };
     GraphUI.prototype.mousedown = function (n) {
         var _this = this;
+        this.node = n;
         if (d3.event.ctrlKey) {
+            this.nodes
+                .on('mousedown.drag', null)
+                .on('touchstart.drag', null);
             this.new_link = true;
             this.line = this.svg.append("line")
                 .attr("class", "link")
@@ -145,7 +152,7 @@ var GraphUI = (function () {
     };
     GraphUI.prototype.add_node = function () {
         //appel bdd (TEST)
-        var node = new node_1.NVNode(9999, 'test', this.node.branch, this.node.owners, this.node.viewvers, null, this.node, null); //TODO Rempalcer
+        var node = new node_1.NVNode(9999, 'test', this.node.branch, Array()); //TODO Rempalcer
         var edge = new edge_1.NVEdge(9999, 'blabla', this.node, node); //TODO Rempalcer
         //reconstruction
         this.graph.nodes.push(node);
@@ -167,23 +174,13 @@ var GraphUI = (function () {
         this.node.name = node_name;
         this.title_state = false;
     };
-    GraphUI.prototype.add_user_or_group = function () {
-    };
-    GraphUI.prototype.delete_user_or_group = function () {
-    };
-    GraphUI.prototype.update_user_or_group = function () {
-    };
     GraphUI.prototype.show_branch = function (branch) {
     };
     GraphUI.prototype.add_branch = function (name, color) {
-        if (this.branch == null)
-            var br = new branch_1.Branch();
-        else
-            var br = this.branch;
         this.branch.name = name;
-        this.branch.color = 'ffffff';
-        var nd = new node_1.NVNode(13, "Nouveau noeud", br, this.allUsers, this.allUsers, null, null, null);
-        this.branches.push(br);
+        this.branch.color = color;
+        var nd = new node_1.NVNode(13, "Nouveau noeud", this.branch, Array());
+        this.branches.push(this.branch);
         this.graph.nodes.push(nd);
         this.redraw();
         this.branchmodalstate = false;
@@ -191,8 +188,6 @@ var GraphUI = (function () {
     GraphUI.prototype.update_branch = function (branch) {
         this.branchmodalstate = true;
         this.branch = branch;
-    };
-    GraphUI.prototype.update_users_node = function (user) {
     };
     GraphUI.prototype.delete_branch = function (branch) {
         var _this = this;
@@ -224,37 +219,49 @@ var GraphUI = (function () {
     GraphUI.prototype.update_edge = function () {
     };
     GraphUI.prototype.test = function () {
-        ///////////////////////TEST///////////////////////
-        this.allUsers = [new user_1.User('0002', 'laumondais', 'thomas', null, null),
-            new user_1.User('0003', 'chaumont', 'pierre', null, null),
-            new user_1.User('0004', 'chipaux', 'germain', null, null),
-            new user_1.User('0005', 'thomas', 'valentin', null, null),
-            new user_1.User('0005', 'wahiba', 'bidah', null, null)];
-        this.graph = new graph_1.Graph(1, 'first');
-        var b1 = new branch_1.Branch();
-        b1.name = 'branch 1';
-        b1.color = '#234587';
-        var b2 = new branch_1.Branch();
-        b2.name = 'branch 2';
-        b2.color = '#123120';
+        var neo_init = "MATCH (u:User)-[r:RELTYPE*]->(n:Node) WHERE u.mail = 'benjamin.troquereau@gmail.com' RETURN n,r";
+        ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
+        var user = new user_1.User('benjamin.troquereau@gmail.com', 'Troquereau', 'Benjamin', null, null);
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        /// request to init the graph
+        var neo_init = "MATCH (u:User),(n:Node) WHERE u.mail = '" + user.matricule + "' AND (u)-[*]->(n) RETURN n";
+        var response;
+        jQuery.ajax({
+            type: "POST",
+            async: false,
+            url: "http://5.196.66.87/db/data/cypher",
+            contentType: "application/json",
+            data: JSON.stringify({ "query": neo_init, "params": {} }),
+            success: function (data) {
+                response = data.data;
+            }
+        });
+        console.log(response);
+        // hydratation des noeuds
         var nodes = new Array();
+        response.forEach(function (n) {
+            n.forEach(function (o) {
+                console.log(typeof o);
+                nodes.push(new node_1.NVNode(o.metadata.id, o.data.name, new branch_1.Branch('name', 'ffffff', 'Standard'), new Array()));
+            });
+        });
+        // hydratation des aretes
         var edges = new Array();
-        var n1 = new node_1.NVNode(1, 'un', b1, null, null, [new attribute_1.Attribute('one string', 'a string', 'string')], null, null);
-        var n2 = new node_1.NVNode(2, 'deux', b1, null, null, [new attribute_1.Attribute('one number', '12', 'number')], n1, null);
-        var n3 = new node_1.NVNode(3, 'trois', b1, null, null, [new attribute_1.Attribute('one boolean', 'true', 'boolean')], n1, null);
-        var n4 = new node_1.NVNode(4, 'un', b2, null, null, [new attribute_1.Attribute('one string', 'a string', 'string')], null, null);
-        var n5 = new node_1.NVNode(5, 'deux', b2, null, null, [new attribute_1.Attribute('one number', '12', 'number')], n4, null);
-        var n6 = new node_1.NVNode(6, 'trois', b2, null, null, [new attribute_1.Attribute('one boolean', 'true', 'boolean')], n4, null);
-        var e1 = new edge_1.NVEdge(1, 'link1', n1, n2);
-        var e2 = new edge_1.NVEdge(2, 'link2', n1, n3);
-        var e3 = new edge_1.NVEdge(3, 'link3', n4, n5);
-        var e4 = new edge_1.NVEdge(4, 'link4', n4, n6);
-        nodes.push(n1, n2, n3, n4, n5, n6);
-        edges.push(e1, e2, e3, e4);
+        //console.log(nodes)
+        ///////////////////////TEST///////////////////////
+        this.graph = new graph_1.Graph(1, 'first');
+        var e1 = new edge_1.NVEdge(1, 'link1', nodes[0], nodes[1]);
+        var e2 = new edge_1.NVEdge(2, 'link2', nodes[0], nodes[2]);
+        edges.push(e1, e2);
         this.graph.nodes = nodes;
         this.graph.edges = edges;
         ///////////////////////////////////////////////////
-        this.node = new node_1.NVNode(1, 'fire', b1, [new user_1.User('0001', 'troquereau', 'benjamin', new preferencepopup_1.PreferencePopup(true, false, false))], [new user_1.User('0001', 'troquereau', 'benjamin', new preferencepopup_1.PreferencePopup(true, false, false))], [new attribute_1.Attribute('Test', 'Test', 'Test')], null, null);
+        /* this.node = new NVNode(1,
+             'fire',
+             b1,
+             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
+             [new User('0001', 'troquereau', 'benjamin', new PreferencePopup(true, false, false))],
+             [new Attribute('Test', 'Test', 'Test')], null, null);*/
         ///////////////////////////////////////////////////
     };
     GraphUI = __decorate([
