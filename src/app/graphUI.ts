@@ -21,6 +21,7 @@ export class GraphUI {
     private url = "http://localhost:7474/db/data/";//http://5.196.66.87
     private width: number = 960;
     private height: number = 500;
+    private user : User;
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -203,7 +204,12 @@ export class GraphUI {
         this.branch.name = name;
         this.branch.color = color;
         
+        this.query(Action.create,this.branch)
+        
         var nd = new NVNode( this.branch,13, "Nouveau noeud",Array<Attribute>());
+        
+        //TODO ATTENTION nd sort de ma poche
+        
         this.branches.push(this.branch);
         this.graph.nodes.push(nd);
         this.redraw();
@@ -270,6 +276,7 @@ export class GraphUI {
                 case Action.create:
                     if(element instanceof NVNode) cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c"
                     if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM]->(t) RETURN r"                    
+                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u ";
                     break;
                 case Action.update:
                                       
@@ -300,11 +307,11 @@ export class GraphUI {
     public test() {
         var neo_init ="";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
-        var user = new User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
+        this.user = new User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+user.matricule+"' RETURN n,r,b")
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN n,r,b")
         console.log(response)
         this.graph = new Graph(1, 'first');         
         // hydratation des noeuds
@@ -326,9 +333,11 @@ export class GraphUI {
         // hydratation des arcs
         response.forEach(r => {
            r[1].forEach(e => {
-                var source = this.found(this.graph.nodes,e.start.split("/")[e.start.split("/").length - 1]);
-                var target = this.found(this.graph.nodes,e.end.split("/")[e.end.split("/").length - 1]);
-                if(source && target) this.graph.edges.push(new NVEdge(e.metadata.id,e.data.name,source,target));
+               if(!this.found(this.graph.edges,e.metadata.id)){
+                    var source = this.found(this.graph.nodes,e.start.split("/")[e.start.split("/").length - 1]);
+                    var target = this.found(this.graph.nodes,e.end.split("/")[e.end.split("/").length - 1]);
+                    if(source && target) this.graph.edges.push(new NVEdge(e.metadata.id,e.data.name,source,target));
+               }
             });
         });
          
