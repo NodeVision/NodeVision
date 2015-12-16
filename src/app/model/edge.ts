@@ -14,5 +14,5 @@ export class NVEdge implements d3.layout.force.Link<NVNode>{
         this.source = source;
         this.target = target;
     }
-    
+    get id(){ return this._id }
 }

@@ -18,6 +18,11 @@ var NVEdge = (function () {
         this.source = source;
         this.target = target;
     }
+    Object.defineProperty(NVEdge.prototype, "id", {
+        get: function () { return this._id; },
+        enumerable: true,
+        configurable: true
+    });
     NVEdge = __decorate([
         angular2_1.Injectable(), 
         __metadata('design:paramtypes', [Number, String, node_1.NVNode, node_1.NVNode])

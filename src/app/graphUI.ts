@@ -7,7 +7,8 @@ import {Graph} from './model/graph';
 import {Group} from './model/group';
 import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
-import {Modal} from './enum';
+import {Element} from './enum';
+import {Action} from './enum';
 @View({
     templateUrl: 'app/graphUI.html',
     directives: [CORE_DIRECTIVES]
@@ -17,6 +18,7 @@ import {Modal} from './enum';
 })
 export class GraphUI {
     //Container
+    private url = "http://localhost:7474/db/data/";//http://5.196.66.87
     private width: number = 960;
     private height: number = 500;
     //Graph
@@ -30,7 +32,7 @@ export class GraphUI {
     private new_link: boolean;
     //node Modal
     private nodemodalstate = false;
-    private nodemodal = Modal.node;
+    private nodemodal = Element.node;
     //attribut
     private title_state = false;
     private node: NVNode;
@@ -38,7 +40,7 @@ export class GraphUI {
     private allUsers: Array<User>;
     //branch Modal
     private branchmodalstate = false;
-    private branchmodal = Modal.branch;
+    private branchmodal = Element.branch;
     private branch = new Branch();
     //edge
     private edge: NVEdge;    
@@ -167,7 +169,8 @@ export class GraphUI {
     }
     public add_node() {
         //appel bdd (TEST)
-        var node = new NVNode(9999, 'test', this.node.branch, Array<Attribute>())//TODO Rempalcer
+        this.query(Action.create,new NVNode(new Branch('test','ff47f5','Standard')))
+        var node = new NVNode(this.node.branch, 9999, 'test', Array<Attribute>())//TODO Rempalcer
         var edge = new NVEdge(9999, 'blabla', this.node, node)//TODO Rempalcer
         
         //reconstruction
@@ -199,7 +202,7 @@ export class GraphUI {
         this.branch.name = name;
         this.branch.color = color;
         
-        var nd = new NVNode(13, "Nouveau noeud", this.branch, Array<Attribute>());
+        var nd = new NVNode( this.branch,13, "Nouveau noeud",Array<Attribute>());
         this.branches.push(this.branch);
         this.graph.nodes.push(nd);
         this.redraw();
@@ -255,32 +258,59 @@ export class GraphUI {
         });
         return tamp;
     }
+    public query(action:Action,element?:NVNode|NVEdge|Branch|User|Attribute,cypher?:string){
+        var response;
+        if(!cypher){
+            switch(action){
+                case Action.read:
+                    if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" RETURN n"
+                    if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" RETURN r"
+                    break;
+                case Action.create:
+                    if(element instanceof NVNode) cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c"
+                    if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source+" AND id(s)="+element.target+" CREATE (s)-[r:HIERARCHICAL]->(t) RETURN r"                    
+                    break;
+                case Action.update:
+                                      
+                    break;
+                case Action.delete:
+                    if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" delete n"
+                    if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" delete r"
+                    break; 
+            }
+        }
+        console.log(cypher)
+        jQuery.ajax({
+                type: 'POST',
+                url: this.url+"cypher",
+                async: false,
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify({"query":cypher, "params": {}}),
+                success: (data, textStatus, jqXHR) => {
+                    console.log(textStatus);
+                    response = data.data;
+                },
+                error: (jqXHR, textStatus, errorThrown) => {
+                    console.log(errorThrown);
+                }
+                });
+        return response;   
+    }
     public test() {
         var neo_init ="";
-        
-        
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
-        var user = new User('benjamin.troquereau@gmail.com', 'Troquereau', 'Benjamin', null, null);
+        var user = new User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
-        var neo_init = "MATCH (u:User)-[r:KNOWS | RELTYPE*]->(n:Node) WHERE u.mail = 'benjamin.troquereau@gmail.com' RETURN n,r"
-        var response;
-        jQuery.ajax({
-                    type: "POST",
-                    async: false,
-                    url: "http://5.196.66.87/db/data/cypher",
-                    contentType: "application/json",
-                    data: JSON.stringify({"query":neo_init, "params": {}}),
-                    success: (data) => {
-                        response = data.data;
-                    }
-                 });        
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS | HIERARCHICAL*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+user.matricule+"' RETURN n,r,b")
+        console.log(response)
         this.graph = new Graph(1, 'first');         
         // hydratation des noeuds
         response.forEach(n => {
-            this.graph.nodes.push(new NVNode(n[0].metadata.id,n[0].data.name,new Branch('name','ffffff','Standard'),new Array<Attribute>()));  
+            this.graph.nodes.push(new NVNode(new Branch(n[2].data.name,n[2].data.color,n[2].data.type,n[2].metadata.id),n[0].metadata.id,n[0].data.name,new Array<Attribute>()));  
         });
+        
         // hydratation des arcs
         response.forEach(r => {
            r[1].forEach(e => {
@@ -293,3 +323,17 @@ export class GraphUI {
     }
 }
 bootstrap(GraphUI);
+
+/*
+CREATE (u:User {matricule:'troquereaub@gmail.com',name:'Troquereau',firstname:'Benjamin'});
+CREATE (b:Branch {name:'b1',color:'AA11F6',type:'Standard'});
+CREATE (n:Node {name:'n1'});
+CREATE (n:Node {name:'n2'});
+CREATE (n:Node {name:'n3'});
+
+MATCH (s:User),(t:Node) WHERE t.name='n1' CREATE (s)-[r:KNOWS]->(t);
+MATCH (s:Branch),(t:Node) CREATE (s)-[r:BELONG]->(t);
+MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);
+MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n3' CREATE (s)-[r:HIERARCHICAL]->(t);
+
+*/

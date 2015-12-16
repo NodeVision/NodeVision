@@ -6,12 +6,13 @@ export class Branch {
     private _name: string;
     private _color: string; //#1f77b4
     private _type: string;
-    public types = ['Standard','User','Group','Temporal'];
+    public types = ['Standard','User','Group','Temporal']; // TODO METTRE AUTRE PART
 
-    constructor(name?: string, color?: string,type?:string) {
+    constructor(name?: string, color?: string,type?:string,id?:number) {
         if (name) this._name = name;
         if (color) this._color = color;
         if (type) this._type = 'Standard';
+        if (id) this._id = id;
     }
     get id() { return this._id }
     get name() { return this._name }

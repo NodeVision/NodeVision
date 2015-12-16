@@ -11,14 +11,15 @@ var Action = exports.Action;
     Status[Status["fail"] = 2] = "fail";
 })(exports.Status || (exports.Status = {}));
 var Status = exports.Status;
-(function (Modal) {
-    Modal[Modal["graph"] = 0] = "graph";
-    Modal[Modal["branch"] = 1] = "branch";
-    Modal[Modal["node"] = 2] = "node";
-    Modal[Modal["edge"] = 3] = "edge";
-    Modal[Modal["user"] = 4] = "user";
-})(exports.Modal || (exports.Modal = {}));
-var Modal = exports.Modal;
+(function (Element) {
+    Element[Element["graph"] = 0] = "graph";
+    Element[Element["branch"] = 1] = "branch";
+    Element[Element["node"] = 2] = "node";
+    Element[Element["edge"] = 3] = "edge";
+    Element[Element["attribut"] = 4] = "attribut";
+    Element[Element["user"] = 5] = "user";
+})(exports.Element || (exports.Element = {}));
+var Element = exports.Element;
 (function (EDGE_TYPE) {
     EDGE_TYPE[EDGE_TYPE["hierarchy"] = 0] = "hierarchy";
     EDGE_TYPE[EDGE_TYPE["custom"] = 1] = "custom";

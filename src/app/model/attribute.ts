@@ -1,5 +1,5 @@
 import {Injectable} from 'angular2/angular2';
-import {Modal} from '../enum';
+import {Element} from '../enum';
 import {Status} from '../enum';
 @Injectable()
 export class Attribute{
