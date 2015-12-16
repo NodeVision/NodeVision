@@ -158,6 +158,7 @@ export class GraphUI {
         if(source != target){  
             var edge = new NVEdge(2264, 'undfined', source, target);      
             this.graph.edges.push(edge);
+            this.query(Action.create,edge);
         }
         
     }
@@ -268,7 +269,7 @@ export class GraphUI {
                     break;
                 case Action.create:
                     if(element instanceof NVNode) cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c"
-                    if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source+" AND id(s)="+element.target+" CREATE (s)-[r:HIERARCHICAL]->(t) RETURN r"                    
+                    if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM]->(t) RETURN r"                    
                     break;
                 case Action.update:
                                       
@@ -303,12 +304,23 @@ export class GraphUI {
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS | HIERARCHICAL*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+user.matricule+"' RETURN n,r,b")
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+user.matricule+"' RETURN n,r,b")
         console.log(response)
         this.graph = new Graph(1, 'first');         
         // hydratation des noeuds
         response.forEach(n => {
-            this.graph.nodes.push(new NVNode(new Branch(n[2].data.name,n[2].data.color,n[2].data.type,n[2].metadata.id),n[0].metadata.id,n[0].data.name,new Array<Attribute>()));  
+            if(!this.found(this.graph.nodes,n[0].metadata.id)){
+                this.graph.nodes.push(new NVNode(
+                    new Branch(
+                        n[2].data.name,
+                        n[2].data.color,
+                        n[2].data.type,n[2].metadata.id),
+                    n[0].metadata.id,
+                    n[0].data.name,
+                    new Array<Attribute>()
+                    )
+                ); 
+            }
         });
         
         // hydratation des arcs
@@ -336,4 +348,7 @@ MATCH (s:Branch),(t:Node) CREATE (s)-[r:BELONG]->(t);
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n3' CREATE (s)-[r:HIERARCHICAL]->(t);
 
+//DELETE
+
+MATCH ()-[r]->(n) WHERE n.name='undefined' delete n,r
 */

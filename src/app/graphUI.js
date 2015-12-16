@@ -144,6 +144,7 @@ var GraphUI = (function () {
         if (source != target) {
             var edge = new edge_1.NVEdge(2264, 'undfined', source, target);
             this.graph.edges.push(edge);
+            this.query(enum_2.Action.create, edge);
         }
     };
     GraphUI.prototype.add_attribute = function () {
@@ -243,7 +244,7 @@ var GraphUI = (function () {
                     if (element instanceof node_1.NVNode)
                         cypher = "MATCH (n),(b) WHERE id(n)=" + this.node.id + " AND id(b)=" + this.node.branch.id + " CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
                     if (element instanceof edge_1.NVEdge)
-                        cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source + " AND id(s)=" + element.target + " CREATE (s)-[r:HIERARCHICAL]->(t) RETURN r";
+                        cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source.id + " AND id(t)=" + element.target.id + " CREATE (s)-[r:CUSTOM]->(t) RETURN r";
                     break;
                 case enum_2.Action.update:
                     break;
@@ -279,12 +280,14 @@ var GraphUI = (function () {
         var user = new user_1.User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// request to init the graph
-        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS | HIERARCHICAL*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + user.matricule + "' RETURN n,r,b");
+        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + user.matricule + "' RETURN n,r,b");
         console.log(response);
         this.graph = new graph_1.Graph(1, 'first');
         // hydratation des noeuds
         response.forEach(function (n) {
-            _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[2].data.name, n[2].data.color, n[2].data.type, n[2].metadata.id), n[0].metadata.id, n[0].data.name, new Array()));
+            if (!_this.found(_this.graph.nodes, n[0].metadata.id)) {
+                _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[2].data.name, n[2].data.color, n[2].data.type, n[2].metadata.id), n[0].metadata.id, n[0].data.name, new Array()));
+            }
         });
         // hydratation des arcs
         response.forEach(function (r) {
@@ -322,5 +325,8 @@ MATCH (s:Branch),(t:Node) CREATE (s)-[r:BELONG]->(t);
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n3' CREATE (s)-[r:HIERARCHICAL]->(t);
 
+//DELETE
+
+MATCH ()-[r]->(n) WHERE n.name='undefined' delete n,r
 */ 
 //# sourceMappingURL=graphUI.js.map
