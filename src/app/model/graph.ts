@@ -5,12 +5,14 @@ import {NVEdge} from './edge';
 export class Graph{
         private _id: number;
         private _name: string;
-        private _nodes: Array<NVNode> = new Array<NVNode>();
-        private _edges: Array<NVEdge> = new Array<NVEdge>();
+        private _nodes: NVNode[];// = new Array<NVNode>();
+        private _edges: NVEdge[];//Array<NVEdge> = new Array<NVEdge>();
 
         constructor(id: number, name: string) {   
             this._id = id;
             this._name = name;
+            this._nodes = [];
+            this._edges = [];
         }
         
         get nodes(){ return this._nodes;}

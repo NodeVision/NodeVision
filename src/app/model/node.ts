@@ -9,7 +9,7 @@ export class NVNode implements d3.layout.force.Node{
         private _node_attributs: Array<Attribute>;
         private _branch: Branch;
 
-        x: number;y: number;px: number;py: number;fixed: boolean;weight: number;
+        index: number;x: number;y: number;px: number;py: number;fixed: boolean;weight: number;
 
         constructor(branch: Branch,id?: number, name?: string,node_attributs?: Array<Attribute>) {
             this._id = id;

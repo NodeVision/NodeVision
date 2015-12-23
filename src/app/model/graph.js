@@ -12,10 +12,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var angular2_1 = require('angular2/angular2');
 var Graph = (function () {
     function Graph(id, name) {
-        this._nodes = new Array();
-        this._edges = new Array();
         this._id = id;
         this._name = name;
+        this._nodes = [];
+        this._edges = [];
     }
     Object.defineProperty(Graph.prototype, "nodes", {
         get: function () { return this._nodes; },

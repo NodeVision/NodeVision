@@ -23,6 +23,12 @@ var NVEdge = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(NVEdge.prototype, "name", {
+        get: function () { return this._name; },
+        set: function (name) { this._name = name; },
+        enumerable: true,
+        configurable: true
+    });
     NVEdge = __decorate([
         angular2_1.Injectable(), 
         __metadata('design:paramtypes', [Number, String, node_1.NVNode, node_1.NVNode])
