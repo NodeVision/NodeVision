@@ -130,7 +130,8 @@ var GraphUI = (function () {
     GraphUI.prototype.mousedown = function (n) {
         var _this = this;
         this.node = n;
-        if (d3.event.ctrlKey) {
+        console.log("lol");
+        if (d3.event.shiftKey) {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
@@ -160,9 +161,20 @@ var GraphUI = (function () {
             this.query(enum_2.Action.create, edge);
         }
     };
+    GraphUI.prototype.add_attribute_line = function () {
+        this.node.attributes.push(new attribute_1.Attribute(this.node.attributes.length + 1, '', '', ''));
+    };
     /** This is a description of the  function. */
-    GraphUI.prototype.add_attribute = function () {
-        this.node.attributes.push(new attribute_1.Attribute('', '', ''));
+    GraphUI.prototype.add_attribute = function (attribute_id, attribute_name, attribute_value, attribute_type) {
+        var foundAttribute = this.node.attributes.find(function (x) { return x.id == attribute_id; }) != null
+            ? this.node.attributes.find(function (x) { return x.id == attribute_id; })
+            : new attribute_1.Attribute(this.node.attributes.length + 1, attribute_name, attribute_value, attribute_type);
+        this.node.attributes.splice(this.node.attributes.findIndex(function (x) { return x.id == attribute_id; }), 1);
+        foundAttribute.name = attribute_name;
+        foundAttribute.type = attribute_type;
+        foundAttribute.value = attribute_value;
+        this.node.attributes.push(foundAttribute);
+        var response = this.query(enum_2.Action.create, foundAttribute);
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_attribute = function (attribute) {
@@ -201,6 +213,7 @@ var GraphUI = (function () {
     /** This is a description of the  function. */
     GraphUI.prototype.update_node = function (node_name) {
         this.node.name = node_name;
+        var response = this.query(enum_2.Action.update, this.node);
         this.title_state = false;
     };
     /** This is a description of the  function. */
