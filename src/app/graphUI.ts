@@ -185,12 +185,13 @@ export class GraphUI {
     /** This is a description of the  function. */
     public add_node() {
         //appel bdd (TEST)
+        console.log("bonjour");
         var response = this.query(Action.create,new NVNode(this.node.branch))
-        console.log(response[0][0])
+        //console.log(response);
         ////// TODO TODO TODO
-        var node = new NVNode(this.node.branch, 9999, 'test', Array<Attribute>())//TODO Rempalcer
-        var edge = new NVEdge(9999, 'blabla', this.node, node)//TODO Rempalcer
-        
+        var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>())//TODO Rempalcer
+        var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node)//TODO Rempalcer
+        console.log("aurevoir");
         //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
@@ -233,10 +234,7 @@ export class GraphUI {
         this.branch.id = response[0][0].metadata.id;
         this.branches.push(this.branch);
         //id node from the database
-        this.node = new NVNode(this.branch,null, "undefined",Array<Attribute>());
-        
-        var response = this.query(Action.create,this.node);
-        this.node.id = response[0][0].metadata.id; 
+        this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
         this.graph.nodes.push(this.node);
         
         this.redraw();
@@ -303,21 +301,9 @@ export class GraphUI {
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" RETURN r";
                     break;
                 case Action.create:
-                    if(element instanceof NVNode){
-                        var isFirstBranchNode = 0;
-                        this.graph.nodes.forEach((n:NVNode) => { if(n.branch == this.node.branch) isFirstBranchNode++ });
-                        
-                        //TODO ajouter dans les attributs les utilisateurs avec leurs droits {write : user, read : user}
-                        
-                        //Noeud créer à l'ajout de la branche
-                        if(isFirstBranchNode < 1) 
-                            cypher = "MATCH (n),(b),(u) WHERE id(b)="+this.node.branch.id+" AND u.matricule='"+this.user.matricule+"' CREATE (u)-[r:KNOW]->(n)<-[re:BELONG]-b RETURN n";
-                        //Noeud hierarchique 
-                        else 
-                            cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
-                    }
+                    if(element instanceof NVNode)cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
                     if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM]->(t) RETURN r";            
-                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b";
+                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
                     if(element instanceof Attribute){
                         var value="";
                         switch (element.type) {
@@ -348,8 +334,8 @@ export class GraphUI {
                     if(element instanceof NVNode) {
                         var isLastNode = 0;
                         this.graph.nodes.forEach((n:NVNode) => { if(n.branch == element.branch) isLastNode++ })
-                        
-                        if(isLastNode > 1) cypher = "MATCH (n) WHERE id(n)="+element.id+" detach delete n";
+                        console.log(isLastNode);
+                        if(isLastNode > 0) cypher = "MATCH (n) WHERE id(n)="+element.id+" detach delete n";
                         else  cypher = "MATCH (b),(n) WHERE id(b)="+element.branch.id+" AND (b)-->(n) detach delete b,n";
                     }
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" delete r";
@@ -435,3 +421,5 @@ MATCH (n) WHERE  id(n) <> 125 detach delete (n)
 MATCH ()-[r]-() delete (r)
 MATCH ()-[r]->(n) WHERE n.name='undefined' delete n,r
 */
+
+/*MATCH (n),(b),(u) WHERE id(b)="" AND u.matricule='troquereaub@gmail.com' CREATE (u)-[r:KNOW]->(n)<-[re:BELONG]-b RETURN n*/
