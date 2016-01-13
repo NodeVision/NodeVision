@@ -24,6 +24,7 @@ var Branch = (function () {
     }
     Object.defineProperty(Branch.prototype, "id", {
         get: function () { return this._id; },
+        set: function (id) { this._id = id; },
         enumerable: true,
         configurable: true
     });
