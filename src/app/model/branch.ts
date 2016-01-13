@@ -18,6 +18,7 @@ export class Branch {
     get name() { return this._name }
     get color() { return this._color }
     get type() { return this._type }
+    set id(id: number) { this._id = id }
     set name(name: string) { this._name = name }
     set color(color: string) { this._color = color }
     set type(type: string) { this._type = type }

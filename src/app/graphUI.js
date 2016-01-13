@@ -1,10 +1,8 @@
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -22,7 +20,7 @@ var GraphUI = (function () {
     function GraphUI() {
         var _this = this;
         //Container
-        this.url = "http://localhost:7474/db/data/"; //http://5.196.66.87
+        this.url = "http://5.196.66.87/db/data/"; //http://5.196.66.87
         this.width = 960;
         this.height = 500;
         //node Modal
@@ -81,7 +79,6 @@ var GraphUI = (function () {
             .on("mousedown", function (n) { _this.mousedown(n); })
             .call(this.force.drag)
             .on("mouseup", function (n) { _this.mouseupNode(n); })
-            .call(this.force.drag)
             .on("dblclick", function (n) { _this.nodemodalstate = true; });
         this.nodes.append("title").text(function (n) { return n.name; });
     };
@@ -172,7 +169,9 @@ var GraphUI = (function () {
     /** This is a description of the  function. */
     GraphUI.prototype.add_node = function () {
         //appel bdd (TEST)
-        this.query(enum_2.Action.create, new node_1.NVNode(new branch_1.Branch('test', 'ff47f5', 'Standard')));
+        var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
+        console.log(response[0][0]);
+        ////// TODO TODO TODO
         var node = new node_1.NVNode(this.node.branch, 9999, 'test', Array()); //TODO Rempalcer
         var edge = new edge_1.NVEdge(9999, 'blabla', this.node, node); //TODO Rempalcer
         //reconstruction
@@ -205,13 +204,18 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_branch = function (name, color) {
+        //branch input
         this.branch.name = name;
         this.branch.color = color;
-        this.query(enum_2.Action.create, this.branch);
-        var nd = new node_1.NVNode(this.branch, 13, "Nouveau noeud", Array());
-        //TODO ATTENTION nd sort de ma poche
+        //id branch from the database
+        var response = this.query(enum_2.Action.create, this.branch);
+        this.branch.id = response[0][0].metadata.id;
         this.branches.push(this.branch);
-        this.graph.nodes.push(nd);
+        //id node from the database
+        this.node = new node_1.NVNode(this.branch, null, "undefined", Array());
+        var response = this.query(enum_2.Action.create, this.node);
+        this.node.id = response[0][0].metadata.id;
+        this.graph.nodes.push(this.node);
         this.redraw();
         this.branchmodalstate = false;
     };
@@ -263,6 +267,7 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.query = function (action, element, cypher) {
+        var _this = this;
         var response;
         if (!cypher) {
             switch (action) {
@@ -273,12 +278,21 @@ var GraphUI = (function () {
                         cypher = "MATCH ()-[r]-() WHERE id(r)=" + element.id + " RETURN r";
                     break;
                 case enum_2.Action.create:
-                    if (element instanceof node_1.NVNode)
-                        cypher = "MATCH (n),(b) WHERE id(n)=" + this.node.id + " AND id(b)=" + this.node.branch.id + " CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
+                    if (element instanceof node_1.NVNode) {
+                        var isFirstBranchNode = 0;
+                        this.graph.nodes.forEach(function (n) { if (n.branch == _this.node.branch)
+                            isFirstBranchNode++; });
+                        //TODO ajouter dans les attributs les utilisateurs avec leurs droits {write : user, read : user}
+                        //Noeud créer à l'ajout de la branche
+                        if (isFirstBranchNode < 1)
+                            cypher = "MATCH (n),(b),(u) WHERE id(b)=" + this.node.branch.id + " AND u.matricule='" + this.user.matricule + "' CREATE (u)-[r:KNOW]->(n)<-[re:BELONG]-b RETURN n";
+                        else
+                            cypher = "MATCH (n),(b) WHERE id(n)=" + this.node.id + " AND id(b)=" + this.node.branch.id + " CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
+                    }
                     if (element instanceof edge_1.NVEdge)
                         cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source.id + " AND id(t)=" + element.target.id + " CREATE (s)-[r:CUSTOM]->(t) RETURN r";
                     if (element instanceof branch_1.Branch)
-                        cypher = "MATCH (u) WHERE u.matricule='" + this.user.matricule + "' CREATE (b:Branch {name:'" + this.branch.name + "',color:'" + this.branch.color + "',type:'" + this.branch.type + "'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u ";
+                        cypher = "MATCH (u) WHERE u.matricule='" + this.user.matricule + "' CREATE (b:Branch {name:'" + this.branch.name + "',color:'" + this.branch.color + "',type:'" + this.branch.type + "'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b";
                     if (element instanceof attribute_1.Attribute) {
                         var value = "";
                         switch (element.type) {
@@ -325,8 +339,15 @@ var GraphUI = (function () {
                     }
                     break;
                 case enum_2.Action.delete:
-                    if (element instanceof node_1.NVNode)
-                        cypher = "MATCH (n) WHERE id(n)=" + element.id + " detach delete n";
+                    if (element instanceof node_1.NVNode) {
+                        var isLastNode = 0;
+                        this.graph.nodes.forEach(function (n) { if (n.branch == element.branch)
+                            isLastNode++; });
+                        if (isLastNode > 1)
+                            cypher = "MATCH (n) WHERE id(n)=" + element.id + " detach delete n";
+                        else
+                            cypher = "MATCH (b),(n) WHERE id(b)=" + element.branch.id + " AND (b)-->(n) detach delete b,n";
+                    }
                     if (element instanceof edge_1.NVEdge)
                         cypher = "MATCH ()-[r]-() WHERE id(r)=" + element.id + " delete r";
                     if (element instanceof attribute_1.Attribute)
@@ -408,7 +429,8 @@ MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCH
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n3' CREATE (s)-[r:HIERARCHICAL]->(t);
 
 //DELETE
-
+MATCH (n) WHERE  id(n) <> 125 detach delete (n)
+MATCH ()-[r]-() delete (r)
 MATCH ()-[r]->(n) WHERE n.name='undefined' delete n,r
 */ 
 //# sourceMappingURL=graphUI.js.map
