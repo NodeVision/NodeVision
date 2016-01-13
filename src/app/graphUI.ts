@@ -143,7 +143,8 @@ export class GraphUI {
     /** This is a description of the  function. */
     public mousedown(n: NVNode) {
         this.node = n;
-        if (d3.event.ctrlKey) {
+        console.log("lol");
+        if (d3.event.shiftKey) {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
@@ -174,9 +175,24 @@ export class GraphUI {
         }
         
     }
+    public add_attribute_line(){
+        this.node.attributes.push(new Attribute(this.node.attributes.length+1,'','',''));
+    }
+    
     /** This is a description of the  function. */
-    public add_attribute() {
-        this.node.attributes.push(new Attribute('', '', ''));
+    public add_attribute(attribute_id, attribute_name, attribute_value, attribute_type) {
+        var foundAttribute = this.node.attributes.find(x => x.id == attribute_id) != null 
+        ? this.node.attributes.find(x => x.id == attribute_id) 
+        : new Attribute(this.node.attributes.length+1, attribute_name, attribute_value, attribute_type);
+        
+        this.node.attributes.splice(this.node.attributes.findIndex(x => x.id == attribute_id), 1);
+        
+        foundAttribute.name = attribute_name;
+        foundAttribute.type = attribute_type;
+        foundAttribute.value = attribute_value;
+        
+        this.node.attributes.push(foundAttribute);
+        var response = this.query(Action.create, foundAttribute);
     }
     /** This is a description of the  function. */
     public delete_attribute(attribute: Attribute) {
@@ -218,6 +234,7 @@ export class GraphUI {
     /** This is a description of the  function. */
     public update_node(node_name) {
         this.node.name = node_name;
+        var response = this.query(Action.update, this.node);
         this.title_state = false;
     }
     /** This is a description of the  function. */

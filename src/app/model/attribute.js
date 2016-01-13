@@ -9,13 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var angular2_1 = require('angular2/angular2');
 var Attribute = (function () {
-    function Attribute(name, value, type) {
+    function Attribute(id, name, value, type) {
+        this._id = id;
         this._name = name;
         this._value = value;
         this._type = type;
     }
-    Object.defineProperty(Attribute.prototype, "name", {
+    Object.defineProperty(Attribute.prototype, "id", {
         //TODO
+        get: function () { return this._id; },
+        set: function (id) { this._id = id; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Attribute.prototype, "name", {
         get: function () { return this._name; },
         set: function (name) { this._name = name; },
         enumerable: true,
@@ -35,7 +42,7 @@ var Attribute = (function () {
     });
     Attribute = __decorate([
         angular2_1.Injectable(), 
-        __metadata('design:paramtypes', [String, Object, String])
+        __metadata('design:paramtypes', [Number, String, Object, String])
     ], Attribute);
     return Attribute;
 })();
