@@ -90,7 +90,7 @@ var GraphUI = (function () {
         var _this = this;
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link");
+        links.enter().insert("line", ".node").attr("class", "link").on("mousedown", function (d) { alert("HEY"); });
         links.exit().remove();
         var nodes = this.nodes.data(this.force.nodes());
         nodes.enter().append("circle")
@@ -166,9 +166,7 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_attribute = function (attribute_id, attribute_name, attribute_value, attribute_type) {
-        var foundAttribute = this.node.attributes.find(function (x) { return x.id == attribute_id; }) != null
-            ? this.node.attributes.find(function (x) { return x.id == attribute_id; })
-            : new attribute_1.Attribute(this.node.attributes.length + 1, attribute_name, attribute_value, attribute_type);
+        var foundAttribute = this.node.attributes.find(function (x) { return x.id == attribute_id; });
         this.node.attributes.splice(this.node.attributes.findIndex(function (x) { return x.id == attribute_id; }), 1);
         foundAttribute.name = attribute_name;
         foundAttribute.type = attribute_type;
@@ -179,16 +177,15 @@ var GraphUI = (function () {
     /** This is a description of the  function. */
     GraphUI.prototype.delete_attribute = function (attribute) {
         this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
+        this.query(enum_2.Action.delete, attribute);
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_node = function () {
         //appel bdd (TEST)
         console.log("bonjour");
         var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
-        //console.log(response);
-        ////// TODO TODO TODO
-        var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array()); //TODO Rempalcer
-        var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node); //TODO Rempalcer
+        var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
+        var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
         console.log("aurevoir");
         //reconstruction
         this.graph.nodes.push(node);
@@ -388,17 +385,28 @@ var GraphUI = (function () {
         this.user = new user_1.User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// request to init the graph
-        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + this.user.matricule + "' RETURN n,r,b");
+        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + this.user.matricule + "' RETURN keys(n),n,r,b");
+        console.log("DEBUUUUUUUUUUUT");
+        console.log(response);
+        console.log("FINNNNNNNNNNNNNN");
         this.graph = new graph_1.Graph(1, 'graph');
         // hydratation des noeuds
+        var listAttribute = new Array();
         response.forEach(function (n) {
-            if (!_this.found(_this.graph.nodes, n[0].metadata.id)) {
-                _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[2].data.name, n[2].data.color, n[2].data.type, n[2].metadata.id), n[0].metadata.id, n[0].data.name, new Array()));
+            listAttribute.splice(0, listAttribute.length);
+            n[0].forEach(function (elt) {
+                if (n[0].indexOf(elt) != 0) {
+                    listAttribute.push(new attribute_1.Attribute(n[1].metadata.id, elt, n[1].data[elt]));
+                }
+            });
+            if (!_this.found(_this.graph.nodes, n[1].metadata.id)) {
+                _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[3].data.name, n[3].data.color, n[3].data.type, n[3].metadata.id), n[1].metadata.id, n[1].data.name, listAttribute));
+                console.log(listAttribute);
             }
         });
         // hydratation des arcs
         response.forEach(function (r) {
-            r[1].forEach(function (e) {
+            r[2].forEach(function (e) {
                 if (!_this.found(_this.graph.edges, e.metadata.id)) {
                     var source = _this.found(_this.graph.nodes, e.start.split("/")[e.start.split("/").length - 1]);
                     var target = _this.found(_this.graph.nodes, e.end.split("/")[e.end.split("/").length - 1]);

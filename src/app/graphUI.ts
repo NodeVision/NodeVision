@@ -81,8 +81,12 @@ export class GraphUI {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
+<<<<<<< HEAD
             .on("click", (e: NVEdge) => { this.edge = e ; console.log("tt") })
             .on("dblclick",(e:NVEdge) => { this.edgemodalstate = true });
+=======
+            .on("mousedown", function(d){ alert("HEYYYYYYYYY")});
+>>>>>>> origin/dev
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -101,7 +105,7 @@ export class GraphUI {
     public redraw() {
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link");
+        links.enter().insert("line", ".node").attr("class", "link").on("mousedown", function(d){alert("HEY")});
         links.exit().remove();
         
         var nodes = this.nodes.data(this.force.nodes());
@@ -181,10 +185,7 @@ export class GraphUI {
     
     /** This is a description of the  function. */
     public add_attribute(attribute_id, attribute_name, attribute_value, attribute_type) {
-        var foundAttribute = this.node.attributes.find(x => x.id == attribute_id) != null 
-        ? this.node.attributes.find(x => x.id == attribute_id) 
-        : new Attribute(this.node.attributes.length+1, attribute_name, attribute_value, attribute_type);
-        
+        var foundAttribute = this.node.attributes.find(x => x.id == attribute_id);
         this.node.attributes.splice(this.node.attributes.findIndex(x => x.id == attribute_id), 1);
         
         foundAttribute.name = attribute_name;
@@ -197,17 +198,17 @@ export class GraphUI {
     /** This is a description of the  function. */
     public delete_attribute(attribute: Attribute) {
         this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
+        this.query(Action.delete, attribute);
     }
     /** This is a description of the  function. */
     public add_node() {
         //appel bdd (TEST)
         console.log("bonjour");
-        var response = this.query(Action.create,new NVNode(this.node.branch))
-        //console.log(response);
-        ////// TODO TODO TODO
-        var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>())//TODO Rempalcer
-        var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node)//TODO Rempalcer
+        var response = this.query(Action.create,new NVNode(this.node.branch));
+        var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
+        var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
         console.log("aurevoir");
+        
         //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
@@ -387,28 +388,42 @@ export class GraphUI {
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN n,r,b")
-
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
+        console.log("DEBUUUUUUUUUUUT")
+        console.log(response);
+        console.log("FINNNNNNNNNNNNNN")
         this.graph = new Graph(1, 'graph');         
         // hydratation des noeuds
+        
+        var listAttribute = new Array<Attribute>();
         response.forEach(n => {
-            if(!this.found(this.graph.nodes,n[0].metadata.id)){
+                listAttribute.splice(0, listAttribute.length);
+                n[0].forEach(elt => {
+                    if(n[0].indexOf(elt) != 0)
+                    {
+                    listAttribute.push(new Attribute(n[1].metadata.id, elt,n[1].data[elt]));
+                    }
+                });
+                
+                if(!this.found(this.graph.nodes,n[1].metadata.id)){
                 this.graph.nodes.push(new NVNode(
                     new Branch(
-                        n[2].data.name,
-                        n[2].data.color,
-                        n[2].data.type,n[2].metadata.id),
-                    n[0].metadata.id,
-                    n[0].data.name,
-                    new Array<Attribute>()
+                        n[3].data.name,
+                        n[3].data.color,
+                        n[3].data.type,n[3].metadata.id),
+                    n[1].metadata.id,
+                    n[1].data.name,
+                    listAttribute
                     )
-                ); 
+                );
+                
+                console.log(listAttribute); 
             }
         });
         
         // hydratation des arcs
         response.forEach(r => {
-           r[1].forEach(e => {
+           r[2].forEach(e => {
                if(!this.found(this.graph.edges,e.metadata.id)){
                     var source = this.found(this.graph.nodes,e.start.split("/")[e.start.split("/").length - 1]);
                     var target = this.found(this.graph.nodes,e.end.split("/")[e.end.split("/").length - 1]);
