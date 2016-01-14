@@ -42,7 +42,9 @@ export class GraphUI {
     private branchmodal = Element.branch;
     private branch = new Branch();
     //edge
-    private edge: NVEdge;    
+    private edge: NVEdge;
+    private edgemodalstate = false;
+    private edgemodal = Element.edge; 
     //navbar
     private branches = new Array<Branch>();
 
@@ -66,8 +68,6 @@ export class GraphUI {
             .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
 
         this.init_graph();
-        console.log(this.graph.nodes)
-        console.log(this.nodes)
     }
     /** This is a description of the  function. */
     public init_graph() {
@@ -81,7 +81,8 @@ export class GraphUI {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
-            .on("click", (e: NVEdge) => { this.edge = e });
+            .on("click", (e: NVEdge) => { this.edge = e ; console.log("tt") })
+            .on("dblclick",(e:NVEdge) => { this.edgemodalstate = true });
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -143,7 +144,6 @@ export class GraphUI {
     /** This is a description of the  function. */
     public mousedown(n: NVNode) {
         this.node = n;
-        console.log("lol");
         if (d3.event.shiftKey) {
             this.nodes
                 .on('mousedown.drag', null)

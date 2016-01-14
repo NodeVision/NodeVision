@@ -34,6 +34,8 @@ var GraphUI = (function () {
         this.branchmodalstate = false;
         this.branchmodal = enum_1.Element.branch;
         this.branch = new branch_1.Branch();
+        this.edgemodalstate = false;
+        this.edgemodal = enum_1.Element.edge;
         //navbar
         this.branches = new Array();
         this.test(); //TODO remove appel de la base de données  
@@ -53,8 +55,6 @@ var GraphUI = (function () {
         this.svg
             .on('contextmenu', function () { _this.branchmodalstate = true; _this.branch = new branch_1.Branch('', '', 'Standard'); });
         this.init_graph();
-        console.log(this.graph.nodes);
-        console.log(this.nodes);
     }
     /** This is a description of the  function. */
     GraphUI.prototype.init_graph = function () {
@@ -69,7 +69,8 @@ var GraphUI = (function () {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
-            .on("click", function (e) { _this.edge = e; });
+            .on("click", function (e) { _this.edge = e; console.log("tt"); })
+            .on("dblclick", function (e) { _this.edgemodalstate = true; });
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -130,7 +131,6 @@ var GraphUI = (function () {
     GraphUI.prototype.mousedown = function (n) {
         var _this = this;
         this.node = n;
-        console.log("lol");
         if (d3.event.shiftKey) {
             this.nodes
                 .on('mousedown.drag', null)
