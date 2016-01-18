@@ -12,11 +12,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var angular2_1 = require('angular2/angular2');
 var branch_1 = require('./branch');
 var NVNode = (function () {
-    function NVNode(branch, id, name, node_attributs) {
+    function NVNode(branch, id, name, node_attributs, users) {
         this._id = id;
         this._name = name;
         this._node_attributs = node_attributs;
         this._branch = branch;
+        this._users = users;
     }
     Object.defineProperty(NVNode.prototype, "name", {
         //get & set
@@ -27,6 +28,7 @@ var NVNode = (function () {
     });
     Object.defineProperty(NVNode.prototype, "id", {
         get: function () { return this._id; },
+        set: function (id) { this._id = id; },
         enumerable: true,
         configurable: true
     });
@@ -40,9 +42,14 @@ var NVNode = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(NVNode.prototype, "users", {
+        get: function () { return this._users; },
+        enumerable: true,
+        configurable: true
+    });
     NVNode = __decorate([
         angular2_1.Injectable(), 
-        __metadata('design:paramtypes', [branch_1.Branch, Number, String, Array])
+        __metadata('design:paramtypes', [branch_1.Branch, Number, String, Array, Array])
     ], NVNode);
     return NVNode;
 })();

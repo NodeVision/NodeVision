@@ -22,7 +22,7 @@ var GraphUI = (function () {
     function GraphUI() {
         var _this = this;
         //Container
-        this.url = "http://localhost:7474/db/data/"; //http://5.196.66.87
+        this.url = "http://5.196.66.87/db/data/"; //http://5.196.66.87
         this.width = 960;
         this.height = 500;
         //node Modal
@@ -34,6 +34,8 @@ var GraphUI = (function () {
         this.branchmodalstate = false;
         this.branchmodal = enum_1.Element.branch;
         this.branch = new branch_1.Branch();
+        this.edgemodalstate = false;
+        this.edgemodal = enum_1.Element.edge;
         //navbar
         this.branches = new Array();
         this.test(); //TODO remove appel de la base de données  
@@ -53,8 +55,6 @@ var GraphUI = (function () {
         this.svg
             .on('contextmenu', function () { _this.branchmodalstate = true; _this.branch = new branch_1.Branch('', '', 'Standard'); });
         this.init_graph();
-        console.log(this.graph.nodes);
-        console.log(this.nodes);
     }
     /** This is a description of the  function. */
     GraphUI.prototype.init_graph = function () {
@@ -69,7 +69,8 @@ var GraphUI = (function () {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
-            .on("click", function (e) { _this.edge = e; });
+            .on("click", function (e) { _this.edge = e; console.log("tt"); })
+            .on("dblclick", function (e) { _this.edgemodalstate = true; });
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -81,7 +82,6 @@ var GraphUI = (function () {
             .on("mousedown", function (n) { _this.mousedown(n); })
             .call(this.force.drag)
             .on("mouseup", function (n) { _this.mouseupNode(n); })
-            .call(this.force.drag)
             .on("dblclick", function (n) { _this.nodemodalstate = true; });
         this.nodes.append("title").text(function (n) { return n.name; });
     };
@@ -90,7 +90,7 @@ var GraphUI = (function () {
         var _this = this;
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link");
+        links.enter().insert("line", ".node").attr("class", "link").on("mousedown", function (d) { alert("HEY"); });
         links.exit().remove();
         var nodes = this.nodes.data(this.force.nodes());
         nodes.enter().append("circle")
@@ -131,7 +131,7 @@ var GraphUI = (function () {
     GraphUI.prototype.mousedown = function (n) {
         var _this = this;
         this.node = n;
-        if (d3.event.ctrlKey) {
+        if (d3.event.shiftKey) {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
@@ -161,20 +161,32 @@ var GraphUI = (function () {
             this.query(enum_2.Action.create, edge);
         }
     };
+    GraphUI.prototype.add_attribute_line = function () {
+        this.node.attributes.push(new attribute_1.Attribute(this.node.attributes.length + 1, '', '', ''));
+    };
     /** This is a description of the  function. */
-    GraphUI.prototype.add_attribute = function () {
-        this.node.attributes.push(new attribute_1.Attribute('', '', ''));
+    GraphUI.prototype.add_attribute = function (attribute_id, attribute_name, attribute_value, attribute_type) {
+        var foundAttribute = this.node.attributes.find(function (x) { return x.id == attribute_id; });
+        this.node.attributes.splice(this.node.attributes.findIndex(function (x) { return x.id == attribute_id; }), 1);
+        foundAttribute.name = attribute_name;
+        foundAttribute.type = attribute_type;
+        foundAttribute.value = attribute_value;
+        this.node.attributes.push(foundAttribute);
+        var response = this.query(enum_2.Action.create, foundAttribute);
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_attribute = function (attribute) {
         this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
+        this.query(enum_2.Action.delete, attribute);
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_node = function () {
         //appel bdd (TEST)
-        this.query(enum_2.Action.create, new node_1.NVNode(new branch_1.Branch('test', 'ff47f5', 'Standard')));
-        var node = new node_1.NVNode(this.node.branch, 9999, 'test', Array()); //TODO Rempalcer
-        var edge = new edge_1.NVEdge(9999, 'blabla', this.node, node); //TODO Rempalcer
+        console.log("bonjour");
+        var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
+        var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
+        var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
+        console.log("aurevoir");
         //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
@@ -198,6 +210,7 @@ var GraphUI = (function () {
     /** This is a description of the  function. */
     GraphUI.prototype.update_node = function (node_name) {
         this.node.name = node_name;
+        var response = this.query(enum_2.Action.update, this.node);
         this.title_state = false;
     };
     /** This is a description of the  function. */
@@ -205,13 +218,16 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_branch = function (name, color) {
+        //branch input
         this.branch.name = name;
         this.branch.color = color;
-        this.query(enum_2.Action.create, this.branch);
-        var nd = new node_1.NVNode(this.branch, 13, "Nouveau noeud", Array());
-        //TODO ATTENTION nd sort de ma poche
+        //id branch from the database
+        var response = this.query(enum_2.Action.create, this.branch);
+        this.branch.id = response[0][0].metadata.id;
         this.branches.push(this.branch);
-        this.graph.nodes.push(nd);
+        //id node from the database
+        this.node = new node_1.NVNode(this.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
+        this.graph.nodes.push(this.node);
         this.redraw();
         this.branchmodalstate = false;
     };
@@ -278,7 +294,7 @@ var GraphUI = (function () {
                     if (element instanceof edge_1.NVEdge)
                         cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source.id + " AND id(t)=" + element.target.id + " CREATE (s)-[r:CUSTOM]->(t) RETURN r";
                     if (element instanceof branch_1.Branch)
-                        cypher = "MATCH (u) WHERE u.matricule='" + this.user.matricule + "' CREATE (b:Branch {name:'" + this.branch.name + "',color:'" + this.branch.color + "',type:'" + this.branch.type + "'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u ";
+                        cypher = "MATCH (u) WHERE u.matricule='" + this.user.matricule + "' CREATE (b:Branch {name:'" + this.branch.name + "',color:'" + this.branch.color + "',type:'" + this.branch.type + "'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
                     if (element instanceof attribute_1.Attribute) {
                         var value = "";
                         switch (element.type) {
@@ -325,8 +341,16 @@ var GraphUI = (function () {
                     }
                     break;
                 case enum_2.Action.delete:
-                    if (element instanceof node_1.NVNode)
-                        cypher = "MATCH (n) WHERE id(n)=" + element.id + " detach delete n";
+                    if (element instanceof node_1.NVNode) {
+                        var isLastNode = 0;
+                        this.graph.nodes.forEach(function (n) { if (n.branch == element.branch)
+                            isLastNode++; });
+                        console.log(isLastNode);
+                        if (isLastNode > 0)
+                            cypher = "MATCH (n) WHERE id(n)=" + element.id + " detach delete n";
+                        else
+                            cypher = "MATCH (b),(n) WHERE id(b)=" + element.branch.id + " AND (b)-->(n) detach delete b,n";
+                    }
                     if (element instanceof edge_1.NVEdge)
                         cypher = "MATCH ()-[r]-() WHERE id(r)=" + element.id + " delete r";
                     if (element instanceof attribute_1.Attribute)
@@ -361,17 +385,28 @@ var GraphUI = (function () {
         this.user = new user_1.User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// request to init the graph
-        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + this.user.matricule + "' RETURN n,r,b");
+        var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + this.user.matricule + "' RETURN keys(n),n,r,b");
+        console.log("DEBUUUUUUUUUUUT");
+        console.log(response);
+        console.log("FINNNNNNNNNNNNNN");
         this.graph = new graph_1.Graph(1, 'graph');
         // hydratation des noeuds
+        var listAttribute = new Array();
         response.forEach(function (n) {
-            if (!_this.found(_this.graph.nodes, n[0].metadata.id)) {
-                _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[2].data.name, n[2].data.color, n[2].data.type, n[2].metadata.id), n[0].metadata.id, n[0].data.name, new Array()));
+            listAttribute.splice(0, listAttribute.length);
+            n[0].forEach(function (elt) {
+                if (n[0].indexOf(elt) != 0) {
+                    listAttribute.push(new attribute_1.Attribute(n[1].metadata.id, elt, n[1].data[elt]));
+                }
+            });
+            if (!_this.found(_this.graph.nodes, n[1].metadata.id)) {
+                _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[3].data.name, n[3].data.color, n[3].data.type, n[3].metadata.id), n[1].metadata.id, n[1].data.name, listAttribute));
+                console.log(listAttribute);
             }
         });
         // hydratation des arcs
         response.forEach(function (r) {
-            r[1].forEach(function (e) {
+            r[2].forEach(function (e) {
                 if (!_this.found(_this.graph.edges, e.metadata.id)) {
                     var source = _this.found(_this.graph.nodes, e.start.split("/")[e.start.split("/").length - 1]);
                     var target = _this.found(_this.graph.nodes, e.end.split("/")[e.end.split("/").length - 1]);
@@ -408,7 +443,9 @@ MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCH
 MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n3' CREATE (s)-[r:HIERARCHICAL]->(t);
 
 //DELETE
-
+MATCH (n) WHERE  id(n) <> 125 detach delete (n)
+MATCH ()-[r]-() delete (r)
 MATCH ()-[r]->(n) WHERE n.name='undefined' delete n,r
-*/ 
+*/
+/*MATCH (n),(b),(u) WHERE id(b)="" AND u.matricule='troquereaub@gmail.com' CREATE (u)-[r:KNOW]->(n)<-[re:BELONG]-b RETURN n*/ 
 //# sourceMappingURL=graphUI.js.map
