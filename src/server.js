@@ -1,7 +1,7 @@
-/// <reference path="lib/express.d.ts" />
-/// <reference path="lib/serve-static.d.ts" />
-/// <reference path="lib/mime.d.ts" />
-/// <reference path="lib/socketIO.d.ts" />
+/// <reference path="./lib/express.d.ts" />
+/// <reference path="./lib/serve-static.d.ts" />
+/// <reference path="./lib/mime.d.ts" />
+/// <reference path="./lib/socketIO.d.ts" />
 var express = require("express");
 var sio = require("socket.io");
 var http = require("http");
@@ -10,6 +10,7 @@ var Server = (function () {
         this.app = express();
         this.httpServer = http.createServer(this.app);
         this.io = sio.listen(this.httpServer);
+        console.log();
         //routage sur index.html
         this.app.get('/', function (req, res) {
             res.sendFile(__dirname + '/index.html');
@@ -24,8 +25,8 @@ var Server = (function () {
             });
         });
         //montage du server
-        this.httpServer.listen(52310, function () {
-            console.log('listening on *:52310');
+        this.httpServer.listen(8080, function () {
+            console.log('listening on *:8080');
         });
     }
     return Server;

@@ -4,7 +4,7 @@
         <meta http-equiv="content-type" content="text/html; charset=UTF8">
         <title>NgNodeVision</title>
 
-        <!-- <script src="http://localhost:52310/node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script> -->
+        <script src="../node_modules/socket.io-client/socket.io.js"></script>
 
         <script src="./lib/js/jquery-2.1.4.min.js"></script>
         
@@ -31,6 +31,9 @@
             packages: {'app': {defaultExtension: 'js'}}
           });
           System.import('app/graphUI');
+          
+        //   var socket = io();
+        var socket = io.connect('http://localhost:8080', {resource: 'nodejs'});
         </script>
     </head>
     <body oncontextmenu="return false">

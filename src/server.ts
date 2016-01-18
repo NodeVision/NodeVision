@@ -1,7 +1,7 @@
-/// <reference path="lib/express.d.ts" />
-/// <reference path="lib/serve-static.d.ts" />
-/// <reference path="lib/mime.d.ts" />
-/// <reference path="lib/socketIO.d.ts" />
+/// <reference path="./lib/express.d.ts" />
+/// <reference path="./lib/serve-static.d.ts" />
+/// <reference path="./lib/mime.d.ts" />
+/// <reference path="./lib/socketIO.d.ts" />
 
 import * as express from "express";
 import * as sio from "socket.io";
@@ -13,6 +13,7 @@ class Server {
     private io = sio.listen(this.httpServer);
 
     constructor() {
+        console.log();
         //routage sur index.html
         this.app.get('/', function (req, res) {
             res.sendFile(__dirname + '/index.html');
@@ -27,8 +28,8 @@ class Server {
             });
         });
         //montage du server
-        this.httpServer.listen(52310, function () {
-            console.log('listening on *:52310');
+        this.httpServer.listen(8080, function () {
+            console.log('listening on *:8080');
         });
     }
 }

@@ -81,12 +81,9 @@ export class GraphUI {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
-<<<<<<< HEAD
             .on("click", (e: NVEdge) => { this.edge = e ; console.log("tt") })
             .on("dblclick",(e:NVEdge) => { this.edgemodalstate = true });
-=======
-            .on("mousedown", function(d){ alert("HEYYYYYYYYY")});
->>>>>>> origin/dev
+
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
