@@ -61,14 +61,12 @@ var GraphUI = (function () {
         });
         this.socket.on('add node clt', function (node, edge) {
             console.log('add node clt');
-            // var n = JSON.parse(node);
+            //hydratation
             var b = new branch_1.Branch(node._branch._name, node._branch._color, node._branch._type, node._branch._id);
             var nt = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
             var ns = _this.graph.nodes.find(function (x) { return x.id == edge.source._id; });
             var e = new edge_1.NVEdge(edge._id, edge.name, ns, nt);
-            //var e = new NVEdge(edge._id,edge.name,edge.source,n) //TODO c'est ici faire une boucle sur le this.graph.node pour fabriquer le edge
-            //  var o = JSON.parse(edge);
-            // var NEdge = new NVEdge(o._id,o._name,o._source,o._target);
+            //add to graph
             _this.graph.nodes.push(nt);
             _this.graph.edges.push(e);
             _this.redraw();
@@ -87,8 +85,10 @@ var GraphUI = (function () {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
-            .on("click", function (e) { _this.edge = e; console.log("tt"); })
-            .on("dblclick", function (e) { _this.edgemodalstate = true; });
+            .on("click", function (e) { _this.edge = e; })
+            .on("dblclick", function (e) { _this.edgemodalstate = true; })
+            .style("stroke", "999")
+            .style("stroke-width", "5");
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -108,7 +108,11 @@ var GraphUI = (function () {
         var _this = this;
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link").on("mousedown", function (d) { alert("HEY"); });
+        links.enter().insert("line", ".node").attr("class", "link")
+            .on("click", function (e) { _this.edge = e; })
+            .on("dblclick", function (e) { _this.edgemodalstate = true; })
+            .style("stroke", "999")
+            .style("stroke-width", "5");
         links.exit().remove();
         var nodes = this.nodes.data(this.force.nodes());
         nodes.enter().append("circle")
@@ -150,16 +154,18 @@ var GraphUI = (function () {
         var _this = this;
         this.node = n;
         if (d3.event.shiftKey) {
-            this.nodes
-                .on('mousedown.drag', null)
-                .on('touchstart.drag', null);
-            this.new_link = true;
             this.line = this.svg.append("line")
                 .attr("class", "link")
+                .style("stroke", "999")
+                .style("stroke-width", "5")
                 .attr("x1", n.x)
                 .attr("y1", n.y)
                 .attr("x2", n.x)
                 .attr("y2", n.y);
+            this.nodes
+                .on('mousedown.drag', null)
+                .on('touchstart.drag', null);
+            this.new_link = true;
             this.svg.on("mousemove", function () { _this.mousemove(); });
         }
     };
@@ -308,9 +314,9 @@ var GraphUI = (function () {
                     break;
                 case enum_2.Action.create:
                     if (element instanceof node_1.NVNode)
-                        cypher = "MATCH (n),(b) WHERE id(n)=" + this.node.id + " AND id(b)=" + this.node.branch.id + " CREATE n-[r:HIERARCHICAL]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
+                        cypher = "MATCH (n),(b) WHERE id(n)=" + this.node.id + " AND id(b)=" + this.node.branch.id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
                     if (element instanceof edge_1.NVEdge)
-                        cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source.id + " AND id(t)=" + element.target.id + " CREATE (s)-[r:CUSTOM]->(t) RETURN r";
+                        cypher = "MATCH (s:Node),(t:Node) WHERE id(s)=" + element.source.id + " AND id(t)=" + element.target.id + " CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";
                     if (element instanceof branch_1.Branch)
                         cypher = "MATCH (u) WHERE u.matricule='" + this.user.matricule + "' CREATE (b:Branch {name:'" + this.branch.name + "',color:'" + this.branch.color + "',type:'" + this.branch.type + "'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
                     if (element instanceof attribute_1.Attribute) {
@@ -425,7 +431,7 @@ var GraphUI = (function () {
                     var source = _this.found(_this.graph.nodes, e.start.split("/")[e.start.split("/").length - 1]);
                     var target = _this.found(_this.graph.nodes, e.end.split("/")[e.end.split("/").length - 1]);
                     if (source && target)
-                        _this.graph.edges.push(new edge_1.NVEdge(e.metadata.id, e.data.name, source, target));
+                        _this.graph.edges.push(new edge_1.NVEdge(e.metadata.id, e.data.name, source, target, e.metadata.type));
                 }
             });
         });

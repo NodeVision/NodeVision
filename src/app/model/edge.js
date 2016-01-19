@@ -12,11 +12,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var angular2_1 = require('angular2/angular2');
 var node_1 = require('./node');
 var NVEdge = (function () {
-    function NVEdge(id, name, source, target) {
+    function NVEdge(id, name, source, target, type) {
         this._id = id;
         this._name = name;
         this.source = source;
         this.target = target;
+        this._type = type;
     }
     Object.defineProperty(NVEdge.prototype, "id", {
         get: function () { return this._id; },
@@ -29,9 +30,14 @@ var NVEdge = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(NVEdge.prototype, "type", {
+        get: function () { return this._type; },
+        enumerable: true,
+        configurable: true
+    });
     NVEdge = __decorate([
         angular2_1.Injectable(), 
-        __metadata('design:paramtypes', [Number, String, node_1.NVNode, node_1.NVNode])
+        __metadata('design:paramtypes', [Number, String, node_1.NVNode, node_1.NVNode, String])
     ], NVEdge);
     return NVEdge;
 })();
