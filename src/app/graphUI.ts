@@ -10,7 +10,7 @@ import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
 import {Action} from './enum';
 @View({
-    templateUrl: 'app/graphUI.html',
+    templateUrl: 'html/graphUI.html',
     directives: [CORE_DIRECTIVES]
 })
 @Component({

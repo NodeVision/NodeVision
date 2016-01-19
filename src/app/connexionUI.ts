@@ -1,6 +1,6 @@
 import {bootstrap,View, Component,CORE_DIRECTIVES} from 'angular2/angular2';
 @View({
-  templateUrl: 'app/connexionUI.html',
+  templateUrl: 'html/connexionUI.html',
   directives: [CORE_DIRECTIVES]
 })
 @Component({
