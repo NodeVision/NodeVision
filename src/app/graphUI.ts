@@ -17,6 +17,7 @@ import {Action} from './enum';
     selector: 'graph'
 })
 export class GraphUI {
+
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = 960;
