@@ -38,7 +38,7 @@ var GraphUI = (function () {
         this.edgemodal = enum_1.Element.edge;
         //navbar
         this.branches = new Array();
-        this.test(); //TODO remove appel de la base de données  
+        this.bdd(); //TODO remove appel de la base de données  
         //navbar branches
         var b = new Array();
         this.graph.nodes.forEach(function (n) {
@@ -55,6 +55,24 @@ var GraphUI = (function () {
         this.svg
             .on('contextmenu', function () { _this.branchmodalstate = true; _this.branch = new branch_1.Branch('', '', 'Standard'); });
         this.init_graph();
+        this.socket = io.connect('http://localhost:8888', { resource: 'nodejs' });
+        this.socket.on('tests', function () {
+            console.log('testclientbroadcast');
+        });
+        this.socket.on('add node clt', function (node, edge) {
+            console.log('add node clt');
+            // var n = JSON.parse(node);
+            var b = new branch_1.Branch(node._branch._name, node._branch._color, node._branch._type, node._branch._id);
+            var NNode = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
+            console.log(node);
+            console.log(NNode);
+            console.log(edge);
+            //  var o = JSON.parse(edge);
+            // var NEdge = new NVEdge(o._id,o._name,o._source,o._target);
+            _this.graph.nodes.push(NNode);
+            _this.graph.edges.push(edge);
+            _this.redraw();
+        });
     }
     /** This is a description of the  function. */
     GraphUI.prototype.init_graph = function () {
@@ -181,12 +199,13 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_node = function () {
-        //appel bdd (TEST)
-        console.log("bonjour");
         var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
         var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
         var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        console.log("aurevoir");
+        console.log(node);
+        console.log(JSON.stringify(node));
+        console.log(edge);
+        this.socket.emit('add node srv', node, edge);
         //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
@@ -206,6 +225,8 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_node_and_sons = function () {
+        this.socket.emit('test');
+        console.log("je passe");
     };
     /** This is a description of the  function. */
     GraphUI.prototype.update_node = function (node_name) {
@@ -360,7 +381,6 @@ var GraphUI = (function () {
                     break;
             }
         }
-        console.log(cypher);
         jQuery.ajax({
             type: 'POST',
             url: this.url + "cypher",
@@ -378,7 +398,7 @@ var GraphUI = (function () {
         return response;
     };
     /** This is a description of the  function. */
-    GraphUI.prototype.test = function () {
+    GraphUI.prototype.bdd = function () {
         var _this = this;
         var neo_init = "";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
@@ -386,9 +406,6 @@ var GraphUI = (function () {
         ////////////////////////////////////////////////////////////////////////////////////////////
         /// request to init the graph
         var response = this.query(enum_2.Action.read, null, "MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '" + this.user.matricule + "' RETURN keys(n),n,r,b");
-        console.log("DEBUUUUUUUUUUUT");
-        console.log(response);
-        console.log("FINNNNNNNNNNNNNN");
         this.graph = new graph_1.Graph(1, 'graph');
         // hydratation des noeuds
         var listAttribute = new Array();
