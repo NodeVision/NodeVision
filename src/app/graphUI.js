@@ -378,7 +378,6 @@ var GraphUI = (function () {
                         var isLastNode = 0;
                         this.graph.nodes.forEach(function (n) { if (n.branch == element.branch)
                             isLastNode++; });
-                        console.log(isLastNode);
                         if (isLastNode > 0)
                             cypher = "MATCH (n) WHERE id(n)=" + element.id + " detach delete n";
                         else
@@ -430,7 +429,6 @@ var GraphUI = (function () {
             });
             if (!_this.found(_this.graph.nodes, n[1].metadata.id)) {
                 _this.graph.nodes.push(new node_1.NVNode(new branch_1.Branch(n[3].data.name, n[3].data.color, n[3].data.type, n[3].metadata.id), n[1].metadata.id, n[1].data.name, listAttribute));
-                console.log(listAttribute);
             }
         });
         // hydratation des arcs

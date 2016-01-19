@@ -377,7 +377,6 @@ export class GraphUI {
                     if(element instanceof NVNode) {
                         var isLastNode = 0;
                         this.graph.nodes.forEach((n:NVNode) => { if(n.branch == element.branch) isLastNode++ })
-                        console.log(isLastNode);
                         if(isLastNode > 0) cypher = "MATCH (n) WHERE id(n)="+element.id+" detach delete n";
                         else  cypher = "MATCH (b),(n) WHERE id(b)="+element.branch.id+" AND (b)-->(n) detach delete b,n";
                     }
@@ -436,8 +435,6 @@ export class GraphUI {
                     listAttribute
                     )
                 );
-                
-                console.log(listAttribute); 
             }
         });
         
