@@ -313,7 +313,12 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public delete_edge() {
-
+        this.query(Action.delete,this.edge)
+        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.edge.source) || (l.target === this.edge.target); });
+        toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
+        this.edgemodalstate = false;
+     
+        this.redraw();
     }
     /** This is a description of the  function. */
     public update_edge(edgename:string) {

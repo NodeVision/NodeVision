@@ -288,6 +288,12 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_edge = function () {
+        var _this = this;
+        this.query(enum_2.Action.delete, this.edge);
+        var toSplice = this.graph.edges.filter(function (l) { return (l.source === _this.edge.source) || (l.target === _this.edge.target); });
+        toSplice.map(function (l) { _this.graph.edges.splice(_this.graph.edges.indexOf(l), 1); });
+        this.edgemodalstate = false;
+        this.redraw();
     };
     /** This is a description of the  function. */
     GraphUI.prototype.update_edge = function (edgename) {
