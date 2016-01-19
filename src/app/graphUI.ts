@@ -48,9 +48,10 @@ export class GraphUI {
     private edgemodal = Element.edge; 
     //navbar
     private branches = new Array<Branch>();
+    private socket;
 
     constructor() {
-        this.test(); //TODO remove appel de la base de données  
+        this.bdd(); //TODO remove appel de la base de données  
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
@@ -61,7 +62,6 @@ export class GraphUI {
                 this.branches.push(br);
             }
         });
-        
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
@@ -69,6 +69,24 @@ export class GraphUI {
             .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
 
         this.init_graph();
+        this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});   
+        this.socket.on('tests', function () {
+             console.log('testclientbroadcast');
+        });
+        this.socket.on('add node clt', (node, edge) => {
+            console.log('add node clt');
+           // var n = JSON.parse(node);
+            var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+            var NNode = new NVNode(b,node._id,node._name,node._node_attributs);
+            console.log(node);
+            console.log(NNode);
+            console.log(edge);
+           //  var o = JSON.parse(edge);
+            // var NEdge = new NVEdge(o._id,o._name,o._source,o._target);
+            this.graph.nodes.push(NNode);
+            this.graph.edges.push(edge);
+            this.redraw();
+        });
     }
     /** This is a description of the  function. */
     public init_graph() {
@@ -200,13 +218,13 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_node() {
-        //appel bdd (TEST)
-        console.log("bonjour");
         var response = this.query(Action.create,new NVNode(this.node.branch));
         var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
         var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        console.log("aurevoir");
-        
+        console.log(node);
+        console.log(JSON.stringify(node);
+        console.log(edge);
+        this.socket.emit('add node srv',node,edge);
         //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
@@ -228,7 +246,8 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public delete_node_and_sons() {
-
+        this.socket.emit('test');
+        console.log("je passe");
     }
     /** This is a description of the  function. */
     public update_node(node_name) {
@@ -360,7 +379,6 @@ export class GraphUI {
                     break; 
             }
         }
-        console.log(cypher)
         jQuery.ajax({
                 type: 'POST',
                 url: this.url+"cypher",
@@ -379,7 +397,7 @@ export class GraphUI {
         return response;   
     }
     /** This is a description of the  function. */
-    public test() {
+    public bdd() {
         var neo_init ="";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
         this.user = new User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
@@ -387,9 +405,6 @@ export class GraphUI {
         
         /// request to init the graph
         var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
-        console.log("DEBUUUUUUUUUUUT")
-        console.log(response);
-        console.log("FINNNNNNNNNNNNNN")
         this.graph = new Graph(1, 'graph');         
         // hydratation des noeuds
         
