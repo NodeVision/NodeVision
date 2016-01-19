@@ -290,7 +290,10 @@ var GraphUI = (function () {
     GraphUI.prototype.delete_edge = function () {
     };
     /** This is a description of the  function. */
-    GraphUI.prototype.update_edge = function () {
+    GraphUI.prototype.update_edge = function (edgename) {
+        this.edge.name = edgename;
+        var response = this.query(enum_2.Action.update, this.edge);
+        this.title_state = false;
     };
     /** This is a description of the  function. */
     GraphUI.prototype.found = function (array, value) {

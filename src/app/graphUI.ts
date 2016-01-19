@@ -252,7 +252,7 @@ export class GraphUI {
         console.log("je passe");
     }
     /** This is a description of the  function. */
-    public update_node(node_name) {
+    public update_node(node_name:string) {
         this.node.name = node_name;
         var response = this.query(Action.update, this.node);
         this.title_state = false;
@@ -316,9 +316,10 @@ export class GraphUI {
 
     }
     /** This is a description of the  function. */
-    public update_edge() {
-
-
+    public update_edge(edgename:string) {
+        this.edge.name = edgename;
+        var response = this.query(Action.update, this.edge);
+        this.title_state = false;
     }
     /** This is a description of the  function. */
     public found(array:any[],value:any){
