@@ -70,21 +70,22 @@ export class GraphUI {
 
         this.init_graph();
         this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});   
-        this.socket.on('tests', function () {
+        this.socket.on('tests', () => {
              console.log('testclientbroadcast');
         });
         this.socket.on('add node clt', (node, edge) => {
             console.log('add node clt');
            // var n = JSON.parse(node);
             var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
-            var NNode = new NVNode(b,node._id,node._name,node._node_attributs);
-            console.log(node);
-            console.log(NNode);
-            console.log(edge);
+            var nt = new NVNode(b,node._id,node._name,node._node_attributs);
+            var ns = this.graph.nodes.find(x => x.id == edge.source._id)
+            var e = new NVEdge(edge._id,edge.name,ns,nt)
+            //var e = new NVEdge(edge._id,edge.name,edge.source,n) //TODO c'est ici faire une boucle sur le this.graph.node pour fabriquer le edge
+
            //  var o = JSON.parse(edge);
             // var NEdge = new NVEdge(o._id,o._name,o._source,o._target);
-            this.graph.nodes.push(NNode);
-            this.graph.edges.push(edge);
+            this.graph.nodes.push(nt);
+            this.graph.edges.push(e);
             this.redraw();
         });
     }
@@ -221,9 +222,6 @@ export class GraphUI {
         var response = this.query(Action.create,new NVNode(this.node.branch));
         var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
         var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        console.log(node);
-        console.log(JSON.stringify(node);
-        console.log(edge);
         this.socket.emit('add node srv',node,edge);
         //reconstruction
         this.graph.nodes.push(node);

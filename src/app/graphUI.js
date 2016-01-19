@@ -63,14 +63,14 @@ var GraphUI = (function () {
             console.log('add node clt');
             // var n = JSON.parse(node);
             var b = new branch_1.Branch(node._branch._name, node._branch._color, node._branch._type, node._branch._id);
-            var NNode = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
-            console.log(node);
-            console.log(NNode);
-            console.log(edge);
+            var nt = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
+            var ns = _this.graph.nodes.find(function (x) { return x.id == edge.source._id; });
+            var e = new edge_1.NVEdge(edge._id, edge.name, ns, nt);
+            //var e = new NVEdge(edge._id,edge.name,edge.source,n) //TODO c'est ici faire une boucle sur le this.graph.node pour fabriquer le edge
             //  var o = JSON.parse(edge);
             // var NEdge = new NVEdge(o._id,o._name,o._source,o._target);
-            _this.graph.nodes.push(NNode);
-            _this.graph.edges.push(edge);
+            _this.graph.nodes.push(nt);
+            _this.graph.edges.push(e);
             _this.redraw();
         });
     }
@@ -202,9 +202,6 @@ var GraphUI = (function () {
         var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
         var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
         var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        console.log(node);
-        console.log(JSON.stringify(node));
-        console.log(edge);
         this.socket.emit('add node srv', node, edge);
         //reconstruction
         this.graph.nodes.push(node);
