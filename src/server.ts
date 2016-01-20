@@ -29,13 +29,12 @@ class Server {
             });
 
             socket.on('del node srv', (node) => {
-                console.log('del node srv');
                 socket.broadcast.emit('del node clt', node);
             });
 
-            socket.on('test', () => {
-                console.log('testserveur');
-                socket.broadcast.emit('tests');
+            socket.on('up node srv', (node, name) => {
+                console.log("coté serveur ok");
+                socket.broadcast.emit('up node clt', node, name);
             });
 
             socket.on('disconnect', function () {
