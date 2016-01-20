@@ -40,6 +40,9 @@ class Server {
                 socket.broadcast.emit('add branch clt', node);
             });
 
+            socket.on('del branch srv', (branch) => {
+                socket.broadcast.emit('del branch clt', branch);
+            });
             
 
             socket.on('disconnect', function () {

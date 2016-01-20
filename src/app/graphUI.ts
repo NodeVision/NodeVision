@@ -88,34 +88,22 @@ export class GraphUI {
         /**/ });
         /**/ // Delete node broadcast
         /**/ this.socket.on('del node clt', (node) => {
-        /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
-        /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     //del to graph
-        /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === n.id) });
+        /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/      toSpliceN.map((k) => { 
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
         /**/        this.nodes[0].splice(this.graph.nodes.indexOf(k), 1); 
         /**/     });
-        /**/     jQuery("#"+n.id).remove();
-<<<<<<< HEAD
-        /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === n.id) || (l.target.id === n.id); });
+        /**/     jQuery("#"+node._id).remove();
+        /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === node._id) || (l.target.id === node._id); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-=======
-        /**/     this.graph.nodes.splice(this.graph.nodes.indexOf(n), 1);
-        /**/     var toSplice = this.graph.edges.filter((l) => { return (l.source.id === n.id) || (l.target.id === n.id); });
-        /**/     toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
->>>>>>> aa91ebf2a3972ae98b91266a082637e8d6b42d34
         /**/     this.nodemodalstate = false;
         /**/     this.redraw();
         /**/ });
         /**/ // Update node broadcast
         /**/ this.socket.on('up node clt', (node,Nname) => {
-        /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
-        /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     //update to graph
-        /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === n.id) });
+        /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     console.log(name); console.log(this.graph.nodes); 
         /**/     toRenameN.map((k) => { 
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
@@ -132,6 +120,30 @@ export class GraphUI {
         /**/     this.graph.nodes.push(n);
         /**/     this.branchmodalstate = false;
         /**/     this.redraw();  
+        /**/ });
+        /**/ // Del branch broadcast
+        /**/ this.socket.on('del branch clt', (branch) => {
+        /**/     //hydratation
+        /**/     var nodesbranch = Array<NVNode>();
+        /**/     this.graph.nodes.forEach(element => {
+        /**/        if (element.branch.id == branch._id) {
+        /**/            nodesbranch.push(element);
+        /**/        }
+        /**/    });
+        /**/    //supprime la branche
+        /**/    this.branches.splice(this.branches.indexOf(nodesbranch[0].branch), 1); 
+        /**/    //supprime les edges de la branche
+        /**/    nodesbranch.forEach(elt => {
+        /**/    this.graph.edges.forEach(element => {
+        /**/        if (element.source == elt || element.target == elt)
+        /**/            this.graph.edges.splice(this.graph.edges.indexOf(element), 1);
+        /**/        });
+        /**/    });    
+        /**/    //supprime les noeuds de la branche
+        /**/    nodesbranch.forEach(element => {
+        /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
+        /**/    });
+        /**/    this.redraw();            
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -341,28 +353,26 @@ export class GraphUI {
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
-            if (element.branch == branch) {
+            console.log(element.branch);
+            if (element.branch.id == branch.id) {
                 nodesbranch.push(element);
             }
         });
-        
         //supprime la branche
-        this.branches.splice(this.branches.indexOf(nodesbranch[0].branch), 1);
-        
+        this.branches.splice(this.branches.indexOf(nodesbranch[0].branch), 1); 
         //supprime les edges de la branche
         nodesbranch.forEach(elt => {
             this.graph.edges.forEach(element => {
                 if (element.source == elt || element.target == elt)
                     this.graph.edges.splice(this.graph.edges.indexOf(element), 1);
             });
-        });
-        
+        });    
         //supprime les noeuds de la branche
         nodesbranch.forEach(element => {
             this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         });
-
         this.redraw();
+        this.socket.emit('del branch srv', branch);
     }
     /** This is a description of the  function. */
     public delete_edge() {
