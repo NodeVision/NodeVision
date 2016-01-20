@@ -13,7 +13,6 @@ class Server {
     private io = sio.listen(this.httpServer);
 
     constructor() {
-        console.log();
         //routage sur index.html
         this.app.get('/', function (req, res) {
             res.sendFile(__dirname + '/index.html');
@@ -26,13 +25,16 @@ class Server {
             console.log(date+' : a user connected '+socket.id);
 
             socket.on('add node srv',(node, edge) => {
-                console.log('add node srv');
                 socket.broadcast.emit('add node clt', node, edge);
             });
 
-            socket.on('test', () => {
-                console.log('testserveur');
-                socket.broadcast.emit('tests');
+            socket.on('del node srv', (node) => {
+                socket.broadcast.emit('del node clt', node);
+            });
+
+            socket.on('up node srv', (node, name) => {
+                console.log("coté serveur ok");
+                socket.broadcast.emit('up node clt', node, name);
             });
 
             socket.on('disconnect', function () {
