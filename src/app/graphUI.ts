@@ -274,7 +274,6 @@ export class GraphUI {
         if(foundAttribute == undefined)
         {
             foundAttribute = new Attribute(attribute_name, attribute_value);
-<<<<<<< HEAD
             this.node.attributes.push(foundAttribute);
         }
         else
@@ -284,15 +283,7 @@ export class GraphUI {
            this.node.attributes[indexAtt].value = attribute_value;
         }
         //add ou update
-=======
-            else
-            {
-        foundAttribute.name = attribute_name;
-        foundAttribute.value = attribute_value; 
-            }
-            this.node.attributes.splice(this.node.attributes.findIndex(x => x.name == attribute_name), 1);
-        this.node.attributes.push(foundAttribute);
->>>>>>> origin/dev
+
         var response = this.query(Action.create, foundAttribute);
     }
     /** This is a description of the  function. */
