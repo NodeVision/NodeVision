@@ -46,7 +46,9 @@ export class GraphUI {
     //edge
     private edge: NVEdge;
     private edgemodalstate = false;
-    private edgemodal = Element.edge; 
+    private edgemodal = Element.edge;
+    //users
+    private users = Array<User>();
     //navbar
     private branches = new Array<Branch>();
     private socket;
@@ -409,7 +411,7 @@ export class GraphUI {
                 case Action.create:
                     if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND  u.matricule='"+this.user.matricule+"' CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
                     if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";            
-                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
+                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute){
                         cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                         console.log(cypher)
@@ -449,6 +451,7 @@ export class GraphUI {
                 },
                 error: (jqXHR, textStatus, errorThrown) => {
                     console.log(errorThrown);
+                    
                 }
                 });
                 
@@ -458,29 +461,30 @@ export class GraphUI {
     public bdd() {
         var neo_init ="";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
-        this.user = new User('troquereaub@gmail.com', 'Troquereau', 'Benjamin', null, null);
+        this.user = new User('germainchipaux@gmail.com', 'Chipaux', 'Germain', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
+        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE u.matricule <> '"+this.user.matricule+"' RETURN u") 
         this.graph = new Graph(1, 'graph');         
-
+         reponse_users.forEach(u=> {
+            this.graph.nodes.push(
+                new NVNode(
+                new Branch('User','4578ff','User'),
+                u[0].metadata.id,
+                u[0].data.matricule,
+                [new Attribute('Name',u[0].data.name),new Attribute('Firstname',u[0].data.firstname)]));
+         });
+         
         response.forEach(n => { // par chaque noeud
                 this.listAttribute = new Array<Attribute>();
-               
                 n[0].forEach(nameAttribut => {
                     if(nameAttribut != "name")
                         {
-                            // console.log("^^^^^^^^^^^");
-                            // console.log(nameAttribut)
-                            //console.log(n[1].data[nameAttribut]);
                             var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
-                            //console.log(att);
                             this.listAttribute.push(att);
-                            //console.log("^^^^^^^^^^^");
                         }
-                        //     console.log("AAAAAAAA");
-                        // console.log(this.listAttribute);
                 }); 
                         
                 if(!this.found(this.graph.nodes,n[1].metadata.id)){
