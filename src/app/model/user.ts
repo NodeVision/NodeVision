@@ -9,7 +9,7 @@ export class User{
         private _preferencepopup: PreferencePopup;
         private _branchesvisibility: Array<Branch>;
         
-        constructor(matricule: string,name: string,firsname: string,preferencepopup:PreferencePopup,branchVsblty? : Array<Branch>) {
+        constructor(matricule: string,name: string,firsname: string,preferencepopup?:PreferencePopup,branchVsblty?:Array<Branch>) {
             this._matricule = matricule;
             this._name = name;
             this._firstname = firsname;

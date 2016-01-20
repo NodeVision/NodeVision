@@ -5,8 +5,8 @@ import {Status} from '../enum';
 export class Attribute{
         private _name:string;
         private _value: any;
-        
         constructor(name?:string,value?:any){
+
             this._name = name;
             this._value = value 
         }
@@ -15,4 +15,5 @@ export class Attribute{
         get value(){ return this._value; }
         set name(name : string){ this._name=name; }
         set value(value: any){ this._value=value; } 
+
 } 

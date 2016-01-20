@@ -33,9 +33,17 @@ class Server {
             });
 
             socket.on('up node srv', (node, name) => {
-                console.log("coté serveur ok");
                 socket.broadcast.emit('up node clt', node, name);
             });
+
+            socket.on('add branch srv', (node) => {
+                socket.broadcast.emit('add branch clt', node);
+            });
+
+            socket.on('del branch srv', (branch) => {
+                socket.broadcast.emit('del branch clt', branch);
+            });
+            
 
             socket.on('disconnect', function () {
                 console.log('user disconnected '+socket.id);
