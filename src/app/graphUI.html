@@ -19,6 +19,14 @@
                     </li>
                 </ul>
             </div>
+            <ul class="nav navbar-nav navbar-right">   
+                <li><a>LogIn</a></li>
+                <li><a>LogOut</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <img src="https://avatars.githubusercontent.com/u/8791187?v=3" width="50" height="50" class="img-circle">
+                <img src="https://avatars.githubusercontent.com/u/8791187?v=3" width="50" height="50" class="img-circle">
+            </ul>
         </div>
     </nav> 
     <div class="modal fade in" *ng-if="nodemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{nodemodal}}" style="display:block; padding-left:15px;" >
@@ -29,7 +37,11 @@
                         <div class="col-md-6">
                             <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{node.name}}</h3>
                             <input #node_name *ng-if="title_state" class="form-control" value="{{node.name}}" placeholder="Node Name"                                       
+<<<<<<< HEAD
                                 (keyup.enter)="node.name = update_node(node_name.value);" 
+=======
+                                (keyup.enter)="update_node(node_name.value);" 
+>>>>>>> dev
                                 (blur)="update_node(node_name.value);"
                                 >
                         </div>
@@ -41,7 +53,7 @@
                                 <button class="btn btn-success btn-lg" type="button" (click)="add_node()"> 
                                     <img src="lib/img/add_child.png" >
                                 </button>
-                                <button class="btn btn-danger btn-lg" type="button"> 
+                                <button class="btn btn-danger btn-lg" type="button" (click)="delete_node_and_sons()"> 
                                     <img src="lib/img/delete_node_and_son.png"> 
                                 </button>
                                 <button class="btn btn-danger btn-lg" type="button" (click)="delete_node()"> 
@@ -115,3 +127,29 @@
         </div>
     </div>
 </div>
+ <div class="modal fade in" *ng-if="edgemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{edgemodal}}" style="display:block; padding-left:15px;" >
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{edge.name}}</h3>
+                            <input #edge_name *ng-if="title_state" class="form-control" value="{{edge.name}}" placeholder="Edge Name"                                       
+                                (keyup.enter)="update_edge(edge_name.value);" 
+                                (blur)="update_edge(edge_name.value);"
+                                >
+                        </div>
+                        <div class="col-md-6">
+                            <h3 class='pull-right'>{{"["+ edge.type +"]"}}</h3>
+                        </div>  
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <button class="btn btn-danger btn-lg" type= "button" (click)="delete_edge()">Delete edge</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-default" (click)="edgemodalstate=false;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>

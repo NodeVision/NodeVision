@@ -1,10 +1,8 @@
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
-    switch (arguments.length) {
-        case 2: return decorators.reduceRight(function(o, d) { return (d && d(o)) || o; }, target);
-        case 3: return decorators.reduceRight(function(o, d) { return (d && d(target, key)), void 0; }, void 0);
-        case 4: return decorators.reduceRight(function(o, d) { return (d && d(target, key, o)) || o; }, desc);
-    }
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -38,7 +36,7 @@ var GraphUI = (function () {
         this.edgemodal = enum_1.Element.edge;
         //navbar
         this.branches = new Array();
-        this.test(); //TODO remove appel de la base de données  
+        this.bdd(); //TODO remove appel de la base de données  
         //navbar branches
         var b = new Array();
         this.graph.nodes.forEach(function (n) {
@@ -138,10 +136,16 @@ var GraphUI = (function () {
             this.new_link = true;
             this.line = this.svg.append("line")
                 .attr("class", "link")
+                .style("stroke", "999")
+                .style("stroke-width", "5")
                 .attr("x1", n.x)
                 .attr("y1", n.y)
                 .attr("x2", n.x)
                 .attr("y2", n.y);
+            this.nodes
+                .on('mousedown.drag', null)
+                .on('touchstart.drag', null);
+            this.new_link = true;
             this.svg.on("mousemove", function () { _this.mousemove(); });
         }
     };
@@ -164,7 +168,9 @@ var GraphUI = (function () {
     GraphUI.prototype.add_attribute_line = function () {
         this.node.attributes.push(new attribute_1.Attribute(this.node.attributes.length + 1, '', '', ''));
     };
-    /** This is a description of the  function. */
+    GraphUI.prototype.add_attribute_line = function () {
+        this.node.attributes.push(new attribute_1.Attribute(this.node.attributes.length + 1, '', '', ''));
+    };
     GraphUI.prototype.add_attribute = function (attribute_id, attribute_name, attribute_value, attribute_type) {
         var foundAttribute = this.node.attributes.find(function (x) { return x.id == attribute_id; });
         this.node.attributes.splice(this.node.attributes.findIndex(function (x) { return x.id == attribute_id; }), 1);
@@ -181,13 +187,11 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.add_node = function () {
-        //appel bdd (TEST)
         console.log("bonjour");
         var response = this.query(enum_2.Action.create, new node_1.NVNode(this.node.branch));
         var node = new node_1.NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array());
         var edge = new edge_1.NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
         console.log("aurevoir");
-        //reconstruction
         this.graph.nodes.push(node);
         this.graph.edges.push(edge);
         this.redraw();
@@ -206,6 +210,8 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_node_and_sons = function () {
+        this.socket.emit('test');
+        console.log("je passe");
     };
     /** This is a description of the  function. */
     GraphUI.prototype.update_node = function (node_name) {
@@ -264,9 +270,18 @@ var GraphUI = (function () {
     };
     /** This is a description of the  function. */
     GraphUI.prototype.delete_edge = function () {
+        var _this = this;
+        this.query(enum_2.Action.delete, this.edge);
+        var toSplice = this.graph.edges.filter(function (l) { return (l.source === _this.edge.source) || (l.target === _this.edge.target); });
+        toSplice.map(function (l) { _this.graph.edges.splice(_this.graph.edges.indexOf(l), 1); });
+        this.edgemodalstate = false;
+        this.redraw();
     };
     /** This is a description of the  function. */
-    GraphUI.prototype.update_edge = function () {
+    GraphUI.prototype.update_edge = function (edgename) {
+        this.edge.name = edgename;
+        var response = this.query(enum_2.Action.update, this.edge);
+        this.title_state = false;
     };
     /** This is a description of the  function. */
     GraphUI.prototype.found = function (array, value) {
@@ -360,7 +375,6 @@ var GraphUI = (function () {
                     break;
             }
         }
-        console.log(cypher);
         jQuery.ajax({
             type: 'POST',
             url: this.url + "cypher",
@@ -378,7 +392,7 @@ var GraphUI = (function () {
         return response;
     };
     /** This is a description of the  function. */
-    GraphUI.prototype.test = function () {
+    GraphUI.prototype.bdd = function () {
         var _this = this;
         var neo_init = "";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
@@ -411,7 +425,7 @@ var GraphUI = (function () {
                     var source = _this.found(_this.graph.nodes, e.start.split("/")[e.start.split("/").length - 1]);
                     var target = _this.found(_this.graph.nodes, e.end.split("/")[e.end.split("/").length - 1]);
                     if (source && target)
-                        _this.graph.edges.push(new edge_1.NVEdge(e.metadata.id, e.data.name, source, target));
+                        _this.graph.edges.push(new edge_1.NVEdge(e.metadata.id, e.data.name, source, target, e.metadata.type));
                 }
             });
         });
