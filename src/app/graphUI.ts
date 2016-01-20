@@ -91,22 +91,40 @@ export class GraphUI {
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
         /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     //del to graph
-        /**/     this.nodes[0].splice(this.graph.nodes.indexOf(n), 1);
+        /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === n.id) });
+        /**/      toSpliceN.map((k) => { 
+        /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
+        /**/        this.nodes[0].splice(this.graph.nodes.indexOf(k), 1); 
+        /**/     });
         /**/     jQuery("#"+n.id).remove();
-        /**/     this.graph.nodes.splice(this.graph.nodes.indexOf(n), 1);
-        /**/     var toSplice = this.graph.edges.filter((l) => { return (l.source._id === n.id) || (l.target._id === n.id); });
-        /**/     toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
+        /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === n.id) || (l.target.id === n.id); });
+        /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/     this.nodemodalstate = false;
         /**/     this.redraw();
         /**/ });
         /**/ // Update node broadcast
-        /**/ this.socket.on('update node clt', (node,name) => {
+        /**/ this.socket.on('up node clt', (node,Nname) => {
         /**/     //hydratation
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
         /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     //update to graph
-        console.log('je passe ici');
-        /**/     this.graph.nodes[this.graph.nodes.indexOf(n)].name = name; 
+        /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === n.id) });
+        /**/     console.log(name); console.log(this.graph.nodes); 
+        /**/     toRenameN.map((k) => { 
+        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
+        /**/     });
+        /**/     
+        /**/ });
+        /**/ // Add branch broadcast
+        /**/ this.socket.on('add branch clt', (node) => {
+        /**/     //hydratation
+        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+        /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
+        /**/     // add to graph
+        /**/     this.branches.push(b);
+        /**/     this.graph.nodes.push(n);
+        /**/     this.branchmodalstate = false;
+        /**/     this.redraw();  
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -262,10 +280,7 @@ export class GraphUI {
         this.nodes[0].splice(this.graph.nodes.indexOf(this.node), 1);
         jQuery("#"+this.node.id).remove();
         this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
-        console.log(this.node);
-        console.log(this.graph.edges);
         var toSplice = this.graph.edges.filter((l) => { return (l.source === this.node) || (l.target === this.node); });
-        console.log(toSplice);
         toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         this.nodemodalstate = false;
         this.socket.emit('del node srv', this.node);
@@ -273,14 +288,14 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public delete_node_and_sons() {
-        this.socket.emit('up node srv', this.node);
+        
     }
     /** This is a description of the  function. */
     public update_node(node_name:string) {
-        console.log(node_name);
         this.node.name = node_name;
         var response = this.query(Action.update, this.node);
         this.title_state = false;
+        this.socket.emit('up node srv', this.node, node_name);
     }
     /** This is a description of the  function. */
     public show_branch(branch: Branch) {
@@ -288,19 +303,21 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_branch(name: string, color: string) {
+        console.log(name);
         //branch input
         this.branch.name = name;
         this.branch.color = color;
         //id branch from the database
         var response = this.query(Action.create,this.branch)
         this.branch.id = response[0][0].metadata.id;
+        console.log(this.branch);
         this.branches.push(this.branch);
         //id node from the database
         this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
         this.graph.nodes.push(this.node);
-        
         this.redraw();
         this.branchmodalstate = false;
+        this.socket.emit('add branch srv', this.node);
     }
     /** This is a description of the  function. */
     public update_branch(branch: Branch) {
