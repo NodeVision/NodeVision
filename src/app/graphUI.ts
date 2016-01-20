@@ -95,7 +95,7 @@ export class GraphUI {
         /**/     this.nodes[0].splice(this.graph.nodes.indexOf(n), 1);
         /**/     jQuery("#"+n.id).remove();
         /**/     this.graph.nodes.splice(this.graph.nodes.indexOf(n), 1);
-        /**/     var toSplice = this.graph.edges.filter((l) => { return (l.source._id === n.id) || (l.target._id === n.id); });
+        /**/     var toSplice = this.graph.edges.filter((l) => { return (l.source.id === n.id) || (l.target.id === n.id); });
         /**/     toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/     this.nodemodalstate = false;
         /**/     this.redraw();
@@ -227,18 +227,6 @@ export class GraphUI {
         }       
     }
     public add_attribute_line(){
-<<<<<<< HEAD
-        this.node.attributes.push(new Attribute(this.node.attributes.length+1,'',''));
-    }
-    
-    /** This is a description of the  function. */
-    public add_attribute(attribute_id, attribute_name, attribute_value) {
-        var foundAttribute = this.node.attributes.find(x => x.id == attribute_id);
-        this.node.attributes.splice(this.node.attributes.findIndex(x => x.id == attribute_id), 1);
-        
-        foundAttribute.name = attribute_name;
-        foundAttribute.value = attribute_value;
-=======
         this.node.attributes.push(new Attribute('attribut '+(this.node.attributes.length+1),''));
     }
     
@@ -253,13 +241,7 @@ export class GraphUI {
         foundAttribute.name = attribute_name;
         foundAttribute.value = attribute_value; 
             }
-            
-            
             this.node.attributes.splice(this.node.attributes.findIndex(x => x.name == attribute_name), 1);
-        
-
->>>>>>> origin/dev
-        
         this.node.attributes.push(foundAttribute);
         var response = this.query(Action.create, foundAttribute);
     }
@@ -394,28 +376,20 @@ export class GraphUI {
                 case Action.create:
                     if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND  u.matricule='"+this.user.matricule+"' CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
                     if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";            
-<<<<<<< HEAD
-                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
-                    if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
-=======
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
                     if(element instanceof Attribute){
                         cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                         console.log(cypher)
                     } 
->>>>>>> origin/dev
+
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
                     if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET SET b.color ='"+element.color+"' , b.type ='"+element.type+"'";
-<<<<<<< HEAD
-                    if(element instanceof Attribute)cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"="+element.value+" RETURN  n";               
-=======
                     if(element instanceof Attribute){
                         cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                     }                  
->>>>>>> origin/dev
                     break;
                 case Action.delete:
                     if(element instanceof NVNode) {
