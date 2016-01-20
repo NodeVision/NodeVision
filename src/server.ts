@@ -22,16 +22,6 @@ class Server {
         this.app.use(express.static(__dirname + '/'));
         //connexion & deconnexion
         this.io.on('connection', function (socket: SocketIO.Socket) {
-<<<<<<< HEAD
-            console.log('a user connected');
-            socket.on('disconnect', function () {
-                console.log('user disconnected');
-            });
-        });
-        //montage du server
-        this.httpServer.listen(8080, function () {
-            console.log('listening on *:8080');
-=======
             var date = new Date();
             console.log(date+' : a user connected '+socket.id);
 
@@ -52,7 +42,6 @@ class Server {
         //montage du server
         this.httpServer.listen(8888, function () {
             console.log('listening on *:8888');
->>>>>>> dev
         });
     }
 }

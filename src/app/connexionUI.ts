@@ -1,31 +1,3 @@
-<<<<<<< HEAD
-import {bootstrap,View, Component,CORE_DIRECTIVES} from 'angular2/angular2';
-@View({
-  templateUrl: 'app/connexionUI.html',
-  directives: [CORE_DIRECTIVES]
-})
-@Component({
-    selector: 'connexion' 
-})
-export class ConnexionUI {
-  constructor(){}
-
-  /**
-   * connect_user
-   */
-  public connect_user() {
-    alert("test");
-  }
-  
-  /**
-   * register_user
-   */
-  public register_user(){
-    
-  }
-}
-bootstrap(ConnexionUI);
-=======
 import {bootstrap, View, Component, FormBuilder,provide, CORE_DIRECTIVES} from 'angular2/angular2';
 import {RouteConfig, Router, APP_BASE_HREF, ROUTER_PROVIDERS, ROUTER_DIRECTIVES, CanActivate} from 'angular2/router';
 import {HTTP_PROVIDERS, Http} from 'angular2/http';
@@ -72,4 +44,3 @@ export class AuthApp {
 
 }
 bootstrap(AuthApp);
->>>>>>> dev
