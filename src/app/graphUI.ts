@@ -102,6 +102,7 @@ export class GraphUI {
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
             .style("stroke","999")
             .style("stroke-width","5");
+
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -201,16 +202,15 @@ export class GraphUI {
         }       
     }
     public add_attribute_line(){
-        this.node.attributes.push(new Attribute(this.node.attributes.length+1,'','',''));
+        this.node.attributes.push(new Attribute(this.node.attributes.length+1,'',''));
     }
     
     /** This is a description of the  function. */
-    public add_attribute(attribute_id, attribute_name, attribute_value, attribute_type) {
+    public add_attribute(attribute_id, attribute_name, attribute_value) {
         var foundAttribute = this.node.attributes.find(x => x.id == attribute_id);
         this.node.attributes.splice(this.node.attributes.findIndex(x => x.id == attribute_id), 1);
         
         foundAttribute.name = attribute_name;
-        foundAttribute.type = attribute_type;
         foundAttribute.value = attribute_value;
         
         this.node.attributes.push(foundAttribute);
@@ -344,34 +344,16 @@ export class GraphUI {
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" RETURN r";
                     break;
                 case Action.create:
-                    if(element instanceof NVNode)cypher = "MATCH (n),(b) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b RETURN r,c";
+                    if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND  u.matricule='"+this.user.matricule+"' CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
                     if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";            
-                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:KNOWS]-u RETURN b, n";
-                    if(element instanceof Attribute){
-                        var value="";
-                        switch (element.type) {
-                            case 'string': value = "'"+element.value+"'"; break;
-                            case 'number': value = element.value; break;
-                            case 'boolean': value = element.value; break;
-                            case 'date': value = "'"+element.value+"'";break; 
-                        }
-                        cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"="+value+" RETURN  n";
-                    } 
+                    if(element instanceof Branch) cypher = "MATCH (u) WHERE u.matricule='"+this.user.matricule+"' CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"',type:'"+this.branch.type+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
+                    if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
                     if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET SET b.color ='"+element.color+"' , b.type ='"+element.type+"'";
-                    if(element instanceof Attribute){
-                        var value="";
-                        switch (element.type) {
-                            case 'string': value = "'"+element.value+"'"; break;
-                            case 'number': value = element.value; break;
-                            case 'boolean': value = element.value; break;
-                            case 'date': value = "'"+element.value+"'";break;
-                        }
-                        cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"="+value+" RETURN  n";
-                    }                  
+                    if(element instanceof Attribute)cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"="+element.value+" RETURN  n";               
                     break;
                 case Action.delete:
                     if(element instanceof NVNode) {
