@@ -59,8 +59,8 @@ var GraphUI = (function () {
         this.socket.on('tests', function () {
             console.log('testclientbroadcast');
         });
+        // Add node broadcast
         this.socket.on('add node clt', function (node, edge) {
-            console.log('add node clt');
             //hydratation
             var b = new branch_1.Branch(node._branch._name, node._branch._color, node._branch._type, node._branch._id);
             var nt = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
@@ -69,6 +69,24 @@ var GraphUI = (function () {
             //add to graph
             _this.graph.nodes.push(nt);
             _this.graph.edges.push(e);
+            _this.redraw();
+        });
+        // Delete node broadcast
+        this.socket.on('del node clt', function (node) {
+            console.log(node);
+            //hydratation
+            var b = new branch_1.Branch(node._branch._name, node._branch._color, node._branch._type, node._branch._id);
+            var n = new node_1.NVNode(b, node._id, node._name, node._node_attributs);
+            console.log(n);
+            //del to graph
+            _this.nodes[0].splice(_this.graph.nodes.indexOf(n), 1);
+            jQuery("#" + n.id).remove();
+            _this.graph.nodes.splice(_this.graph.nodes.indexOf(n), 1);
+            console.log(_this.graph.edges);
+            var toSplice = _this.graph.edges.filter(function (l) { return (l.source._id === n.id) || (l.target._id === n.id); });
+            console.log(toSplice);
+            toSplice.map(function (l) { _this.graph.edges.splice(_this.graph.edges.indexOf(l), 1); });
+            _this.nodemodalstate = false;
             _this.redraw();
         });
     }
@@ -221,9 +239,13 @@ var GraphUI = (function () {
         this.nodes[0].splice(this.graph.nodes.indexOf(this.node), 1);
         jQuery("#" + this.node.id).remove();
         this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
+        console.log(this.node);
+        console.log(this.graph.edges);
         var toSplice = this.graph.edges.filter(function (l) { return (l.source === _this.node) || (l.target === _this.node); });
+        console.log(toSplice);
         toSplice.map(function (l) { _this.graph.edges.splice(_this.graph.edges.indexOf(l), 1); });
         this.nodemodalstate = false;
+        this.socket.emit('del node srv', this.node);
         this.redraw();
     };
     /** This is a description of the  function. */
