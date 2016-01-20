@@ -231,22 +231,19 @@ export class GraphUI {
     
     /** This is a description of the  function. */
     public add_attribute(attribute_name, attribute_value) {
-        console.log(attribute_name+" : "+attribute_value);
         var foundAttribute = this.node.attributes.find(x => x.name == attribute_name);
         if(foundAttribute == undefined)
+        {
             foundAttribute = new Attribute(attribute_name, attribute_value);
-            else
-            {
-        foundAttribute.name = attribute_name;
-        foundAttribute.value = attribute_value; 
-            }
-            
-            
-            this.node.attributes.splice(this.node.attributes.findIndex(x => x.name == attribute_name), 1);
-        
-
-        
-        this.node.attributes.push(foundAttribute);
+            this.node.attributes.push(foundAttribute);
+        }
+        else
+        {
+           var indexAtt = this.node.attributes.findIndex(x => x.name == attribute_name);
+           this.node.attributes[indexAtt].name = attribute_name;
+           this.node.attributes[indexAtt].value = attribute_value;
+        }
+        //add ou update
         var response = this.query(Action.create, foundAttribute);
     }
     /** This is a description of the  function. */

@@ -65,8 +65,8 @@
                         <label class="col-md-3"> value </label>
                     </div>
                     <div class="form-group row" *ng-for="#attribute of node.attributes">
-                        <div class="col-md-3"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text"></div> 
-                        <div class="col-md-3"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text"(blur) = "add_attribute(attribute_name.value, attribute_value.value)"></div> 
+                        <div class="col-md-3"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "add_attribute(attribute_name.value, attribute_value.value)"></div> 
+                        <div class="col-md-3"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "add_attribute(attribute_name.value, attribute_value.value)"></div> 
                         <div class="col-md-6">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_attribute(attribute)" ></span>
                         </div> 
