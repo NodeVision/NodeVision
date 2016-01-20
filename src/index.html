@@ -34,11 +34,18 @@
         
         <script>
           System.config({
-            packages: {'app': {defaultExtension: 'js'}}
+            packages: {'js/app': {defaultExtension: 'js'}}
           });
+<<<<<<< HEAD
           System.import('app/graphUI');
           System.import('app/connexionUI');
         var socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
+=======
+          System.import('js/app/graphUI');
+          
+        //   var socket = io();
+        var socket = io.connect('http://localhost:8080', {resource: 'nodejs'});
+>>>>>>> origin/dev2
         </script>
     </head>
     <body oncontextmenu="return false">

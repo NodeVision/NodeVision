@@ -6,8 +6,13 @@ import {HTTP_PROVIDERS, Http} from 'angular2/http';
 declare var Auth0Lock;
 
 @View({
+<<<<<<< HEAD
     templateUrl: 'app/connexionUI.html',
     directives: [CORE_DIRECTIVES]
+=======
+  templateUrl: 'html/connexionUI.html',
+  directives: [CORE_DIRECTIVES]
+>>>>>>> origin/dev2
 })
 @Component({
     selector: 'AuthApp'
