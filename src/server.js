@@ -19,14 +19,23 @@ var Server = (function () {
         this.app.use(express.static(__dirname + '/'));
         //connexion & deconnexion
         this.io.on('connection', function (socket) {
-            console.log('a user connected');
+            var date = new Date();
+            console.log(date + ' : a user connected ' + socket.id);
+            socket.on('add node srv', function (node, edge) {
+                console.log('add node srv');
+                socket.broadcast.emit('add node clt', node, edge);
+            });
+            socket.on('test', function () {
+                console.log('testserveur');
+                socket.broadcast.emit('tests');
+            });
             socket.on('disconnect', function () {
-                console.log('user disconnected');
+                console.log('user disconnected ' + socket.id);
             });
         });
         //montage du server
-        this.httpServer.listen(8080, function () {
-            console.log('listening on *:8080');
+        this.httpServer.listen(8888, function () {
+            console.log('listening on *:8888');
         });
     }
     return Server;

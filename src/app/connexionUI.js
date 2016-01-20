@@ -8,32 +8,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var angular2_1 = require('angular2/angular2');
-var ConnexionUI = (function () {
-    function ConnexionUI() {
+var AuthApp = (function () {
+    function AuthApp() {
+        this.lock = new Auth0Lock('9B7uUwnzc73tnd1YVu3oE7cesLWqciSA', 'nodevision.eu.auth0.com');
     }
-    /**
-     * connect_user
-     */
-    ConnexionUI.prototype.connect_user = function () {
-        alert("test");
+    AuthApp.prototype.login = function () {
+        this.lock.show(function (err, profile, id_token) {
+            if (err) {
+                throw new Error(err);
+            }
+            localStorage.setItem('profile', JSON.stringify(profile));
+            localStorage.setItem('id_token', id_token);
+        });
     };
-    /**
-     * register_user
-     */
-    ConnexionUI.prototype.register_user = function () {
+    AuthApp.prototype.logout = function () {
+        localStorage.removeItem('profile');
+        localStorage.removeItem('id_token');
     };
-    ConnexionUI = __decorate([
+    AuthApp.prototype.loggedIn = function () {
+        // return tokenNotExpired();
+    };
+    AuthApp = __decorate([
         angular2_1.View({
             templateUrl: 'app/connexionUI.html',
             directives: [angular2_1.CORE_DIRECTIVES]
         }),
         angular2_1.Component({
-            selector: 'connexion'
+            selector: 'AuthApp'
         }), 
         __metadata('design:paramtypes', [])
-    ], ConnexionUI);
-    return ConnexionUI;
+    ], AuthApp);
+    return AuthApp;
 })();
-exports.ConnexionUI = ConnexionUI;
-angular2_1.bootstrap(ConnexionUI);
+exports.AuthApp = AuthApp;
+angular2_1.bootstrap(AuthApp);
 //# sourceMappingURL=connexionUI.js.map
