@@ -1,5 +1,6 @@
 ﻿import {Injectable} from 'angular2/angular2';
 import {User} from './user';
+import {NVNode} from './node';
 @Injectable()
 export class Group {
     private _id: number;

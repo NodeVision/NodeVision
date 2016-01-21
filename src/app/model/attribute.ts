@@ -6,7 +6,6 @@ export class Attribute{
         private _name:string;
         private _value: any;
         constructor(name?:string,value?:any){
-
             this._name = name;
             this._value = value 
         }
