@@ -1,25 +1,34 @@
 import {Injectable} from 'angular2/angular2';
 import {Branch} from './branch';
+import {Attribute} from './attribute';
 import {PreferencePopup} from './preferencepopup';
+import {NVNode} from './node';
 @Injectable()
 export class User{
-        private _matricule: string;
-        private _name: string;
-        private _firstname: string;
+        private _id:number;
+        private _mail: string;
         private _preferencepopup: PreferencePopup;
         private _branchesvisibility: Array<Branch>;
+        private _node: NVNode;
         
-        constructor(matricule: string,name: string,firsname: string,preferencepopup?:PreferencePopup,branchVsblty?:Array<Branch>) {
-            this._matricule = matricule;
-            this._name = name;
-            this._firstname = firsname;
-            this._preferencepopup = preferencepopup;
+        constructor(
+            mail: string,
+            id?:number,
+            node?:NVNode,                      
+            preferencepopup?:PreferencePopup,
+            branchVsblty?:Array<Branch>) {
+                
+                this._mail = mail;
+                this._preferencepopup = preferencepopup;
+                this._branchesvisibility = branchVsblty;
+                this._node = node;
         }
-        get matricule() { return this._matricule }
-        get name() { return this._name }
-        get firstname() { return this._firstname }
+        get id() { return this._id }
+        get mail() { return this._mail }
         get preferencepopup() { return this._preferencepopup }
         get branchesvisibility() { return this._branchesvisibility }
+        get node(){ return this._node }
+        set node(node:NVNode){ this._node = node }
 
     }
     

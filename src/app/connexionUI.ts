@@ -43,4 +43,4 @@ export class AuthApp {
   }
 
 }
-bootstrap(AuthApp);
+//bootstrap(AuthApp);
