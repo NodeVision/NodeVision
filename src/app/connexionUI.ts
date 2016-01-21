@@ -1,7 +1,7 @@
 import {bootstrap, View, Component, FormBuilder,provide, CORE_DIRECTIVES} from 'angular2/angular2';
 import {RouteConfig, Router, APP_BASE_HREF, ROUTER_PROVIDERS, ROUTER_DIRECTIVES, CanActivate} from 'angular2/router';
 import {HTTP_PROVIDERS, Http} from 'angular2/http';
-//import {AuthHttp, tokenNotExpired, JwtHelper} from '../../node_modules/angular2-jwt';
+import {AuthHttp, tokenNotExpired, JwtHelper} from '../../node_modules/angular2-jwt';
 
 declare var Auth0Lock;
 
@@ -26,10 +26,10 @@ export class AuthApp {
       if(err) {
         throw new Error(err);
       }
-
+      console.log(profile)
       localStorage.setItem('profile', JSON.stringify(profile));
       localStorage.setItem('id_token', id_token);
-
+      
     });
   }
 
@@ -39,7 +39,7 @@ export class AuthApp {
   }
 
   loggedIn() {
-   // return tokenNotExpired();
+    //return tokenNotExpired();
   }
 
 }

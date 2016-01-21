@@ -521,8 +521,9 @@ export class GraphUI {
 }
 bootstrap(GraphUI);
 
-/*
+/*germainchipaux@gmail.com
 CREATE (u:User {matricule:'troquereaub@gmail.com',name:'Troquereau',firstname:'Benjamin'});
+CREATE (u:User {matricule:'germainchipaux@gmail.com',name:'Chipaux',firstname:'Germain'});
 CREATE (b:Branch {name:'b1',color:'AA11F6',type:'Standard'});
 CREATE (n:Node {name:'n1'});
 CREATE (n:Node {name:'n2'});
