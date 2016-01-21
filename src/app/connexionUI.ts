@@ -43,9 +43,13 @@ export class AuthApp {
   }
   
   getPicture() : string {
-      console.log(JSON.parse(localStorage.getItem('profile')).picture);
       
       return JSON.parse(localStorage.getItem('profile')).picture;
+  }
+  
+    getMail() : string {
+      
+      return JSON.parse(localStorage.getItem('profile')).email;
   }
   
   isConnected() : boolean {
