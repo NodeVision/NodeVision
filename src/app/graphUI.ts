@@ -150,13 +150,13 @@ export class GraphUI {
         /**/    });
         /**/    this.redraw();            
         /**/ });
-        /**/ this.socket.on('up branch clt', (branch, Nbranch) => {
+        /**/ this.socket.on('up branch clt', (branch) => {
         /**/     // update to graph
         /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
         /**/     toUpdateBranch.map((k) => { 
-        /**/        this.branches[this.branches.indexOf(k)].name = Nbranch._name;
-        /**/        this.branches[this.branches.indexOf(k)].type = Nbranch._type;
-        /**/        this.branches[this.branches.indexOf(k)].color = Nbranch._color;
+        /**/        this.branches[this.branches.indexOf(k)].name = branch._name;
+        /**/        this.branches[this.branches.indexOf(k)].type = branch._type;
+        /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
@@ -357,13 +357,18 @@ export class GraphUI {
         this.branchmodalstate = false;
         this.socket.emit('add branch srv', this.node);
     }
-    /** This is a description of the  function. */
-    public update_branch(branch: Branch) {
-        console.log("index branch :"+ this.branches.indexOf(branch));
+    /** Affiche la pop up de modification d'une branche */
+    public show_update_branch(branch: Branch) {
         this.branchmodalstate = true;
-       // this.branch = branch;
-       // this.socket.emit('up branch srv', this.branch, branch);
+        this.branch = branch;
     }
+    /** Modification d'une branche */
+    public update_branch() {
+        var response = this.query(Action.update, this.branch);
+        this.branchmodalstate = false;
+        this.socket.emit('up branch srv',this.branch);
+    }
+
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
         this.query(Action.delete,branch)
@@ -415,7 +420,7 @@ export class GraphUI {
         return tamp;
     }
     /** This is a description of the  function. */
-    public query(action:Action,element?:NVNode|NVEdge|Branch|User|Attribute,cypher?:string){
+    public query(action:Action,element?:NVNode|NVEdge|Branch|User|Attribute,cypher?:string){ 
         var response;
         if(!cypher){
             switch(action){
@@ -436,10 +441,11 @@ export class GraphUI {
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
-                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET SET b.color ='"+element.color+"' , b.type ='"+element.type+"'";
+                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"' , b.type ='"+element.type+"'";
                     if(element instanceof Attribute){
                         cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
-                    }                  
+                    }
+                    console.log(cypher);                  
                     break;
                 case Action.delete:
                     if(element instanceof NVNode) {

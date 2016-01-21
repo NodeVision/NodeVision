@@ -11,7 +11,7 @@
                                     <div class="col-md-6">{{branch.name}}</div>
                                     <div class="col-md-6"> 
                                         <span class="glyphicon glyphicon-eye-open" aria-hidden="true" (click)="show_branch(branch)"></span>
-                                        <span class="glyphicon glyphicon-pencil" aria-hidden="true" (click)="update_branch(branch)"></span>
+                                        <span class="glyphicon glyphicon-pencil" aria-hidden="true" (click)="show_update_branch(branch)"></span>
                                         <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_branch(branch)"></span>
                                     </div>     
                                 </div>
@@ -82,7 +82,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>{{branch.name}}</h3>
+                    <h3>{{branch._name}}</h3>
                 </div><div class="modal-body">
                 <form class="form-horizontal">
                     <div class="form-group">
@@ -94,7 +94,7 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" >
-                                <li *ng-for="#type of branch.types" (click)="branch.type = type"><a>{{type}}</a></li>
+                                <li *ng-for="#type of branch.types" (click)="branch.type = type;"><a>{{type}}</a></li>
                             </ul>
                             </div>
                         </div>
@@ -115,6 +115,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value,type.value)" type="button">Create</button>
+                <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
                 <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;">Close</button>
             </div>
         </div>
