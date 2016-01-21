@@ -9,6 +9,7 @@ import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
 import {Action} from './enum';
+import {AuthApp} from './connexionUI';
 @View({
     templateUrl: 'html/graphUI.html',
     directives: [CORE_DIRECTIVES]
@@ -17,7 +18,9 @@ import {Action} from './enum';
     selector: 'graph'
 })
 export class GraphUI {
-
+    
+    private authentication = new AuthApp();
+    private isLogged = this.authentication.isConnected;
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = 960;
@@ -54,6 +57,7 @@ export class GraphUI {
     private socket;
 
     constructor() {
+        
         this.bdd(); //TODO remove appel de la base de données  
         //navbar branches
         var b = new Array<Branch>();

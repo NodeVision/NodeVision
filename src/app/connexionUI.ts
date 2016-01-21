@@ -6,19 +6,18 @@ import {AuthHttp, tokenNotExpired, JwtHelper} from '../../node_modules/angular2-
 declare var Auth0Lock;
 
 @View({
-  templateUrl: 'html/connexionUI.html',
   directives: [CORE_DIRECTIVES]
-})
-@Component({
-    selector: 'AuthApp'
-    
 })
 
 export class AuthApp {
+   
 
   lock = new Auth0Lock('9B7uUwnzc73tnd1YVu3oE7cesLWqciSA', 'nodevision.eu.auth0.com');
 
-  constructor() {}
+  constructor() {
+      if(localStorage.getItem('profile') == null )
+        this.login();
+  }
 
   login() {
     this.lock.show(function(err:string, profile:string, id_token:string) {
@@ -34,8 +33,16 @@ export class AuthApp {
   }
 
   logout() {
+      
     localStorage.removeItem('profile');
     localStorage.removeItem('id_token');
+    this.login();
+  }
+  
+  isConnected() : boolean {
+      console.log(localStorage.getItem('profile') != null);
+      
+      return localStorage.getItem('profile') != null;
   }
 
   loggedIn() {
@@ -43,4 +50,4 @@ export class AuthApp {
   }
 
 }
-bootstrap(AuthApp);
+//bootstrap(AuthApp);
