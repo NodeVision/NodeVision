@@ -20,7 +20,7 @@ import {AuthApp} from './connexionUI';
 export class GraphUI {
     
     private authentication = new AuthApp();
-    private isLogged = this.authentication.isConnected;
+    private image = this.authentication.getPicture();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = 960;
