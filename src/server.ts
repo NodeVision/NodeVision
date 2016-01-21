@@ -44,6 +44,9 @@ class Server {
                 socket.broadcast.emit('del branch clt', branch);
             });
             
+            socket.on('up branch srv', (branch, Nbranch) => {
+                socket.broadcast.emit('up branch clt', branch, Nbranch);
+            });
 
             socket.on('disconnect', function () {
                 console.log('user disconnected '+socket.id);

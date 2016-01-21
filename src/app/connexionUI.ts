@@ -2,23 +2,23 @@ import {bootstrap, View, Component, FormBuilder,provide, CORE_DIRECTIVES} from '
 import {RouteConfig, Router, APP_BASE_HREF, ROUTER_PROVIDERS, ROUTER_DIRECTIVES, CanActivate} from 'angular2/router';
 import {HTTP_PROVIDERS, Http} from 'angular2/http';
 import {AuthHttp, tokenNotExpired, JwtHelper} from '../../node_modules/angular2-jwt';
+import {User} from './model/user';
 
 declare var Auth0Lock;
 
 @View({
-  templateUrl: 'html/connexionUI.html',
   directives: [CORE_DIRECTIVES]
-})
-@Component({
-    selector: 'AuthApp'
-    
 })
 
 export class AuthApp {
+   
 
   lock = new Auth0Lock('9B7uUwnzc73tnd1YVu3oE7cesLWqciSA', 'nodevision.eu.auth0.com');
 
-  constructor() {}
+  constructor() {
+      if(localStorage.getItem('profile') == null )
+        this.login();
+  }
 
   login() {
     this.lock.show(function(err:string, profile:string, id_token:string) {
@@ -26,16 +26,31 @@ export class AuthApp {
       if(err) {
         throw new Error(err);
       }
-      console.log(profile)
       localStorage.setItem('profile', JSON.stringify(profile));
       localStorage.setItem('id_token', id_token);
       
+
+      var user = JSON.parse(localStorage.getItem('profile'));
+      var userConnected = new User(user.email,'','');
     });
   }
 
   logout() {
+      
     localStorage.removeItem('profile');
     localStorage.removeItem('id_token');
+    this.login();
+  }
+  
+  getPicture() : string {
+      console.log(JSON.parse(localStorage.getItem('profile')).picture);
+      
+      return JSON.parse(localStorage.getItem('profile')).picture;
+  }
+  
+  isConnected() : boolean {
+      
+      return localStorage.getItem('profile') != null;
   }
 
   loggedIn() {

@@ -9,6 +9,7 @@ import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
 import {Action} from './enum';
+import {AuthApp} from './connexionUI';
 @View({
     templateUrl: 'html/graphUI.html',
     directives: [CORE_DIRECTIVES]
@@ -17,7 +18,9 @@ import {Action} from './enum';
     selector: 'graph'
 })
 export class GraphUI {
-
+    
+    private authentication = new AuthApp();
+    private image = this.authentication.getPicture();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = jQuery("body").width();
@@ -56,6 +59,7 @@ export class GraphUI {
     private socket;
 
     constructor() {
+        
         this.bdd(); //TODO remove appel de la base de données  
         //navbar branches
         var b = new Array<Branch>();
@@ -108,7 +112,6 @@ export class GraphUI {
         /**/ this.socket.on('up node clt', (node,Nname) => {
         /**/     //update to graph
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
-        /**/     console.log(name); console.log(this.graph.nodes); 
         /**/     toRenameN.map((k) => { 
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
         /**/     });
@@ -148,6 +151,15 @@ export class GraphUI {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         /**/    });
         /**/    this.redraw();            
+        /**/ });
+        /**/ this.socket.on('up branch clt', (branch, Nbranch) => {
+        /**/     // update to graph
+        /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
+        /**/     toUpdateBranch.map((k) => { 
+        /**/        this.branches[this.branches.indexOf(k)].name = Nbranch._name;
+        /**/        this.branches[this.branches.indexOf(k)].type = Nbranch._type;
+        /**/        this.branches[this.branches.indexOf(k)].color = Nbranch._color;
+        /**/     });
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -285,7 +297,6 @@ export class GraphUI {
            this.node.attributes[indexAtt].value = attribute_value;
         }
         //add ou update
-
         var response = this.query(Action.create, foundAttribute);
     }
     /** This is a description of the  function. */
@@ -333,7 +344,6 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_branch(name: string, color: string) {
-        console.log(name);
         //branch input
         this.branch.name = name;
         this.branch.color = color;
@@ -351,8 +361,10 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public update_branch(branch: Branch) {
+        console.log("index branch :"+ this.branches.indexOf(branch));
         this.branchmodalstate = true;
-        this.branch = branch
+       // this.branch = branch;
+       // this.socket.emit('up branch srv', this.branch, branch);
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
@@ -460,6 +472,7 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public bdd() {
+<<<<<<< HEAD
         //Récupération du user authentifié
         var mail = "troquereaub@gmail.com"; //TODO change
         var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u")
@@ -483,6 +496,16 @@ export class GraphUI {
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
 
+=======
+        var neo_init ="";
+        ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
+        this.user = new User('troquereaub@gmail.com', 'Chipaux', 'Germain', null, null);
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        
+        /// request to init the graph
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
+        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE u.matricule <> '"+this.user.matricule+"' RETURN u") 
+>>>>>>> origin/dev
         this.graph = new Graph(1, 'graph');         
         reponse_users.forEach(u => {     
             var n = new NVNode(
