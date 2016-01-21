@@ -106,7 +106,6 @@ export class GraphUI {
         /**/ this.socket.on('up node clt', (node,Nname) => {
         /**/     //update to graph
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
-        /**/     console.log(name); console.log(this.graph.nodes); 
         /**/     toRenameN.map((k) => { 
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
         /**/     });
@@ -146,6 +145,15 @@ export class GraphUI {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         /**/    });
         /**/    this.redraw();            
+        /**/ });
+        /**/ this.socket.on('up branch clt', (branch, Nbranch) => {
+        /**/     // update to graph
+        /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
+        /**/     toUpdateBranch.map((k) => { 
+        /**/        this.branches[this.branches.indexOf(k)].name = Nbranch._name;
+        /**/        this.branches[this.branches.indexOf(k)].type = Nbranch._type;
+        /**/        this.branches[this.branches.indexOf(k)].color = Nbranch._color;
+        /**/     });
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -274,7 +282,6 @@ export class GraphUI {
         if(foundAttribute == undefined)
         {
             foundAttribute = new Attribute(attribute_name, attribute_value);
-<<<<<<< HEAD
             this.node.attributes.push(foundAttribute);
         }
         else
@@ -284,15 +291,6 @@ export class GraphUI {
            this.node.attributes[indexAtt].value = attribute_value;
         }
         //add ou update
-=======
-            else
-            {
-        foundAttribute.name = attribute_name;
-        foundAttribute.value = attribute_value; 
-            }
-            this.node.attributes.splice(this.node.attributes.findIndex(x => x.name == attribute_name), 1);
-        this.node.attributes.push(foundAttribute);
->>>>>>> origin/dev
         var response = this.query(Action.create, foundAttribute);
     }
     /** This is a description of the  function. */
@@ -340,7 +338,6 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_branch(name: string, color: string) {
-        console.log(name);
         //branch input
         this.branch.name = name;
         this.branch.color = color;
@@ -358,8 +355,10 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public update_branch(branch: Branch) {
+        console.log("index branch :"+ this.branches.indexOf(branch));
         this.branchmodalstate = true;
-        this.branch = branch
+       // this.branch = branch;
+       // this.socket.emit('up branch srv', this.branch, branch);
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
@@ -473,7 +472,7 @@ export class GraphUI {
     public bdd() {
         var neo_init ="";
         ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
-        this.user = new User('germainchipaux@gmail.com', 'Chipaux', 'Germain', null, null);
+        this.user = new User('troquereaub@gmail.com', 'Chipaux', 'Germain', null, null);
         ////////////////////////////////////////////////////////////////////////////////////////////
         
         /// request to init the graph
