@@ -60,6 +60,18 @@ class Server {
                 socket.broadcast.emit('up edge clt', name, edge);
             });
 
+            socket.on('add attr srv', (node, attribute) => {
+                socket.broadcast.emit('add attr clt', node, attribute);
+            });
+
+            socket.on('del attr srv', (node, attribute) => {
+                socket.broadcast.emit('del attr clt', node, attribute);
+            });
+
+            socket.on('up attr srv', (type, node, attribute, value, name) => {
+                socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+            });
+
             socket.on('disconnect', function () {
                 console.log('user disconnected '+socket.id);
             });

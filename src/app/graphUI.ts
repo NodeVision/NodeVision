@@ -158,7 +158,6 @@ export class GraphUI {
         /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
         /**/     toUpdateBranch.map((k) => { 
         /**/        this.branches[this.branches.indexOf(k)].name = branch._name;
-        /**/        this.branches[this.branches.indexOf(k)].type = branch._type;
         /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
         /**/ });
@@ -183,6 +182,41 @@ export class GraphUI {
         /**/     toRenameE.map((k) => { 
         /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = Nname; 
         /**/     });
+        /**/ });
+        /**/ // Add attribute broadcast
+        /**/ this.socket.on('add attr clt', (node, attribute) => {
+        /**/     // add to graph 
+        /**/     var toAddAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        /**/     toAddAttribut.map((k) => {
+        /**/     var Nattribute = new Attribute(attribute._name,attribute._value);      
+        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
+        /**/     });  
+        /**/ });
+        /**/ // Del attribute broadcast
+        /**/ this.socket.on('del attr clt', (node,attribute) => {
+        /**/     // del to graph 
+        /**/     var toDelAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        /**/     toDelAttribut.map((k) => { 
+        /**/        var toSplice = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name === attribute._name) });
+        /**/        toSplice.map((l) => { this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1); });    
+        /**/     });  
+        /**/ });
+        /**/ // Update attribute broadcast
+        /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
+        /**/     // update to graph
+        /**/        var toGetNode = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        /**/        toGetNode.map((k) => { 
+        /**/            var toUpdateAttribute = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name == attribute._name) });
+        /**/            toUpdateAttribute.map((l) => {
+        /**/                if(type == "value"){
+        /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].value = value;
+        /**/                }else if(type == "name"){
+        /**/                    var NewAttribute = new Attribute(name,value);
+        /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(NewAttribute);
+        /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1);
+        /**/                } 
+        /**/            });
+        /**/        });  
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -298,22 +332,25 @@ export class GraphUI {
         var NewAttribute = new Attribute('attribut'+(this.node.attributes.length+1),'');
         var response = this.query(Action.create, NewAttribute);
         this.node.attributes.push(NewAttribute);
+        this.socket.emit('add attr srv', this.node, NewAttribute);
     }
     
     /** Supression d'un attribut d'un noeud */
     public delete_attribute(attribute: Attribute) {
         this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
         this.query(Action.delete, attribute);
+        this.socket.emit('del attr srv', this.node, attribute);
     }
 
     /** Mise à jour d'un attribut d'un noeud */
     public update_attribute(attribute, name, value) {
         var good_name = name.replace(/\s/g, "_").replace(/["\""]/g, "_").replace(/["\'"]/g, "_");
-        var toUpdateAttribute = this.node.attributes.filter((k) => { return (k.name === attribute.name) });
+        var toUpdateAttribute = this.node.attributes.filter((k) => { return (k.name == attribute.name) });
         if(attribute.name == good_name){
             toUpdateAttribute.map((k) => { 
                 this.node.attributes[this.node.attributes.indexOf(k)].value = value;
                 var response = this.query(Action.update, this.node.attributes[this.node.attributes.indexOf(k)]);
+                this.socket.emit('up attr srv', "value", this.node, this.node.attributes[this.node.attributes.indexOf(k)], value, good_name);
             });
         }else{
             var creation = true;
@@ -323,12 +360,15 @@ export class GraphUI {
                     alert("Deux attributs ne peuvent avoir le même nom.");
                 }
             });
-            if(creation){  
+            if(creation){
+
                 toUpdateAttribute.map((k) => {
-                    this.node.attributes[this.node.attributes.indexOf(k)].name = good_name;
-                    this.node.attributes[this.node.attributes.indexOf(k)].value = value;
-                    var response = this.query(Action.update, this.node.attributes[this.node.attributes.indexOf(k)]);
-                    response = this.query(Action.delete, attribute);
+                    var NewAttribute = new Attribute(good_name,value);
+                    this.node.attributes.push(NewAttribute);
+                    this.query(Action.create, NewAttribute);
+                    this.query(Action.delete, this.node.attributes[this.node.attributes.indexOf(k)]);
+                    this.socket.emit('up attr srv', "name", this.node, this.node.attributes[this.node.attributes.indexOf(k)],value, good_name);
+                    this.node.attributes.splice(this.node.attributes.indexOf(k), 1);
                 });
             }
         }
