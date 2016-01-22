@@ -52,6 +52,14 @@ class Server {
                 socket.broadcast.emit('add edge clt', edge, source, target);
             });
 
+            socket.on('del edge srv', (source, target) => {
+                socket.broadcast.emit('del edge clt', source, target);
+            });
+
+            socket.on('up edge srv', (name, edge) => {
+                socket.broadcast.emit('up edge clt', name, edge);
+            });
+
             socket.on('disconnect', function () {
                 console.log('user disconnected '+socket.id);
             });

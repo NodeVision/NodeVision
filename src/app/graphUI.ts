@@ -48,6 +48,7 @@ export class GraphUI {
     //branch Modal
     private branchmodalstate = false;
     private branchnamecondition = false;
+    private attribnamecondition = false;
     private branchmodal = Element.branch;
     private branch = new Branch();
     //edge
@@ -115,8 +116,7 @@ export class GraphUI {
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toRenameN.map((k) => { 
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
-        /**/     });
-        /**/     
+        /**/     });  
         /**/ });
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (node) => {
@@ -168,6 +168,21 @@ export class GraphUI {
         /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));      
         /**/      this.graph.edges.push(Nedge);
         /**/      this.redraw();
+        /**/ });
+        /**/ // Del edge broadcast
+        /**/ this.socket.on('del edge clt', (source, target) => {
+        /**/      // del to graph 
+        /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === source._id) && (l.target.id === target._id); });
+        /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
+        /**/      this.redraw();
+        /**/ });
+        /**/ // Update edge broadcast
+        /**/ this.socket.on('up edge clt', (Nname, edge) => {
+        /**/     //update to graph
+        /**/     var toRenameE = this.graph.edges.filter((k) => { return (k.id === edge._id) });
+        /**/     toRenameE.map((k) => { 
+        /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = Nname; 
+        /**/     });
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -278,31 +293,45 @@ export class GraphUI {
             .attr("y2",this.m[1]);
     }
 
-    public add_attribute_line(){
-        this.node.attributes.push(new Attribute('attribut '+(this.node.attributes.length+1),''));
+    //Création d'un nouvel attribut d'un noeud
+    public add_attribute(){
+        var NewAttribute = new Attribute('attribut'+(this.node.attributes.length+1),'');
+        var response = this.query(Action.create, NewAttribute);
+        this.node.attributes.push(NewAttribute);
     }
     
-    /** This is a description of the  function. */
-    public add_attribute(attribute_name, attribute_value) {
-        var foundAttribute = this.node.attributes.find(x => x.name == attribute_name);
-        if(foundAttribute == undefined)
-        {
-            foundAttribute = new Attribute(attribute_name, attribute_value);
-            this.node.attributes.push(foundAttribute);
-        }
-        else
-        {
-           var indexAtt = this.node.attributes.findIndex(x => x.name == attribute_name);
-           this.node.attributes[indexAtt].name = attribute_name;
-           this.node.attributes[indexAtt].value = attribute_value;
-        }
-        //add ou update
-        var response = this.query(Action.create, foundAttribute);
-    }
-    /** This is a description of the  function. */
+    /** Supression d'un attribut d'un noeud */
     public delete_attribute(attribute: Attribute) {
         this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
         this.query(Action.delete, attribute);
+    }
+
+    /** Mise à jour d'un attribut d'un noeud */
+    public update_attribute(attribute, name, value) {
+        var good_name = name.replace(/\s/g, "_").replace(/["\""]/g, "_").replace(/["\'"]/g, "_");
+        var toUpdateAttribute = this.node.attributes.filter((k) => { return (k.name === attribute.name) });
+        if(attribute.name == good_name){
+            toUpdateAttribute.map((k) => { 
+                this.node.attributes[this.node.attributes.indexOf(k)].value = value;
+                var response = this.query(Action.update, this.node.attributes[this.node.attributes.indexOf(k)]);
+            });
+        }else{
+            var creation = true;
+            this.node.attributes.forEach(element => {
+                if (element.name == good_name && creation){
+                    creation = false;
+                    alert("Deux attributs ne peuvent avoir le même nom.");
+                }
+            });
+            if(creation){  
+                toUpdateAttribute.map((k) => {
+                    this.node.attributes[this.node.attributes.indexOf(k)].name = good_name;
+                    this.node.attributes[this.node.attributes.indexOf(k)].value = value;
+                    var response = this.query(Action.update, this.node.attributes[this.node.attributes.indexOf(k)]);
+                    response = this.query(Action.delete, attribute);
+                });
+            }
+        }
     }
     /** This is a description of the  function. */
     public add_node() {
@@ -360,7 +389,6 @@ export class GraphUI {
             this.branchnamecondition = false;
             this.socket.emit('add branch srv', this.node);
         }else{
-            $('[data-toggle="popover"]').popover();
             this.branchnamecondition = true;
         }
 
@@ -417,18 +445,19 @@ export class GraphUI {
 
     /** This is a description of the  function. */
     public delete_edge() {
-        this.query(Action.delete,this.edge)
-        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.edge.source) || (l.target === this.edge.target); });
+        this.query(Action.delete,this.edge);
+        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.edge.source) && (l.target === this.edge.target); });
         toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         this.edgemodalstate = false;
-     
         this.redraw();
+        this.socket.emit('del edge srv', this.edge.source, this.edge.target);
     }
     /** This is a description of the  function. */
     public update_edge(edgename:string) {
         this.edge.name = edgename;
         var response = this.query(Action.update, this.edge);
         this.title_state = false;
+        this.socket.emit('up edge srv', edgename, this.edge);
     }
     /** This is a description of the  function. */
     public found(array:any[],value:any){
@@ -473,6 +502,7 @@ export class GraphUI {
                     if(element instanceof Branch) cypher = "MATCH (b),(n) WHERE id(b)="+element.id+" AND (b)-->(n) detach delete b,n";
                     break; 
             }
+            console.log(cypher);
         }
         jQuery.ajax({
                 type: 'POST',
