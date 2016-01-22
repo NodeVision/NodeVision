@@ -23,11 +23,12 @@ export class GraphUI {
     private image = this.authentication.getPicture();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
-    private width: number = jQuery("body").width();
-    private height: number = 500;
+    private width: number = 1000;
+    private height: number = 450;
     //User
     private user : User;
     private userBranch = new Branch('Users','ffffff','User',-1);
+    private notifications = new Array<string>();
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -54,13 +55,15 @@ export class GraphUI {
     private edgemodal = Element.edge;
     //users
     private users = Array<User>();
+    private hiddenBranches = Array<Branch>();
+    private hiddenNodes = Array<NVNode>();
+    private hiddenEdges = Array<NVEdge>();
     //navbar
     private branches = new Array<Branch>();
     private socket;
 
     constructor() {
-        
-        this.bdd(); //TODO remove appel de la base de données  
+        this.bdd();
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
@@ -75,7 +78,12 @@ export class GraphUI {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
+            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') })
+            .on('mouseup',() =>{if(this.new_link){
+                this.new_link = false;
+                this.line.remove();
+                this.nodes.call(this.force.drag);
+            }});
 
         this.init_graph();
 
@@ -157,7 +165,6 @@ export class GraphUI {
         /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
         /**/     toUpdateBranch.map((k) => { 
         /**/        this.branches[this.branches.indexOf(k)].name = Nbranch._name;
-        /**/        this.branches[this.branches.indexOf(k)].type = Nbranch._type;
         /**/        this.branches[this.branches.indexOf(k)].color = Nbranch._color;
         /**/     });
         /**/ });
@@ -191,8 +198,19 @@ export class GraphUI {
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true});
+        // this.nodes.append("image")
+        //     .attr("xlink:href", ()=>{return "https://github.com/favicon.ico"})
+        //     .attr("x", 20)
+        //     .attr("y", 60)
+        //     .attr("width", 16)
+        //     .attr("height", 16);
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
+    }
+    public isUser(node:NVNode){
+        var user = false;
+        if(this.users.find(u => u.id == node.id)) user = true;
+        return user;
     }
     /** This is a description of the  function. */
     public redraw() {
@@ -268,6 +286,10 @@ export class GraphUI {
         this.line
             .attr("x2",this.m[0])
             .attr("y2",this.m[1]);
+    }
+    /** This is a description of the  function. */
+    public visibility(branch:Branch){
+       // this.graph.nodes.
     }
     /** This is a description of the  function. */
     public add_edge(source: NVNode, target: NVNode) {
@@ -350,7 +372,6 @@ export class GraphUI {
         //id branch from the database
         var response = this.query(Action.create,this.branch)
         this.branch.id = response[0][0].metadata.id;
-        console.log(this.branch);
         this.branches.push(this.branch);
         //id node from the database
         this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
@@ -361,7 +382,6 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public update_branch(branch: Branch) {
-        console.log("index branch :"+ this.branches.indexOf(branch));
         this.branchmodalstate = true;
        // this.branch = branch;
        // this.socket.emit('up branch srv', this.branch, branch);
@@ -372,7 +392,6 @@ export class GraphUI {
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
-            console.log(element.branch);
             if (element.branch.id == branch.id) {
                 nodesbranch.push(element);
             }
@@ -475,8 +494,7 @@ export class GraphUI {
         //Récupération du user authentifié
         var mail = "troquereaub@gmail.com"; //TODO change
         var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u")
-        console.log(auth_user.length);
-        //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
+        //si le noeud n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
            auth_user =this.query(Action.create,new User(mail))
         }
@@ -502,7 +520,8 @@ export class GraphUI {
                         u[0].data.mail,
                         [new Attribute('name',u[0].data.name),
                         new Attribute('firstname',u[0].data.firstname)],null,
-                        u[0].data.image_path)
+                        u[0].data.image_path);
+                   
             this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
             this.graph.nodes.push(n);
          });
@@ -529,7 +548,6 @@ export class GraphUI {
                 );
             }
         }); 
-        console.log(this.graph.nodes)
         // hydratation des arcs
         response.forEach(r => {
            r[2].forEach(e => {
