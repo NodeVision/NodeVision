@@ -21,6 +21,7 @@ export class GraphUI {
     
     private authentication = new AuthApp();
     private image = this.authentication.getPicture();
+    private mail = this.authentication.getMail();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = jQuery("body").width();
@@ -46,6 +47,7 @@ export class GraphUI {
     private listAttribute = new Array<Attribute>();
     //branch Modal
     private branchmodalstate = false;
+    private branchnamecondition = false;
     private branchmodal = Element.branch;
     private branch = new Branch();
     //edge
@@ -105,7 +107,6 @@ export class GraphUI {
         /**/     jQuery("#"+node._id).remove();
         /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === node._id) || (l.target.id === node._id); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-        /**/     this.nodemodalstate = false;
         /**/     this.redraw();
         /**/ });
         /**/ // Update node broadcast
@@ -125,7 +126,6 @@ export class GraphUI {
         /**/     // add to graph
         /**/     this.branches.push(b);
         /**/     this.graph.nodes.push(n);
-        /**/     this.branchmodalstate = false;
         /**/     this.redraw();  
         /**/ });
         /**/ // Del branch broadcast
@@ -152,6 +152,7 @@ export class GraphUI {
         /**/    });
         /**/    this.redraw();            
         /**/ });
+        /**/ // Update branch broadcast
         /**/ this.socket.on('up branch clt', (branch) => {
         /**/     // update to graph
         /**/     var toUpdateBranch = this.branches.filter((k) => { return (k.id === branch._id) });
@@ -160,6 +161,13 @@ export class GraphUI {
         /**/        this.branches[this.branches.indexOf(k)].type = branch._type;
         /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
+        /**/ });
+        /**/ // Add edge broadcast
+        /**/ this.socket.on('add edge clt', (edge, source, target) => {
+        /**/     // add to graph 
+        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));      
+        /**/      this.graph.edges.push(Nedge);
+        /**/      this.redraw();
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
@@ -269,15 +277,7 @@ export class GraphUI {
             .attr("x2",this.m[0])
             .attr("y2",this.m[1]);
     }
-    /** This is a description of the  function. */
-    public add_edge(source: NVNode, target: NVNode) {
-        //ajouter a la base de données récup l'id  
-        if(source != target){  
-            var edge = new NVEdge(2264, 'undfined', source, target);      
-            this.graph.edges.push(edge);
-            this.query(Action.create,edge);
-        }       
-    }
+
     public add_attribute_line(){
         this.node.attributes.push(new Attribute('attribut '+(this.node.attributes.length+1),''));
     }
@@ -344,20 +344,26 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_branch(name: string, color: string) {
-        //branch input
-        this.branch.name = name;
-        this.branch.color = color;
-        //id branch from the database
-        var response = this.query(Action.create,this.branch)
-        this.branch.id = response[0][0].metadata.id;
-        console.log(this.branch);
-        this.branches.push(this.branch);
-        //id node from the database
-        this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
-        this.graph.nodes.push(this.node);
-        this.redraw();
-        this.branchmodalstate = false;
-        this.socket.emit('add branch srv', this.node);
+        if(name != ""){
+            //branch input
+            this.branch.name = name;
+            this.branch.color = color;
+            //id branch from the database
+            var response = this.query(Action.create,this.branch)
+            this.branch.id = response[0][0].metadata.id;
+            this.branches.push(this.branch);
+            //id node from the database
+            this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
+            this.graph.nodes.push(this.node);
+            this.redraw();
+            this.branchmodalstate = false;
+            this.branchnamecondition = false;
+            this.socket.emit('add branch srv', this.node);
+        }else{
+            $('[data-toggle="popover"]').popover();
+            this.branchnamecondition = true;
+        }
+
     }
     /** Affiche la pop up de modification d'une branche */
     public show_update_branch(branch: Branch) {
@@ -377,7 +383,6 @@ export class GraphUI {
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
-            console.log(element.branch);
             if (element.branch.id == branch.id) {
                 nodesbranch.push(element);
             }
@@ -398,6 +403,18 @@ export class GraphUI {
         this.redraw();
         this.socket.emit('del branch srv', branch);
     }
+    
+    /** This is a description of the  function. */
+    public add_edge(source: NVNode, target: NVNode) {
+        //ajouter a la base de données récup l'id  
+        if(source != target){  
+            var edge = new NVEdge(2264, 'undfined', source, target);      
+            this.graph.edges.push(edge);
+            this.query(Action.create,edge);
+            this.socket.emit('add edge srv', edge, source, target);
+        }       
+    }
+
     /** This is a description of the  function. */
     public delete_edge() {
         this.query(Action.delete,this.edge)
@@ -453,7 +470,7 @@ export class GraphUI {
                     }
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" delete r";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"= NULL RETURN n";
-                     if(element instanceof Branch) cypher = "MATCH (b),(n) WHERE id(b)="+element.id+" AND (b)-->(n) detach delete b,n";
+                    if(element instanceof Branch) cypher = "MATCH (b),(n) WHERE id(b)="+element.id+" AND (b)-->(n) detach delete b,n";
                     break; 
             }
         }
@@ -478,9 +495,8 @@ export class GraphUI {
     /** This is a description of the  function. */
     public bdd() {
         //Récupération du user authentifié
-        var mail = "troquereaub@gmail.com"; //TODO change
-        var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u")
-        console.log(auth_user.length);
+        var mail = this.mail;
+        var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
         //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
            auth_user =this.query(Action.create,new User(mail))

@@ -48,6 +48,10 @@ class Server {
                 socket.broadcast.emit('up branch clt', branch);
             });
 
+            socket.on('add edge srv', (edge, source, target) => {
+                socket.broadcast.emit('add edge clt', edge, source, target);
+            });
+
             socket.on('disconnect', function () {
                 console.log('user disconnected '+socket.id);
             });

@@ -102,6 +102,7 @@
                         <label class="col-sm-3 control-label">Branch name :</label>
                         <div class="col-sm-3">
                             <input #name class="form-control" type="text" placeholder="branch name" value="{{branch.name}}" (keyup)="branch.name = name.value">
+                            <div *ng-if="branchnamecondition" style="display: block;">Nom requis</div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -115,7 +116,7 @@
             <div class="modal-footer">
                 <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value,type.value)" type="button">Create</button>
                 <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
-                <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;">Close</button>
+                <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
             </div>
         </div>
     </div>
