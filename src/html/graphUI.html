@@ -11,7 +11,7 @@
                                     <div class="col-md-6">{{branch.name}}</div>
                                     <div class="col-md-6"> 
                                         <span class="glyphicon glyphicon-eye-open" aria-hidden="true" (click)="show_branch(branch)"></span>
-                                        <span class="glyphicon glyphicon-pencil" aria-hidden="true" (click)="update_branch(branch)"></span>
+                                        <span class="glyphicon glyphicon-pencil" aria-hidden="true" (click)="show_update_branch(branch)"></span>
                                         <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_branch(branch)"></span>
                                     </div>     
                                 </div>
@@ -43,7 +43,11 @@
                 <li><a (click)="authentication.logout()">Log Out</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
+<<<<<<< HEAD
                 <img src="{{authentication.getPicture()}}" width="50" height="50" class="img-circle">
+=======
+                <img title="{{authentication.getMail()}}" src="{{authentication.getPicture()}}" width="45" height="45" class="img-circle">
+>>>>>>> origin/dev
             </ul>
         </div>
     </nav> 
@@ -101,7 +105,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>{{branch.name}}</h3>
+                    <h3>{{branch._name}}</h3>
                 </div><div class="modal-body">
                 <form class="form-horizontal">
                     <div class="form-group">
@@ -113,7 +117,7 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" >
-                                <li *ng-for="#type of branch.types" (click)="branch.type = type"><a>{{type}}</a></li>
+                                <li *ng-for="#type of branch.types" (click)="branch.type = type;"><a>{{type}}</a></li>
                             </ul>
                             </div>
                         </div>
@@ -122,6 +126,7 @@
                         <label class="col-sm-3 control-label">Branch name :</label>
                         <div class="col-sm-3">
                             <input #name class="form-control" type="text" placeholder="branch name" value="{{branch.name}}" (keyup)="branch.name = name.value">
+                            <div *ng-if="branchnamecondition" style="display: block;">Nom requis</div>
                         </div>
                     </div>
                     <div class="form-group">
@@ -134,7 +139,8 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value,type.value)" type="button">Create</button>
-                <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;">Close</button>
+                <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
+                <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
             </div>
         </div>
     </div>
