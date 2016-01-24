@@ -6,6 +6,7 @@ import {NVEdge} from './model/edge';
 import {Graph} from './model/graph';
 import {Group} from './model/group';
 import {Attribute} from './model/attribute';
+import {Notification} from './model/notification';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
 import {Action} from './enum';
@@ -60,10 +61,12 @@ export class GraphUI {
     private branches = new Array<Branch>();
     private socket;
     //administration
-    private notifications = new Array<string>();
+    private notifications = new Array<Notification>();
 
     constructor() {
-        this.notifications.push("test",'test','test');
+        //Création de la socket client
+        this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
+        //initialisation des données utilisateur
         this.bdd();
         //navbar branches
         var b = new Array<Branch>();
@@ -83,9 +86,16 @@ export class GraphUI {
 
         this.init_graph();
 
-        //Création de la socket client
-        this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
+        
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
+        /**/ // connetion User
+        /**/ this.socket.on('broadcast user clt', (user) => {
+        /**/     //hydratation
+        /**/     var nu = this.graph.nodes.find(n => n.id == user._id)
+        /**/     var u = new User(user._mail,user._id,nu);
+        /**/     //add to users
+        /**/     this.users.push(u);
+        /**/ });
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
@@ -278,6 +288,14 @@ export class GraphUI {
             .attr("x2",this.m[0])
             .attr("y2",this.m[1]);
     }
+    public notif_accept(){
+        //TODO change le status de l'edge et ajoute les noeuds
+        //TODO supprime la notification du récepteur
+    }
+    public notif_decline(){
+        //TODO supprime l'edge
+        //TODO supprime la notification de l'auteur
+    }
     /** This is a description of the  function. */
     public add_edge(source: NVNode, target: NVNode) {
         //ajouter a la base de données récup l'id  
@@ -392,7 +410,6 @@ export class GraphUI {
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
-            console.log(element.branch);
             if (element.branch.id == branch.id) {
                 nodesbranch.push(element);
             }
@@ -509,7 +526,8 @@ export class GraphUI {
                 [new Attribute('name',auth_user[0][0].data.name),
                 new Attribute('firstname',auth_user[0][0].data.firstname)],null,
                 auth_user[0][0].data.image_path));
-
+        //broadcast du user aux autres connecté 
+        this.socket.emit('broadcast users srv', this.user);
         //Récupération de tous les noeuds sur lesquels on a la vision
         var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
         //Récupération de tous les utilisateurs qui ne sont pas nous même

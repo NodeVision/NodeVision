@@ -10,6 +10,7 @@ export class User{
         private _preferencepopup: PreferencePopup;
         private _branchesvisibility: Array<Branch>;
         private _node: NVNode;
+        private _socket:string
         
         constructor(
             mail: string,
@@ -23,6 +24,8 @@ export class User{
                 this._branchesvisibility = branchVsblty;
                 this._node = node;
         }
+        get socket(){ return this._socket}
+        set socket(socket:string){this._socket = socket}
         get id() { return this._id }
         get mail() { return this._mail }
         get preferencepopup() { return this._preferencepopup }

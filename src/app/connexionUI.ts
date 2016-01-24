@@ -29,9 +29,8 @@ export class AuthApp {
       localStorage.setItem('profile', JSON.stringify(profile));
       localStorage.setItem('id_token', id_token);
       
-
       var user = JSON.parse(localStorage.getItem('profile'));
-      var userConnected = new User(user.email,'','');
+      var userConnected = new User(user.email);
     });
   }
 
@@ -41,23 +40,16 @@ export class AuthApp {
     localStorage.removeItem('id_token');
     this.login();
   }
-  
   getPicture() : string {
-      console.log(JSON.parse(localStorage.getItem('profile')).picture);
-      
       return JSON.parse(localStorage.getItem('profile')).picture;
   }
-  
-    getMail() : string {
-      
+  getMail() : string {
       return JSON.parse(localStorage.getItem('profile')).email;
   }
   
   isConnected() : boolean {
-      
       return localStorage.getItem('profile') != null;
   }
-
   loggedIn() {
     //return tokenNotExpired();
   }

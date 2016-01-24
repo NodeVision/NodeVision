@@ -1,3 +1,4 @@
+import {User} from './app/model/user';
 /// <reference path="./lib/express.d.ts" />
 /// <reference path="./lib/serve-static.d.ts" />
 /// <reference path="./lib/mime.d.ts" />
@@ -11,6 +12,7 @@ class Server {
     private app = express();
     private httpServer = http.createServer(this.app);
     private io = sio.listen(this.httpServer);
+    private users = Array<User>();
 
     constructor() {
         //routage sur index.html
@@ -20,10 +22,15 @@ class Server {
         //ajout des dépendences
         this.app.use(express.static(__dirname + '/'));
         //connexion & deconnexion
-        this.io.on('connection', function (socket: SocketIO.Socket) {
+        this.io.on('connection', (socket: SocketIO.Socket) => {
             var date = new Date();
             console.log(date+' : a user connected '+socket.id);
 
+            socket.on('broadcast users srv',(user) => {
+                var u = new User(user.mail,user.id);u.socket = socket.id;
+                this.users.push(u);
+                socket.broadcast.emit('broadcast users clt',this.users)
+            });
             socket.on('add node srv',(node, edge) => {
                 socket.broadcast.emit('add node clt', node, edge);
             });

@@ -25,11 +25,11 @@
                         <ul class="dropdown-menu">
                             <li *ng-for="#notif of notifications">
                                 <div class="row">
-                                    <div class="col-md-9">{{notif}}</div>
+                                    <div class="col-md-9">{{notif.notif()}}</div>
                                     <div class="col-md-3">
                                         <div class="row">
-                                            <span class="glyphicon glyphicon-ok" style="color:green" aria-hidden="true"></span>
-                                            <span class="glyphicon glyphicon-remove" style="color:#ff1a1a" aria-hidden="true"></span>
+                                            <span class="glyphicon glyphicon-ok" style="color:green" (click)="notif_accept()" aria-hidden="true"></span>
+                                            <span class="glyphicon glyphicon-remove" style="color:#ff1a1a" (click)="notif_decline()" aria-hidden="true"></span>
                                         </div>
                                     </div>     
                                 </div>
