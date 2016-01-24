@@ -59,10 +59,12 @@ export class GraphUI {
     //navbar
     private branches = new Array<Branch>();
     private socket;
+    //administration
+    private notifications = new Array<string>();
 
     constructor() {
-        
-        this.bdd(); //TODO remove appel de la base de données  
+        this.notifications.push("test",'test','test');
+        this.bdd();
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
