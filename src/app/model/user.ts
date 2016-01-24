@@ -17,7 +17,7 @@ export class User{
             node?:NVNode,                      
             preferencepopup?:PreferencePopup,
             branchVsblty?:Array<Branch>) {
-                
+                this._id = id;
                 this._mail = mail;
                 this._preferencepopup = preferencepopup;
                 this._branchesvisibility = branchVsblty;
