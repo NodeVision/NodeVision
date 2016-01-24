@@ -31,7 +31,7 @@ export class AuthApp {
       
 
       var user = JSON.parse(localStorage.getItem('profile'));
-      var userConnected = new User(user.email);
+      var userConnected = new User(user.email,'','');
     });
   }
 
@@ -43,6 +43,7 @@ export class AuthApp {
   }
   
   getPicture() : string {
+      console.log(JSON.parse(localStorage.getItem('profile')).picture);
       
       return JSON.parse(localStorage.getItem('profile')).picture;
   }
