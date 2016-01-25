@@ -5,6 +5,7 @@ import {NVNode} from './model/node';
 import {NVEdge} from './model/edge';
 import {Graph} from './model/graph';
 import {Group} from './model/group';
+import {Notification} from './model/notification';
 import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
@@ -28,7 +29,7 @@ export class GraphUI {
     private height: number = 500;
     //User
     private user : User;
-    private userBranch = new Branch('Users','ffffff','User',-1);
+    private userBranch = new Branch('Users','ffffff',-1);
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -60,10 +61,13 @@ export class GraphUI {
     //navbar
     private branches = new Array<Branch>();
     private socket;
-
+    //administration
+    private notifications = new Array<Notification>();
     constructor() {
-        
-        this.bdd(); //TODO remove appel de la base de données  
+       
+        this.bdd();
+        var n = new Notification(this.user,'test',new Branch('lol')); 
+        this.notifications.push(n) 
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
@@ -78,17 +82,26 @@ export class GraphUI {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg
-            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
+            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','') })
+            .on('mouseup',() => { this.line.remove()});
 
         this.init_graph();
 
         //Création de la socket client
         this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
+        /**/ // connetion User
+        /**/ this.socket.on('broadcast user clt', (user) => {
+        /**/     //hydratation
+        /**/     var nu = this.graph.nodes.find(n => n.id == user._id)
+        /**/     var u = new User(user._mail,user._id,nu);
+        /**/     //add to users
+        /**/     this.users.push(u);
+        /**/ });
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
         /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
         /**/     var e = new NVEdge(edge._id,edge.name,ns,nt);
@@ -121,7 +134,7 @@ export class GraphUI {
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (node) => {
         /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
         /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     // add to graph
         /**/     this.branches.push(b);
@@ -266,6 +279,7 @@ export class GraphUI {
         nodes.enter().append("circle")
             .attr("class", "node")
             .attr("r", 10)
+            .attr("id", (n: NVNode) => { return n.id })
             .style('fill', (n: NVNode) => { return n.branch.color })
             .style('stroke', (n: NVNode) => { return n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
@@ -526,7 +540,7 @@ export class GraphUI {
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
-                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"' , b.type ='"+element.type+"'";
+                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"'";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";  
                     if(element instanceof User) cypher = "";
                     break;
@@ -612,15 +626,14 @@ export class GraphUI {
                     new Branch(
                         n[3].data.name,
                         n[3].data.color,
-                        n[3].data.type,n[3].metadata.id),
+                        n[3].metadata.id),
                     n[1].metadata.id,
                     n[1].data.name,
                     this.listAttribute
                     )
                 );
             }
-        }); 
-        console.log(this.graph.nodes)
+        });
         // hydratation des arcs
         response.forEach(r => {
            r[2].forEach(e => {

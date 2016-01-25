@@ -6,7 +6,7 @@ export class Branch {
     private _name: string;
     private _color: string;
 
-    constructor(name?: string, color?: string,type?:string,id?:number) {
+    constructor(name?: string, color?: string,id?:number) {
         if (name) this._name = name;
         if (color) this._color = color;
         if (id) this._id = id;

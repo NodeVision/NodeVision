@@ -1,3 +1,4 @@
+import {User} from './app/model/user';
 /// <reference path="./lib/express.d.ts" />
 /// <reference path="./lib/serve-static.d.ts" />
 /// <reference path="./lib/mime.d.ts" />
@@ -23,7 +24,11 @@ class Server {
         this.io.on('connection', function (socket: SocketIO.Socket) {
             var date = new Date();
             console.log(date+' : a user connected '+socket.id);
-
+            socket.on('broadcast users srv',(user) => {
+                var u = new User(user.mail,user.id);u.socket = socket.id;
+                this.users.push(u);
+                socket.broadcast.emit('broadcast users clt',this.users)
+            });
             socket.on('add node srv',(node, edge) => {
                 socket.broadcast.emit('add node clt', node, edge);
             });
