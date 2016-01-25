@@ -571,6 +571,7 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public bdd() {
+<<<<<<< HEAD
         //Récupération du user authentifié
         var mail = this.mail;
         var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
@@ -593,6 +594,17 @@ export class GraphUI {
         var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
+
+=======
+        var neo_init ="";
+        ///RECUP DU USER VIA LA CONNEXION mail:benjamin.troquereau@gmail.com//////////////////////// TODO
+        this.user = new User('troquereaub@gmail.com', 'Chipaux', 'Germain', null, null);
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        
+        /// request to init the graph
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE u.matricule = '"+this.user.matricule+"' RETURN keys(n),n,r,b")
+        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE u.matricule <> '"+this.user.matricule+"' RETURN u") 
+>>>>>>> origin/dev
         this.graph = new Graph(1, 'graph');         
         reponse_users.forEach(u => {     
             var n = new NVNode(
