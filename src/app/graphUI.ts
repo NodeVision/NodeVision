@@ -29,7 +29,7 @@ export class GraphUI {
     private height: number = 500;
     //User
     private user : User;
-    private userBranch = new Branch('Users','ffffff',-1);
+    private userBranch = new Branch('Users','#ffffff',-1);
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -81,14 +81,11 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg
-            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','') })
-            .on('mouseup',() => { this.line.remove()});
-
+        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { this.line.remove()});
         this.init_graph();
 
         //Création de la socket client
-        this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
+        this.socket = io.connect('http://localhost:8888');
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
         /**/ // connetion User
         /**/ this.socket.on('broadcast user clt', (user) => {
@@ -107,6 +104,7 @@ export class GraphUI {
         /**/     var e = new NVEdge(edge._id,edge.name,ns,nt);
         /**/     //add to graph
         /**/     this.graph.nodes.push(nt);
+        /**/     //this.nodes[0].push(nt);
         /**/     this.graph.edges.push(e);
         /**/     this.redraw();
         /**/ });
@@ -116,9 +114,7 @@ export class GraphUI {
         /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/      toSpliceN.map((k) => { 
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
-        /**/        this.nodes[0].splice(this.graph.nodes.indexOf(k), 1); 
         /**/     });
-        /**/     jQuery("#"+node._id).remove();
         /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === node._id) || (l.target.id === node._id); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/     this.redraw();
@@ -247,8 +243,8 @@ export class GraphUI {
             .attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999");
 
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
@@ -271,8 +267,8 @@ export class GraphUI {
         links.enter().insert("line", ".node").attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e})
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999")
         links.exit().remove();
         
         var nodes = this.nodes.data(this.force.nodes());
@@ -319,8 +315,8 @@ export class GraphUI {
         if (d3.event.shiftKey) {
             this.line = this.svg.append("line")
                 .attr("class", "link")
-                .style("stroke","999")
                 .style("stroke-width","5")
+                .style("stroke","#999")
                 .attr("x1", n.x)
                 .attr("y1", n.y)
                 .attr("x2", n.x)
@@ -328,8 +324,7 @@ export class GraphUI {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
-            this.new_link = true;
-            
+            this.new_link = true;            
             this.svg.on("mousemove", () => { this.mousemove() });
         }
     }
@@ -389,26 +384,15 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_node() {
-        var response = this.query(Action.create,new NVNode(this.node.branch));
-        var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
-        var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        this.socket.emit('add node srv',node,edge);
-        //reconstruction
-        this.graph.nodes.push(node);
-        this.graph.edges.push(edge);
-        this.redraw();
+        this.socket.emit('add node srv',this.user,this.node);
     }
     /** This is a description of the  function. */
     public delete_node() {
-        this.query(Action.delete,this.node);
-        this.nodes[0].splice(this.graph.nodes.indexOf(this.node), 1);
-        jQuery("#"+this.node.id).remove();
-        this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
-        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.node) || (l.target === this.node); });
-        toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-        this.nodemodalstate = false;
-        this.socket.emit('del node srv', this.node);
-        this.redraw();
+        var isLastNode = 0;
+        console.log(this.graph.nodes);console.log(this.node);
+        this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){console.log(n.branch.id+'=?'+this.node.branch.id); isLastNode++} })
+        console.log(isLastNode);
+        this.socket.emit('del node srv', this.node, isLastNode);
     }
     /** This is a description of the  function. */
     public delete_node_and_sons() {
