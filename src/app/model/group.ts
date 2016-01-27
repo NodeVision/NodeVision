@@ -1,9 +1,6 @@
 ﻿import {User} from './user';
 import {NVNode} from './node';
-<<<<<<< HEAD
-=======
 
->>>>>>> 8af129ed4a093e03a15b64892799e9a2f45df1f7
 export class Group {
     private _id: number;
     private _name: string;

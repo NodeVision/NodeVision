@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-/// <reference path="../../../tests/libs/angularjs/angular-mocks.d.ts" />
-
-=======
->>>>>>> 8af129ed4a093e03a15b64892799e9a2f45df1f7
 import {Branch} from './branch';
 import {Attribute} from './attribute';
 import {PreferencePopup} from './preferencepopup';

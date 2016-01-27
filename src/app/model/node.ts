@@ -1,10 +1,7 @@
 import {User} from './user';
 import {Attribute} from './attribute';
 import {Branch} from './branch';
-<<<<<<< HEAD
-=======
 
->>>>>>> 8af129ed4a093e03a15b64892799e9a2f45df1f7
 export class NVNode implements d3.layout.force.Node{    
         private _id: number;
         private _name: string;
