@@ -1,7 +1,4 @@
-﻿import {Injectable} from 'angular2/angular2';
-
-@Injectable()
-export class Branch {
+﻿export class Branch {
     private _id: number;
     private _name: string;
     private _color: string;

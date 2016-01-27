@@ -29,7 +29,7 @@ export class GraphUI {
     private height: number = 500;
     //User
     private user : User;
-    private userBranch = new Branch('Users','ffffff',-1);
+    private userBranch = new Branch('Users','#ffffff',-1);
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -247,8 +247,8 @@ export class GraphUI {
             .attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999");
 
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
@@ -271,8 +271,8 @@ export class GraphUI {
         links.enter().insert("line", ".node").attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e})
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999")
         links.exit().remove();
         
         var nodes = this.nodes.data(this.force.nodes());
@@ -319,8 +319,8 @@ export class GraphUI {
         if (d3.event.shiftKey) {
             this.line = this.svg.append("line")
                 .attr("class", "link")
-                .style("stroke","999")
                 .style("stroke-width","5")
+                .style("stroke","#999")
                 .attr("x1", n.x)
                 .attr("y1", n.y)
                 .attr("x2", n.x)
@@ -328,8 +328,7 @@ export class GraphUI {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
-            this.new_link = true;
-            
+            this.new_link = true;            
             this.svg.on("mousemove", () => { this.mousemove() });
         }
     }

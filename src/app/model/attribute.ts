@@ -1,7 +1,6 @@
-import {Injectable} from 'angular2/angular2';
 import {Element} from '../enum';
 import {Status} from '../enum';
-@Injectable()
+
 export class Attribute{
         private _name:string;
         private _value: any;
