@@ -85,20 +85,6 @@
                 </div><div class="modal-body">
                 <form class="form-horizontal">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Branch Type :</label>
-                        <div class="col-sm-3">
-                            <div class="dropdown">
-                            <button #type value="{{branch.type}}" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" >
-                                {{branch.type}}
-                                <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" >
-                                <li *ng-for="#type of branch.types" (click)="branch.type = type;"><a>{{type}}</a></li>
-                            </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label class="col-sm-3 control-label">Branch name :</label>
                         <div class="col-sm-3">
                             <input #name class="form-control" type="text" placeholder="branch name" value="{{branch.name}}" (blur)="branch.name = name.value">
@@ -114,7 +100,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value,type.value)" type="button">Create</button>
+                <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value)" type="button">Create</button>
                 <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
                 <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
             </div>

@@ -1,8 +1,7 @@
-import {Injectable} from 'angular2/angular2';
 import {User} from './user';
 import {Attribute} from './attribute';
 import {Branch} from './branch';
-@Injectable()
+
 export class NVNode implements d3.layout.force.Node{    
         private _id: number;
         private _name: string;

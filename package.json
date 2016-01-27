@@ -14,6 +14,7 @@
     "angular2": "2.0.0-alpha.44",
     "es6-shim": "^0.33.13",
     "express": "^4.10.2",
+    "neo4j-io": "^1.0.4",
     "socket.io": "^1.4.4",
     "systemjs": "0.19.2"
   },

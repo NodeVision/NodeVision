@@ -1,5 +1,4 @@
-﻿import {Injectable} from 'angular2/angular2';
-@Injectable()
+﻿
 export class PreferencePopup {
     public _activate: boolean;
     public _fadeout: boolean;

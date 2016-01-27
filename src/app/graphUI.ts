@@ -77,23 +77,23 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg
-            .on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch('','','Standard') });
-
+        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch() });
         this.init_graph();
 
         //Création de la socket client
-        this.socket = io.connect('http://localhost:8888', {resource: 'nodejs'});
+        this.socket = io.connect('http://localhost:8888');
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
+        console.log(b);
         /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
         /**/     var e = new NVEdge(edge._id,edge.name,ns,nt);
         /**/     //add to graph
         /**/     this.graph.nodes.push(nt);
+        /**/     //this.nodes[0].push(nt);
         /**/     this.graph.edges.push(e);
         /**/     this.redraw();
         /**/ });
@@ -103,9 +103,7 @@ export class GraphUI {
         /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/      toSpliceN.map((k) => { 
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
-        /**/        this.nodes[0].splice(this.graph.nodes.indexOf(k), 1); 
         /**/     });
-        /**/     jQuery("#"+node._id).remove();
         /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === node._id) || (l.target.id === node._id); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/     this.redraw();
@@ -121,7 +119,7 @@ export class GraphUI {
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (node) => {
         /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._type,node._branch._id);
+        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
         /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     // add to graph
         /**/     this.branches.push(b);
@@ -266,6 +264,7 @@ export class GraphUI {
         nodes.enter().append("circle")
             .attr("class", "node")
             .attr("r", 10)
+            .attr("id", (n: NVNode) => { return n.id })
             .style('fill', (n: NVNode) => { return n.branch.color })
             .style('stroke', (n: NVNode) => { return n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
@@ -375,26 +374,15 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public add_node() {
-        var response = this.query(Action.create,new NVNode(this.node.branch));
-        var node = new NVNode(this.node.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
-        var edge = new NVEdge(response[0][0].metadata.id, response[0][0].data.name, this.node, node);
-        this.socket.emit('add node srv',node,edge);
-        //reconstruction
-        this.graph.nodes.push(node);
-        this.graph.edges.push(edge);
-        this.redraw();
+        this.socket.emit('add node srv',this.user,this.node);
     }
     /** This is a description of the  function. */
     public delete_node() {
-        this.query(Action.delete,this.node);
-        this.nodes[0].splice(this.graph.nodes.indexOf(this.node), 1);
-        jQuery("#"+this.node.id).remove();
-        this.graph.nodes.splice(this.graph.nodes.indexOf(this.node), 1);
-        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.node) || (l.target === this.node); });
-        toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-        this.nodemodalstate = false;
-        this.socket.emit('del node srv', this.node);
-        this.redraw();
+        var isLastNode = 0;
+        console.log(this.graph.nodes);console.log(this.node);
+        this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){console.log(n.branch.id+'=?'+this.node.branch.id); isLastNode++} })
+        console.log(isLastNode);
+        this.socket.emit('del node srv', this.node, isLastNode);
     }
     /** This is a description of the  function. */
     public delete_node_and_sons() {
@@ -526,7 +514,7 @@ export class GraphUI {
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
-                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"' , b.type ='"+element.type+"'";
+                    if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"'";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";  
                     if(element instanceof User) cypher = "";
                     break;
@@ -612,7 +600,7 @@ export class GraphUI {
                     new Branch(
                         n[3].data.name,
                         n[3].data.color,
-                        n[3].data.type,n[3].metadata.id),
+                        n[3].metadata.id),
                     n[1].metadata.id,
                     n[1].data.name,
                     this.listAttribute
@@ -620,7 +608,6 @@ export class GraphUI {
                 );
             }
         }); 
-        console.log(this.graph.nodes)
         // hydratation des arcs
         response.forEach(r => {
            r[2].forEach(e => {

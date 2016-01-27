@@ -1,9 +1,8 @@
-import {Injectable} from 'angular2/angular2';
 import {Branch} from './branch';
 import {Attribute} from './attribute';
 import {PreferencePopup} from './preferencepopup';
 import {NVNode} from './node';
-@Injectable()
+
 export class User{
         private _id:number;
         private _mail: string;
