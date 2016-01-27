@@ -125,4 +125,4 @@ class Server {
         });
     }
 }
-new Server(); 
+new Server();
