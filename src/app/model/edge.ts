@@ -1,7 +1,5 @@
-import {Injectable} from 'angular2/angular2';
 import {NVNode} from './node';
 
-@Injectable()
 export class NVEdge implements d3.layout.force.Link<NVNode>{
 
     private _id: number;

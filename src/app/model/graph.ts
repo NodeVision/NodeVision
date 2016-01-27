@@ -1,7 +1,5 @@
-import {Injectable} from 'angular2/angular2';
 import {NVNode} from './node';
 import {NVEdge} from './edge';
-@Injectable()
 export class Graph{
         private _id: number;
         private _name: string;
