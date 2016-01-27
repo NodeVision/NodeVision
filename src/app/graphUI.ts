@@ -5,6 +5,7 @@ import {NVNode} from './model/node';
 import {NVEdge} from './model/edge';
 import {Graph} from './model/graph';
 import {Group} from './model/group';
+import {Notification} from './model/notification';
 import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
@@ -28,7 +29,7 @@ export class GraphUI {
     private height: number = 500;
     //User
     private user : User;
-    private userBranch = new Branch('Users','ffffff','User',-1);
+    private userBranch = new Branch('Users','#ffffff',-1);
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -60,10 +61,13 @@ export class GraphUI {
     //navbar
     private branches = new Array<Branch>();
     private socket;
-
+    //administration
+    private notifications = new Array<Notification>();
     constructor() {
-        
-        this.bdd(); //TODO remove appel de la base de données  
+       
+        this.bdd();
+        var n = new Notification(this.user,'test',new Branch('lol')); 
+        this.notifications.push(n) 
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
@@ -77,17 +81,24 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch() });
+        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { this.line.remove()});
         this.init_graph();
 
         //Création de la socket client
         this.socket = io.connect('http://localhost:8888');
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
+        /**/ // connetion User
+        /**/ this.socket.on('broadcast user clt', (user) => {
+        /**/     //hydratation
+        /**/     var nu = this.graph.nodes.find(n => n.id == user._id)
+        /**/     var u = new User(user._mail,user._id,nu);
+        /**/     //add to users
+        /**/     this.users.push(u);
+        /**/ });
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
-        console.log(b);
         /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
         /**/     var e = new NVEdge(edge._id,edge.name,ns,nt);
@@ -232,8 +243,8 @@ export class GraphUI {
             .attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999");
 
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
@@ -256,8 +267,8 @@ export class GraphUI {
         links.enter().insert("line", ".node").attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e})
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke","999")
-            .style("stroke-width","5");
+            .style("stroke-width","5")
+            .style("stroke","#999")
         links.exit().remove();
         
         var nodes = this.nodes.data(this.force.nodes());
@@ -304,8 +315,8 @@ export class GraphUI {
         if (d3.event.shiftKey) {
             this.line = this.svg.append("line")
                 .attr("class", "link")
-                .style("stroke","999")
                 .style("stroke-width","5")
+                .style("stroke","#999")
                 .attr("x1", n.x)
                 .attr("y1", n.y)
                 .attr("x2", n.x)
@@ -313,8 +324,7 @@ export class GraphUI {
             this.nodes
                 .on('mousedown.drag', null)
                 .on('touchstart.drag', null);
-            this.new_link = true;
-            
+            this.new_link = true;            
             this.svg.on("mousemove", () => { this.mousemove() });
         }
     }
@@ -607,7 +617,7 @@ export class GraphUI {
                     )
                 );
             }
-        }); 
+        });
         // hydratation des arcs
         response.forEach(r => {
            r[2].forEach(e => {

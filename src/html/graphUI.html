@@ -19,6 +19,25 @@
                         </ul>
                     </li>
                 </ul>
+                 <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
+                            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
+                        <ul class="dropdown-menu">
+                            <li *ng-for="#notif of notifications">
+                                <div class="row">
+                                    <div class="col-md-9">{{notif.note}}</div>
+                                    <div class="col-md-3">
+                                        <div class="row">
+                                            <span class="glyphicon glyphicon-ok" style="color:green" (click)="notif_accept()" aria-hidden="true"></span>
+                                            <span class="glyphicon glyphicon-remove" style="color:#ff1a1a" (click)="notif_decline()" aria-hidden="true"></span>
+                                        </div>
+                                    </div>     
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
             <ul class="nav navbar-nav navbar-right">   
                 <li><a (click)="authentication.logout()">Log Out</a></li>

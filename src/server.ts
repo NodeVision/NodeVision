@@ -1,8 +1,8 @@
-import {bootstrap, View, Component, FormBuilder, CORE_DIRECTIVES} from 'angular2/angular2';
 import {Branch} from './app/model/branch';
 import {NVNode} from './app/model/node';
 import {NVEdge} from './app/model/edge';
 import {Attribute} from './app/model/attribute';
+import {User} from './app/model/user';
 
 /// <reference path="./lib/express.d.ts" />
 /// <reference path="./lib/serve-static.d.ts" />
@@ -31,6 +31,16 @@ class Server {
             var date = new Date();
             console.log(date+' : a user connected '+socket.id);
 
+            //Connexion d'un nouvel utilisateur
+            socket.on('broadcast users srv',(user) => {
+                var u = new User(user.mail,user.id);u.socket = socket.id;
+                this.users.push(u);
+                socket.broadcast.emit('broadcast users clt',this.users)
+            });
+            socket.on('add node srv',(node, edge) => {
+                socket.broadcast.emit('add node clt', node, edge);
+            });
+
             // Création d'un noeud coté serveur
             socket.on('add node srv',(user, node) => {
                 var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
@@ -48,7 +58,6 @@ class Server {
                         console.log("Erreur dans la creation du noeud"+ node._id+"  "+ node._branch._id+" "+ user._node._id);
                     }
                 );
-            });
 
             socket.on('del node srv', (node, isLastNode) => {
                 console.log(isLastNode);

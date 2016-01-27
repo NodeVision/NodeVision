@@ -1,5 +1,6 @@
 import {Element} from '../enum';
 import {Status} from '../enum';
+
 export class Attribute{
         private _name:string;
         private _value: any;
