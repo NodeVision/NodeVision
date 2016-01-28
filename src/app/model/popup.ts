@@ -1,6 +1,5 @@
 ﻿import {PreferencePopup} from './preferencepopup';
 import {Status} from '../enum';
-
 export class Popup {
     public _type: Status;
     public _message: string;

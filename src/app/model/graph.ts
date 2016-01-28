@@ -1,6 +1,5 @@
 import {NVNode} from './node';
 import {NVEdge} from './edge';
-
 export class Graph{
         private _id: number;
         private _name: string;

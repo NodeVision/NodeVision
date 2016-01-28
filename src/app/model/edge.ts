@@ -1,5 +1,4 @@
 import {NVNode} from './node';
-
 export class NVEdge implements d3.layout.force.Link<NVNode>{
 
     private _id: number;

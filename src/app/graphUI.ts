@@ -21,11 +21,12 @@ import {AuthApp} from './connexionUI';
 export class GraphUI {
     
     private authentication = new AuthApp();
+    private users_authentified = new Array<User>();
     private image = this.authentication.getPicture();
     private mail = this.authentication.getMail();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
-    private width: number = jQuery("body").width();
+    private width: number = 900;
     private height: number = 500;
     //User
     private user : User;
@@ -64,10 +65,16 @@ export class GraphUI {
     //administration
     private notifications = new Array<Notification>();
     constructor() {
-       
+        //Création de la socket client
+        this.socket = io.connect('http://localhost:8888');
+        //initialisation des elements du graph
         this.bdd();
-        var n = new Notification(this.user,'test',new Branch('lol')); 
-        this.notifications.push(n) 
+        /////////////////////TEST NOTIFICATION 
+        var n = new Notification(this.user,'test',new Branch('lol'));
+        //console.log(this.user);
+        
+        this.notifications.push(n,n) 
+        ///////////////////////
         //navbar branches
         var b = new Array<Branch>();
         this.graph.nodes.forEach(n => {  
@@ -81,19 +88,25 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { this.line.remove()});
+        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
         this.init_graph();
 
         //Création de la socket client
         this.socket = io.connect('http://localhost:8888');
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
         /**/ // connetion User
-        /**/ this.socket.on('broadcast user clt', (user) => {
+        /**/ this.socket.on('broadcast users clt', (user) => { 
         /**/     //hydratation
-        /**/     var nu = this.graph.nodes.find(n => n.id == user._id)
-        /**/     var u = new User(user._mail,user._id,nu);
+        /**/     var n = new NVNode(new Branch());
+        /**/     n.image_path = user._node._image_path;
+        /**/     var u = new User(user._mail,user._id,n);
         /**/     //add to users
-        /**/     this.users.push(u);
+        /**/     this.users_authentified.push(u);
+        /**/ });
+        /**/ this.socket.on('broadcast user disconnect', (user) => { 
+            //console.log(user._id)
+             
+        /**/     this.users_authentified.slice(this.users_authentified.findIndex(u => u.id == user._id))
         /**/ });
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
@@ -245,6 +258,7 @@ export class GraphUI {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
+            .style("stroke-opacity", 0.3)
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
             .style("stroke-width","5")
@@ -271,6 +285,7 @@ export class GraphUI {
         links.enter().insert("line", ".node").attr("class", "link")
             .on("click", (e: NVEdge) => { this.edge = e})
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
+            .style("stroke-opacity", 0.3)
             .style("stroke-width","5")
             .style("stroke","#999")
         links.exit().remove();
@@ -465,8 +480,13 @@ export class GraphUI {
     /** This is a description of the  function. */
     public add_edge(source: NVNode, target: NVNode) {
         //ajouter a la base de données récup l'id  
-        if(source != target){  
-            var edge = new NVEdge(2264, 'undfined', source, target);      
+        if(source != target){
+            var type = '';
+            if (source.type == "User" || target.type == "User")  {
+                var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");  
+            }else{
+                var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");  
+            }
             this.graph.edges.push(edge);
             this.query(Action.create,edge);
             this.socket.emit('add edge srv', edge, source, target);
@@ -508,7 +528,16 @@ export class GraphUI {
                     break;
                 case Action.create:
                     if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND id(u)="+this.user.node.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
-                    if(element instanceof NVEdge) cypher = "MATCH (s:Node),(t:Node) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";            
+                    if(element instanceof NVEdge) {
+                        cypher = "MATCH (s),(t) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id;
+                        if(element.source.type == 'User' || element.target.type == 'User'){
+                            if(element.source.type == 'User')  cypher += " CREATE (s)-[r:WRITE { name:'undefined'}]->(t) RETURN r";
+                            if(element.target.type == 'User')  cypher += " CREATE (s)-[r:READ { name:'undefined'}]->(t) RETURN r";
+                        }else{
+                            cypher += " CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";
+                        }
+                        console.log(cypher);
+                    }           
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE id(u)="+this.user.node.id+" CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                     if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:''});";
@@ -566,24 +595,30 @@ export class GraphUI {
                 auth_user[0][0].data.mail,
                 [new Attribute('name',auth_user[0][0].data.name),
                 new Attribute('firstname',auth_user[0][0].data.firstname)],null,
-                auth_user[0][0].data.image_path));
-
+                this.authentication.getPicture()));
+        //broadcast la conenxion à tous les utilisateurs
+        this.socket.emit('broadcast users srv',this.user);
+        this.users_authentified.push(this.user);
+        
         //Récupération de tous les noeuds sur lesquels on a la vision
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
         this.graph = new Graph(1, 'graph');         
-        reponse_users.forEach(u => {     
+        reponse_users.forEach(u => {   
             var n = new NVNode(
                         this.userBranch,
                         u[0].metadata.id,
                         u[0].data.mail,
                         [new Attribute('name',u[0].data.name),
                         new Attribute('firstname',u[0].data.firstname)],null,
-                        u[0].data.image_path)
+                        u[0].data.image_path,
+                        u[0].metadata.labels[0])
             this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
             this.graph.nodes.push(n);
          });
+         
+         
         response.forEach(n => { // par chaque noeud
                 this.listAttribute = new Array<Attribute>();
                 n[0].forEach(nameAttribut => {

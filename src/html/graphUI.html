@@ -1,3 +1,4 @@
+<!-- NAVBAR -->
 <div *ng-if="authentication.isConnected()">
     <nav class="navbar navbar-inverse">
         <div class="container-fluid" >
@@ -19,47 +20,33 @@
                         </ul>
                     </li>
                 </ul>
+                
                  <ul class="nav navbar-nav">
-                        <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
-                            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
-                        <ul class="dropdown-menu">
-                            <li *ng-for="#notif of notifications">
-                                <div class="row">
-                                    <div class="col-md-9">{{notif.note}}</div>
-                                    <div class="col-md-3">
-                                        <div class="row">
-                                            <span class="glyphicon glyphicon-ok" style="color:green" (click)="notif_accept()" aria-hidden="true"></span>
-                                            <span class="glyphicon glyphicon-remove" style="color:#ff1a1a" (click)="notif_decline()" aria-hidden="true"></span>
-                                        </div>
-                                    </div>     
-                                </div>
-                            </li>
-                        </ul>
-                    </li>
+                     <li data-toggle="modal" data-target="#notifmodal"><a><span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications</a></li>
                 </ul>
             </div>
             <ul class="nav navbar-nav navbar-right">   
                 <li><a (click)="authentication.logout()">Log Out</a></li>
             </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <img title="{{authentication.getMail()}}" src="{{authentication.getPicture()}}" width="45" height="45" class="img-circle">
+            <ul class="nav navbar-nav navbar-right" *ng-for="#user of users_authentified">
+                <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle">
             </ul>
         </div>
-    </nav> 
+    </nav>
+<!-- MODAL NODE -->
     <div class="modal fade in" *ng-if="nodemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{nodemodal}}" style="display:block; padding-left:15px;" >
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{node.name}}</h3>
                             <input #node_name *ng-if="title_state" class="form-control" value="{{node.name}}" placeholder="Node Name"                                       
                                 (keyup.enter)="update_node(node_name.value);" 
                                 (blur)="update_node(node_name.value);"
                                 >
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-9">
                             <div class="btn-group pull-right" role= "group">
                                 <button class="btn btn-info btn-lg" type= "button" (click)="add_attribute()"> 
                                     <img src="lib/img/add_attribute.png" > 
@@ -79,13 +66,13 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <label class="col-md-3"> name </label>
-                        <label class="col-md-3"> value </label>
+                        <label class="col-md-5"> name </label>
+                        <label class="col-md-5"> value </label>
                     </div>
                     <div class="form-group row" *ng-for="#attribute of node.attributes">
-                        <div class="col-md-3"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
-                        <div class="col-md-3"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
-                        <div class="col-md-6">
+                        <div class="col-md-5"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
+                        <div class="col-md-5"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
+                        <div class="col-md-2">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_attribute(attribute)" ></span>
                         </div> 
                     </div>
@@ -96,6 +83,7 @@
             </div>
         </div>
     </div>
+<!-- MODAL BRANCH -->
     <div class="modal fade in" *ng-if="branchmodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{branchmodal}}" style="display: block;">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -126,8 +114,9 @@
         </div>
     </div>
 </div>
+<!-- MODAL EDGE -->
  <div class="modal fade in" *ng-if="edgemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{edgemodal}}" style="display:block; padding-left:15px;" >
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <div class="row">
@@ -152,4 +141,41 @@
         </div>
     </div>
 </div>
-
+<!-- MODAL NOTIFICATION -->
+<div class="modal fade " id="notifmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+           <h4 class="modal-title" id="myModalLabel">Notifications</h4>
+      </div>
+      <div class="modal-body">
+        <div *ng-for="#notif of notifications">
+            <div class="row">
+                <div class="col-md-1">
+                    <img src="{{notif.from.node.image_path}}" width="30" height="30" class="img-circle">
+                </div>
+                <div class="col-md-10">{{notif.note}}</div>
+                <div class="col-md-1">
+                    <div class="row">
+                        <span class="glyphicon glyphicon-ok" style="color:green" (click)="notif_accept()" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove" style="color:#ff1a1a" (click)="notif_decline()" aria-hidden="true"></span>
+                    </div>
+                </div>     
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>   
+<!--
+    <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
+            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
+        <ul class="dropdown-menu">
+            
+        </ul>
+    </li>
+    -->

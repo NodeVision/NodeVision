@@ -1,7 +1,6 @@
 import {User} from './user';
 import {Attribute} from './attribute';
 import {Branch} from './branch';
-
 export class NVNode implements d3.layout.force.Node{    
         private _id: number;
         private _name: string;
@@ -9,19 +8,23 @@ export class NVNode implements d3.layout.force.Node{
         private _branch: Branch;
         private _users: Array<User>;
         private _node : NVNode;
+        private _type
         private _image_path: string;
 
         index: number;x: number;y: number;px: number;py: number;fixed: boolean;weight: number;
 
-        constructor(branch: Branch,id?: number, name?: string,node_attributs?: Array<Attribute>,users?:Array<User>,image_path?:string) {
+        constructor(branch: Branch,id?: number, name?: string,node_attributs?: Array<Attribute>,users?:Array<User>,image_path?:string,type?:string) {
             this._id = id;
             this._name = name;
             this._node_attributs = node_attributs;
             this._branch = branch;
             this._users = users;
             this._image_path = image_path;
+            this._type = type;
         }
         //get & set
+        get type() {return this._type}
+        set type(type:string) {this._type = type}
         get name() { return this._name }
         set name(name: string) { this._name = name; }
         set id(id:number){ this._id = id }

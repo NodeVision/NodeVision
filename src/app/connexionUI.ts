@@ -31,7 +31,7 @@ export class AuthApp {
       
 
       var user = JSON.parse(localStorage.getItem('profile'));
-      var userConnected = new User(user.email,'','');
+      var userConnected = new User(user.email);
     });
   }
 

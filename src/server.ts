@@ -19,10 +19,10 @@ class Server {
     private io = sio.listen(this.httpServer);
     private neo4j = require('neo4j-io')("http://5.196.66.87:80");
     private users = Array<User>();
-
     constructor() {
+        express().request
         //routage sur index.html
-        this.app.get('/', function (req, res) {
+        this.app.get('/',(req, res) => {
             res.sendFile(__dirname + '/index.html');
         });
         //ajout des dépendences
@@ -34,12 +34,13 @@ class Server {
 
             //Connexion d'un nouvel utilisateur
             socket.on('broadcast users srv',(user) => {
-                var u = new User(user.mail,user.id);
+                var b = new Branch();
+                var n = new NVNode(b);n.image_path = user._node._image_path;
+                var u = new User(user._mail,user._id,n);
                 u.socket = socket.id;
                 this.users.push(u);
-                socket.broadcast.emit('broadcast users clt',this.users);
+                socket.broadcast.emit('broadcast users clt',u)
             });
-
             // Création d'un noeud
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
@@ -57,7 +58,6 @@ class Server {
                         console.log("Erreur dans la creation du noeud " + node._id + "  " + node._branch._id + " " + user._node._id);
                     }
                     );
-
             });
 
             // Suppression d'un noeud
@@ -186,12 +186,14 @@ class Server {
                 socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
             });
 
-            socket.on('disconnect', function () {
+            socket.on('disconnect', () => {
+                var u = this.users.find(u => u.socket == socket.id);
+                socket.broadcast.emit('broadcast user disconnect',u);
                 console.log('user disconnected '+socket.id);
             });
         });
         //montage du server
-        this.httpServer.listen(8888, function () {
+        this.httpServer.listen(8888, () => {
             console.log('listening on *:8888');
         });
     }

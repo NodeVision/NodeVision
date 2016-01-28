@@ -12,11 +12,14 @@ export class Notification{
          this._message = message;
          this._name = name;
          this._branch = branch;
-         this._note = this._from.node.attributes[1].value+' '+
-                this._from.node.attributes[0].value+
-                ' propose to collaborate on '+
-                this._branch.name;    
+         if(from.node.attributes[1].value != '' && from.node.attributes[0].value != ''){
+             this._note = from.node.attributes[1].value+' '+from.node.attributes[0].value;
+         }else{
+             this._note = from.mail;
+         }
+         this._note +=' propose to collaborate on '+this._branch.name;    
     }
+    get from(){ return this._from}
     get note(){return this._note}
     get message(){return this._message}
 }

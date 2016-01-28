@@ -1,6 +1,5 @@
 ﻿import {User} from './user';
 import {NVNode} from './node';
-
 export class Group {
     private _id: number;
     private _name: string;
