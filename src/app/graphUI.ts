@@ -145,10 +145,10 @@ export class GraphUI {
         /**/     });  
         /**/ });
         /**/ // Add branch broadcast
-        /**/ this.socket.on('add branch clt', (node) => {
+        /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node) => {
         /**/     //hydratation
-        /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
-        /**/     var n = new NVNode(b,node._id,node._name,node._node_attributs);
+        /**/     var b = new Branch(name_branch,color_branch,id_branch);
+        /**/     var n = new NVNode(b,id_node,'undefined', Array<Attribute>());
         /**/     // add to graph
         /**/     this.branches.push(b);
         /**/     this.graph.nodes.push(n);
@@ -432,6 +432,8 @@ export class GraphUI {
         if(name != ""){
             this.branch.name = name;
             this.branch.color = color;
+            this.branchmodalstate = false;
+            this.branchnamecondition = false;
             this.socket.emit('add branch srv', this.branch, this.user);
         }else{
             this.branchnamecondition = true;
@@ -582,7 +584,7 @@ export class GraphUI {
     public bdd() {
         //Récupération du user authentifié
         var mail = this.mail;
-        var auth_user = <[]>this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
+        var auth_user = this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
         //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
            auth_user =this.query(Action.create,new User(mail))

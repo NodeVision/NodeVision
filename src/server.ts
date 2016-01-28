@@ -129,29 +129,17 @@ class Server {
             });
 
             socket.on('add branch srv', (branch, user) => {
-/*                var response = this.neo4j.query("MATCH(u) WHERE id(u) = {id_user} CREATE (b:Branch {name: '{name_branch}', color: '{color_branch}' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n", { id_user: user._node._id, name_branch: branch._name, color_branch: branch._color });
+                var response = this.neo4j.query("MATCH(u) WHERE id(u) = {id_user} CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n", { id_user: user._node._id });
                 response.then(
                     (val) => {
-                        console.log(val);
-                        console.log(val.data);
-                        val.data.forEach(valeur => {
-                            console.log(valeur[0].metadata.id)
-                        });
+                        socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
+                        socket.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
                     }
                 ).catch(
                     function() {
                         console.log("Erreur dans la création de la branche");
                     }
-                );*/
-/*                this.branch.id = response[0][0].metadata.id;
-                this.branches.push(this.branch);
-                //id node from the database
-                this.node = new NVNode(this.branch, response[0][1].metadata.id, response[0][1].data.name, Array<Attribute>());
-                this.graph.nodes.push(this.node);
-                this.redraw();
-                this.branchmodalstate = false;
-                this.branchnamecondition = false;
-                socket.broadcast.emit('add branch clt', node);*/
+                );
             });
 
             socket.on('del branch srv', (branch) => {
