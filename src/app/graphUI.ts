@@ -12,7 +12,7 @@ import {Element} from './enum';
 import {Action} from './enum';
 import {AuthApp} from './connexionUI';
 @View({
-    templateUrl: 'html/graphUI.html',
+    templateUrl: 'src/html/graphUI.html',
     directives: [CORE_DIRECTIVES]
 })
 @Component({

@@ -1,3 +1,4 @@
+
 export class PreferencePopup {
     public _activate: boolean;
     public _fadeout: boolean;
