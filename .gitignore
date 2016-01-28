@@ -2,3 +2,4 @@ src/js
 src/js/*
 .vscode
 .vscode/*
+node_modules

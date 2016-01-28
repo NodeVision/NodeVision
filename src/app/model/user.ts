@@ -32,5 +32,4 @@ export class User{
         set socket(socket:string){this._socket = socket}
 
     }
-    
-
+   

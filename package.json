@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc -p src -w",
-    "start": "live-server --open=src"
+    "start": "live-server",
+    "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "keywords": [],
   "author": "",
@@ -14,11 +15,19 @@
     "angular2": "2.0.0-alpha.44",
     "es6-shim": "^0.33.13",
     "express": "^4.10.2",
+    "neo4j-io": "^1.0.4",
     "socket.io": "^1.4.4",
     "systemjs": "0.19.2"
   },
   "devDependencies": {
     "jasmine-core": "2.4.1",
+    "karma": "^0.13.19",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-ie-launcher": "^0.2.0",
+    "karma-jasmine": "^0.3.6",
+    "karma-requirejs": "^0.2.3",
+    "karma-safari-launcher": "^0.1.1",
+    "karma-sourcemap-loader": "^0.3.7",
     "live-server": "^0.8.2",
     "typescript": "^1.6.2"
   }

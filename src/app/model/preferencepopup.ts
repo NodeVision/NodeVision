@@ -1,4 +1,4 @@
-﻿export class PreferencePopup {
+export class PreferencePopup {
     public _activate: boolean;
     public _fadeout: boolean;
     public _details: boolean;
