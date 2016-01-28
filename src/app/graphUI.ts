@@ -412,23 +412,12 @@ export class GraphUI {
     public show_branch(branch: Branch) {
 
     }
-    /** This is a description of the  function. */
+    /** Création d'une nouvelle branche */
     public add_branch(name: string, color: string) {
         if(name != ""){
-            //branch input
             this.branch.name = name;
             this.branch.color = color;
-            //id branch from the database
-            var response = this.query(Action.create,this.branch)
-            this.branch.id = response[0][0].metadata.id;
-            this.branches.push(this.branch);
-            //id node from the database
-            this.node = new NVNode(this.branch,response[0][1].metadata.id, response[0][1].data.name ,Array<Attribute>());
-            this.graph.nodes.push(this.node);
-            this.redraw();
-            this.branchmodalstate = false;
-            this.branchnamecondition = false;
-            this.socket.emit('add branch srv', this.node);
+            this.socket.emit('add branch srv', this.branch, this.user);
         }else{
             this.branchnamecondition = true;
         }
