@@ -109,22 +109,26 @@ export class GraphUI {
         /**/     this.redraw();
         /**/ });
         /**/ // Delete node broadcast
-        /**/ this.socket.on('del node clt', (node) => {
+        /**/ this.socket.on('del node clt', (id_node,del_branch?:boolean,id_branch?) => {
         /**/     //del to graph
-        /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === id_node) });
         /**/      toSpliceN.map((k) => { 
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
         /**/     });
-        /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === node._id) || (l.target.id === node._id); });
+        /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === id_node) || (l.target.id === id_node); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
+        /**/     if(del_branch){
+        /**/        var toSpliceB = this.branches.filter((b) => { return (b.id === id_branch); });
+        /**/        toSpliceB.map((b) => { this.branches.splice(this.branches.indexOf(b), 1); });
+        /**/     }
         /**/     this.redraw();
         /**/ });
         /**/ // Update node broadcast
-        /**/ this.socket.on('up node clt', (node,Nname) => {
+        /**/ this.socket.on('up node clt', (node) => {
         /**/     //update to graph
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toRenameN.map((k) => { 
-        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = Nname; 
+        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = node._name; 
         /**/     });  
         /**/ });
         /**/ // Add branch broadcast
@@ -382,28 +386,27 @@ export class GraphUI {
             }
         }
     }
-    /** This is a description of the  function. */
+    /** Création d'un noeud */
     public add_node() {
         this.socket.emit('add node srv',this.user,this.node);
     }
-    /** This is a description of the  function. */
+    /** Suppression d'un noeud */
     public delete_node() {
-        var isLastNode = 0;
-        console.log(this.graph.nodes);console.log(this.node);
-        this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){console.log(n.branch.id+'=?'+this.node.branch.id); isLastNode++} })
-        console.log(isLastNode);
-        this.socket.emit('del node srv', this.node, isLastNode);
+        var NbNode = 0;
+        this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){ NbNode++ } })
+        this.socket.emit('del node srv', this.node, NbNode);
     }
-    /** This is a description of the  function. */
+    /** Suppression d'un noeud ainsi que ses fils */
     public delete_node_and_sons() {
-        
+        var NbNode = 0;
+        this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){ NbNode++ } })
+        this.socket.emit('del node & sons srv', this.node, NbNode);
     }
-    /** This is a description of the  function. */
+    /** Mise à jour d'un noeud */
     public update_node(node_name:string) {
         this.node.name = node_name;
-        var response = this.query(Action.update, this.node);
         this.title_state = false;
-        this.socket.emit('up node srv', this.node, node_name);
+        this.socket.emit('up node srv', this.node);
     }
     /** This is a description of the  function. */
     public show_branch(branch: Branch) {
@@ -540,7 +543,6 @@ export class GraphUI {
                     if(element instanceof Branch) cypher = "MATCH (b),(n) WHERE id(b)="+element.id+" AND (b)-->(n) detach delete b,n";
                     break; 
             }
-            console.log(cypher);
         }
         jQuery.ajax({
                 type: 'POST',
@@ -549,11 +551,9 @@ export class GraphUI {
                 contentType: "application/json; charset=UTF-8",
                 data: JSON.stringify({"query":cypher, "params": {}}),
                 success: (data, textStatus, jqXHR) => {
-                    console.log(textStatus);
                     response = data.data;
                 },
                 error: (jqXHR, textStatus, errorThrown) => {
-                    console.log(errorThrown);
                     response = textStatus;
                 }
                 });
