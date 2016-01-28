@@ -45,7 +45,7 @@ class Server {
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
                 var n = new NVNode(b, node._id, node._name, node._node_attributs);
-                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)={id_node} AND id(b)={id_branch} AND id(u)={id_user} CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c", { id_node: node._id, id_branch: node._branch._id, id_user: user._node._id });
+                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
                 response.then(
                     (val) => {
                         var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>());
@@ -55,7 +55,7 @@ class Server {
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans la creation du noeud " + node._id + "  " + node._branch._id + " " + user._node._id);
+                        console.log("Erreur dans la creation du noeud");
                     }
                     );
             });
@@ -63,8 +63,8 @@ class Server {
             // Suppression d'un noeud
             socket.on('del node srv', (node, NbNode) => {
                 var del_branch = false;
-                if (NbNode > 1) { var response = this.neo4j.query("MATCH (n) WHERE id(n)={id_node} detach delete n", { id_node: node._id }); del_branch = false; }
-                else { var response = this.neo4j.query("MATCH (b),(n) WHERE id(b)={id_branch} AND (b)-->(n) detach delete b,n", { id_node: node._id, id_branch: node._branch._id }); del_branch = true; }
+                if (NbNode > 1) { var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " detach delete n"); del_branch = false; }
+                else { var response = this.neo4j.query("MATCH (b),(n) WHERE id(b)=" + node._branch._id + " AND (b)-->(n) detach delete b,n"); del_branch = true; }
                  response.then(    
                     () => {
                         socket.broadcast.emit('del node clt', node._id, del_branch, node._branch._id);
@@ -79,15 +79,15 @@ class Server {
 
             // Création d'un noeud et de ses enfants coté serveur
             socket.on('del node & sons srv', (node, NbNode) => {
-                var response = this.neo4j.query("MATCH (n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = {id_node} return s", { id_node: node._id });
+                var response = this.neo4j.query("MATCH (n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = " + node._id + " return s");
                 var del_branch = false;
                 response.then(
                     (val) => {
                         if (val.data.length + 1 == NbNode) {
-                            var response2 = this.neo4j.query("MATCH (b),(n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = {id_node} AND id(b)={id_branch} detach delete b,n,s", { id_node: node._id, id_branch: node._branch._id });
+                            var response2 = this.neo4j.query("MATCH (b),(n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = " + node._id + " AND id(b)=" + node._branch._id + " detach delete b,n,s");
                             del_branch = true;
                         }else{
-                            var response2 = this.neo4j.query("MATCH (n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = {id_node} detach delete s,n", { id_node: node._id });
+                            var response2 = this.neo4j.query("MATCH (n:Node)-[r:HIERARCHICAL*]->(s:Node) WHERE id(n) = " + node._id + " detach delete s,n");
                             del_branch = false;
                         }
                         response2.then(
@@ -114,7 +114,7 @@ class Server {
 
             // Mise à jour d'un noeud et de ses enfants coté serveur
             socket.on('up node srv', (node) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)={id_node} SET n.name ='{name_node}'", { id_node: node._id, name_node: node._name });
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "'");
                 response.then(
                     () => {
                         socket.broadcast.emit('up node clt', node);
@@ -129,7 +129,7 @@ class Server {
             });
 
             socket.on('add branch srv', (branch, user) => {
-                var response = this.neo4j.query("MATCH(u) WHERE id(u) = {id_user} CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n", { id_user: user._node._id });
+                var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n");
                 response.then(
                     (val) => {
                         socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
@@ -147,7 +147,17 @@ class Server {
             });
             
             socket.on('up branch srv', (branch) => {
-                socket.broadcast.emit('up branch clt', branch);
+                var response = this.neo4j.query("MATCH (b) WHERE id(b)=" + branch._id + " SET b.name='" + branch._name + "', b.color ='" + branch._color + "'");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('up branch clt', branch);
+                        socket.emit('up branch clt', branch);
+                    }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la création de la branche");
+                    }
+                );
             });
 
             socket.on('add edge srv', (edge, source, target) => {

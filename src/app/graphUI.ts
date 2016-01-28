@@ -447,7 +447,6 @@ export class GraphUI {
     }
     /** Modification d'une branche */
     public update_branch() {
-        var response = this.query(Action.update, this.branch);
         this.branchmodalstate = false;
         this.socket.emit('up branch srv',this.branch);
     }
