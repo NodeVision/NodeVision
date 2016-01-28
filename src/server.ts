@@ -1,4 +1,6 @@
 import {User} from './app/model/user';
+import {NVNode} from './app/model/node';
+import {Branch} from './app/model/branch';
 /// <reference path="./lib/express.d.ts" />
 /// <reference path="./lib/serve-static.d.ts" />
 /// <reference path="./lib/mime.d.ts" />
@@ -12,22 +14,27 @@ class Server {
     private app = express();
     private httpServer = http.createServer(this.app);
     private io = sio.listen(this.httpServer);
-
+    private users = Array<User>();
     constructor() {
+        express().request
         //routage sur index.html
-        this.app.get('/', function (req, res) {
+        this.app.get('/',(req, res) => {
             res.sendFile(__dirname + '/index.html');
         });
         //ajout des dépendences
         this.app.use(express.static(__dirname + '/'));
         //connexion & deconnexion
-        this.io.on('connection', function (socket: SocketIO.Socket) {
+        this.io.on('connection', (socket: SocketIO.Socket) => {
             var date = new Date();
             console.log(date+' : a user connected '+socket.id);
+            
             socket.on('broadcast users srv',(user) => {
-                var u = new User(user.mail,user.id);u.socket = socket.id;
+                var b = new Branch();
+                var n = new NVNode(b);n.image_path = user._node._image_path;
+                var u = new User(user._mail,user._id,n);
+                u.socket = socket.id;
                 this.users.push(u);
-                socket.broadcast.emit('broadcast users clt',this.users)
+                socket.broadcast.emit('broadcast users clt',u)
             });
             socket.on('add node srv',(node, edge) => {
                 socket.broadcast.emit('add node clt', node, edge);
@@ -77,12 +84,14 @@ class Server {
                 socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
             });
 
-            socket.on('disconnect', function () {
+            socket.on('disconnect', () => {
+                var u = this.users.find(u => u.socket == socket.id);
+                socket.broadcast.emit('broadcast user disconnect',u);
                 console.log('user disconnected '+socket.id);
             });
         });
         //montage du server
-        this.httpServer.listen(8888, function () {
+        this.httpServer.listen(8888, () => {
             console.log('listening on *:8888');
         });
     }

@@ -1,9 +1,7 @@
-import {Injectable} from 'angular2/angular2';
 import {Branch} from './branch';
 import {Attribute} from './attribute';
 import {PreferencePopup} from './preferencepopup';
 import {NVNode} from './node';
-@Injectable()
 export class User{
         private _id:number;
         private _mail: string;
@@ -18,7 +16,7 @@ export class User{
             node?:NVNode,                      
             preferencepopup?:PreferencePopup,
             branchVsblty?:Array<Branch>) {
-                
+                this._id = id;
                 this._mail = mail;
                 this._preferencepopup = preferencepopup;
                 this._branchesvisibility = branchVsblty;

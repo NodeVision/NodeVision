@@ -1,8 +1,5 @@
-﻿import {Injectable} from 'angular2/angular2';
-import {PreferencePopup} from './preferencepopup';
+﻿import {PreferencePopup} from './preferencepopup';
 import {Status} from '../enum';
-
-@Injectable()
 export class Popup {
     public _type: Status;
     public _message: string;
