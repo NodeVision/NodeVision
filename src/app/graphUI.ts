@@ -246,7 +246,20 @@ export class GraphUI {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
     /** Fonction d'initialisation du graphique */
-    public init_graph() {        
+    public init_graph() { 
+        this.svg.append("svg:defs").selectAll("marker")
+            .data(["end"])      // Different link/path types can be defined here
+            .enter().append("svg:marker")    // This section adds in the arrows
+            .attr("id", String)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 17)
+            .attr("refY", 0)
+            .attr("markerWidth", 3)
+            .attr("markerHeight", 4)
+            .attr("orient", "auto")
+            .style("fill", "#999")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5");       
         this.force
             .nodes(this.graph.nodes)
             .links(this.graph.edges)
@@ -256,12 +269,12 @@ export class GraphUI {
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
+            .attr("marker-end", "url(#end)")
             .style("stroke-opacity", 0.3)
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
             .style("stroke-width","5")
             .style("stroke","#999");
-
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("circle")
@@ -279,16 +292,30 @@ export class GraphUI {
 
     /** Rechargement du graphique à chaque modification */
     public redraw() {
+        this.svg.append("svg:defs").selectAll("marker")
+            .data(["end"])      // Different link/path types can be defined here
+            .enter().append("svg:marker")    // This section adds in the arrows
+            .attr("id", String)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 17)
+            .attr("refY", 0)
+            .attr("markerWidth", 3)
+            .attr("markerHeight", 4)
+            .attr("orient", "auto")
+            .style("fill", "#999")
+            .append("svg:path")
+            .attr("d", "M0,-5L10,0L0,5"); 
+    
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link")
+        links.enter().insert("line", ".node").attr("class", "link").attr("marker-end", "url(#end)")
             .on("click", (e: NVEdge) => { this.edge = e})
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
             .style("stroke-opacity", 0.3)
             .style("stroke-width","5")
             .style("stroke","#999")
         links.exit().remove();
-        
+    
         var nodes = this.nodes.data(this.force.nodes());
         nodes.enter().append("circle")
             .attr("class", "node")
