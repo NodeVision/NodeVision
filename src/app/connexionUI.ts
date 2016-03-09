@@ -21,7 +21,7 @@ export class AuthApp {
   }
 
   login() {
-    this.lock.show(function(err:string, profile:string, id_token:string) {
+    this.lock.show({closable: false},function(err:string, profile:string, id_token:string, callback) {
 
       if(err) {
         throw new Error(err);
@@ -32,6 +32,7 @@ export class AuthApp {
 
       var user = JSON.parse(localStorage.getItem('profile'));
       var userConnected = new User(user.email);
+      window.location.reload();
     });
   }
 
