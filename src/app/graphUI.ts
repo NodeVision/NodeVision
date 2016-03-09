@@ -92,7 +92,6 @@ export class GraphUI {
         this.init_graph();
 
         //Création de la socket client
-        this.socket = io.connect('http://localhost:8888');
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////   
         /**/ // connetion User
         /**/ this.socket.on('broadcast users clt', (user) => { 
@@ -246,9 +245,8 @@ export class GraphUI {
         /**/ });
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     }
-    /** This is a description of the  function. */
-    public init_graph() {
-        //initialisation du graph           
+    /** Fonction d'initialisation du graphique */
+    public init_graph() {        
         this.force
             .nodes(this.graph.nodes)
             .links(this.graph.edges)
@@ -270,15 +268,16 @@ export class GraphUI {
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return n.branch.color })
-            .style('stroke', (n: NVNode) => { return n.branch.color })
+            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
+            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
     }
-    /** This is a description of the  function. */
+
+    /** Rechargement du graphique à chaque modification */
     public redraw() {
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
@@ -295,8 +294,8 @@ export class GraphUI {
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return n.branch.color })
-            .style('stroke', (n: NVNode) => { return n.branch.color })
+            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
+            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .call(this.force.drag)
@@ -308,7 +307,7 @@ export class GraphUI {
         this.nodes = this.svg.selectAll(".node");
         this.force.start();
     }
-    /** This is a description of the  function. */
+    /** Fonction lors du clic sur un noeud de l'utilisateur */
     public tick() {
      
         this.links.attr("x1", (e: NVEdge) => { return e.source.x; })
