@@ -290,17 +290,26 @@ export class GraphUI {
             .style("stroke","#999");
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
-            .enter().append("circle")
+            .enter().append("g")
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
-            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
+        this.nodes.append("image")
+            .attr("xlink:href", "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png")
+            .attr("x", -8)
+            .attr("y", -8)
+            .attr("width", 20)
+            .attr("height", 20);
+        this.nodes.append("text")
+            .attr("x", 12)
+            .attr("dy", ".35em")
+            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .text((n: NVNode) => { return n.name; });
     }
 
     /** Rechargement du graphique à chaque modification */
@@ -330,17 +339,26 @@ export class GraphUI {
         links.exit().remove();
     
         var nodes = this.nodes.data(this.force.nodes());
-        nodes.enter().append("circle")
+        nodes.enter().append("g")
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
-            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .call(this.force.drag)
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
-        this.nodes.append("title").text((n: NVNode) => { return n.name; });
+        nodes.append("title").text((n: NVNode) => { return n.name; });
+        nodes.append("image")
+            .attr("xlink:href", "https://github.com/favicon.ico")
+            .attr("x", -8)
+            .attr("y", -8)
+            .attr("width", 16)
+            .attr("height", 16);
+
+        nodes.append("text")
+            .attr("dx", 10)
+            .attr("dy", ".35em")
+            .text((n: NVNode) => { return n.name });
         nodes.exit().remove();
         
         this.links = this.svg.selectAll(".link");
@@ -354,8 +372,7 @@ export class GraphUI {
             .attr("y1", (e: NVEdge) => { return e.source.y; })
             .attr("x2", (e: NVEdge) => { return e.target.x; })
             .attr("y2", (e: NVEdge) => { return e.target.y; });
-        this.nodes.attr("cx", (n: NVNode) => { return n.x; })
-            .attr("cy", (n: NVNode) => { return n.y; });
+       this.nodes.attr("transform", function(n:NVNode) { return "translate(" + n.x + "," + n.y + ")"; });
     }
     /** This is a description of the  function. */
     public mouseupNode(n: NVNode) {
@@ -673,7 +690,7 @@ export class GraphUI {
                                 var node  =
                                  new NVNode(new Branch(
                             n[3].data.name,
-                            "456456",
+                            n[3].data.color,
                             n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,null, "attribut");
                             this.graph.nodes.push(node);
                             this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
