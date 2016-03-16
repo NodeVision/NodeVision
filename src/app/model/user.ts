@@ -10,6 +10,7 @@ export class User{
         private _branchesvisibility: Array<Branch>;
         private _node: NVNode;
         private _socket:string;
+        private _img_path : string
         
         constructor(
             mail: string,
@@ -17,16 +18,20 @@ export class User{
             id?:number,
             node?:NVNode,                      
             preferencepopup?:PreferencePopup,
-            branchVsblty?:Array<Branch>) {
+            branchVsblty?:Array<Branch>,
+            img_path? : string) {
                 this._id = id;
                 this._mail = mail;
                 this._preferencepopup = preferencepopup;
                 this._branchesvisibility = branchVsblty;
                 this._preferedView = preferedView;
                 this._node = node;
+                this._img_path = img_path;
         }
         get id() { return this._id }
         get mail() { return this._mail }
+        get img_path() { return this._img_path}
+        set img_path(path:string){this._img_path = path}
         get preferedView() { return this._preferedView}
         get preferencepopup() { return this._preferencepopup }
         get branchesvisibility() { return this._branchesvisibility }

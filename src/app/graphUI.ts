@@ -300,7 +300,7 @@ export class GraphUI {
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
-            .attr("xlink:href", "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png")
+            .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
             .attr("x", -8)
             .attr("y", -8)
             .attr("width", 20)
@@ -356,9 +356,10 @@ export class GraphUI {
             .attr("height", 16);
 
         nodes.append("text")
-            .attr("dx", 10)
+            .attr("x", 12)
             .attr("dy", ".35em")
-            .text((n: NVNode) => { return n.name });
+            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .text((n: NVNode) => { return n.name; });
         nodes.exit().remove();
         
         this.links = this.svg.selectAll(".link");
@@ -574,7 +575,7 @@ export class GraphUI {
                     if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND id(u)="+this.user.node.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";   
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE id(u)="+this.user.node.id+" CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
-                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:'',preferedView:'0'});";
+                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:'"+element.img_path+"',preferedView:'0'});";
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
@@ -616,8 +617,9 @@ export class GraphUI {
         var auth_user = this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
         //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
-           auth_user =this.query(Action.create,new User(mail,0))
+           auth_user =this.query(Action.create,new User(mail,0,null,null,null,null,this.authentication.getPicture()))
         }
+       console.log(auth_user);
        
         //hydrate le user
         this.user = new User(
@@ -627,7 +629,7 @@ export class GraphUI {
                 auth_user[0][0].data.mail,
                 [new Attribute('name',auth_user[0][0].data.name),
                 new Attribute('firstname',auth_user[0][0].data.firstname)],null,
-                this.authentication.getPicture()));
+                auth_user[0][0].data.image_path),null,null,auth_user[0][0].data.image_path);
                 
         //broadcast la conenxion à tous les utilisateurs
         this.socket.emit('broadcast users srv',this.user);
@@ -638,8 +640,10 @@ export class GraphUI {
         console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
-        this.graph = new Graph(1, 'graph');         
+        this.graph = new Graph(1, 'graph');
+               
         reponse_users.forEach(u => {   
+                    console.log("img "+u[0].data.image_path);
             var n = new NVNode(
                         this.userBranch,
                         u[0].metadata.id,
@@ -648,13 +652,9 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
-<<<<<<< HEAD
+                        
             this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
             this.graph.nodes.push(n);
-=======
-            //this.graph.nodes.push(n);
-            this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
->>>>>>> a40ec7b41ff87c5f4b329b1d12a29d1159314107
          });
        
             response.forEach(n => { // par chaque noeud
