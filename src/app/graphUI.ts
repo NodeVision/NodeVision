@@ -106,8 +106,6 @@ export class GraphUI {
         /**/     this.users_authentified.push(u);
         /**/ });
         /**/ this.socket.on('broadcast user disconnect', (user) => { 
-            //console.log(user._id)
-             
         /**/     this.users_authentified.slice(this.users_authentified.findIndex(u => u.id == user._id))
         /**/ });
         /**/ // Add node broadcast
@@ -190,25 +188,26 @@ export class GraphUI {
         /**/     });
         /**/ });
         /**/ // Add edge broadcast
-        /**/ this.socket.on('add edge clt', (edge, source, target) => {
+        /**/ this.socket.on('add edge clt', (edge, id_edge) => {
         /**/     // add to graph 
-        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));      
+        /**/      var Nedge = new NVEdge(id_edge, edge._name, this.graph.nodes.find(x => x.id == edge.source._id), this.graph.nodes.find(x => x.id == edge.target._id));      
         /**/      this.graph.edges.push(Nedge);
         /**/      this.redraw();
         /**/ });
         /**/ // Del edge broadcast
-        /**/ this.socket.on('del edge clt', (source, target) => {
+        /**/ this.socket.on('del edge clt', (edge) => {
+                    console.log(edge);
         /**/      // del to graph 
-        /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === source._id) && (l.target.id === target._id); });
+        /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === edge.source._id) && (l.target.id === edge.target._id); });
         /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/      this.redraw();
         /**/ });
         /**/ // Update edge broadcast
-        /**/ this.socket.on('up edge clt', (Nname, edge) => {
+        /**/ this.socket.on('up edge clt', (edge) => {
         /**/     //update to graph
         /**/     var toRenameE = this.graph.edges.filter((k) => { return (k.id === edge._id) });
         /**/     toRenameE.map((k) => { 
-        /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = Nname; 
+        /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = edge._name; 
         /**/     });
         /**/ });
         /**/ // Add attribute broadcast
@@ -507,28 +506,7 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
-        this.query(Action.delete,branch)
-        //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
-        var nodesbranch = Array<NVNode>();
-        this.graph.nodes.forEach(element => {
-            if (element.branch.id == branch.id) {
-                nodesbranch.push(element);
-            }
-        });
-        //supprime la branche
-        this.branches.splice(this.branches.indexOf(nodesbranch[0].branch), 1); 
-        //supprime les edges de la branche
-        nodesbranch.forEach(elt => {
-            this.graph.edges.forEach(element => {
-                if (element.source == elt || element.target == elt)
-                    this.graph.edges.splice(this.graph.edges.indexOf(element), 1);
-            });
-        });    
-        //supprime les noeuds de la branche
-        nodesbranch.forEach(element => {
-            this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
-        });
-        this.redraw();
+        console.log(branch);
         this.socket.emit('del branch srv', branch);
     }
     
@@ -536,33 +514,27 @@ export class GraphUI {
     public add_edge(source: NVNode, target: NVNode) {
         //ajouter a la base de données récup l'id  
         if(source != target){
-            var type = '';
             if (source.type == "User" || target.type == "User")  {
                 var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");  
             }else{
                 var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");  
             }
-            this.graph.edges.push(edge);
-            this.query(Action.create,edge);
             this.socket.emit('add edge srv', edge, source, target);
         }       
     }
 
     /** This is a description of the  function. */
     public delete_edge() {
-        this.query(Action.delete,this.edge);
-        var toSplice = this.graph.edges.filter((l) => { return (l.source === this.edge.source) && (l.target === this.edge.target); });
-        toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         this.edgemodalstate = false;
-        this.redraw();
-        this.socket.emit('del edge srv', this.edge.source, this.edge.target);
+        this.socket.emit('del edge srv', this.edge);
     }
     /** This is a description of the  function. */
     public update_edge(edgename:string) {
+        console.log(edgename);
         this.edge.name = edgename;
-        var response = this.query(Action.update, this.edge);
         this.title_state = false;
-        this.socket.emit('up edge srv', edgename, this.edge);
+        console.log(this.edge);
+        this.socket.emit('up edge srv', this.edge);
     }
     /** This is a description of the  function. */
     public found(array:any[],value:any){
@@ -582,27 +554,15 @@ export class GraphUI {
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" RETURN r";
                     break;
                 case Action.create:
-                    if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND id(u)="+this.user.node.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
-                    if(element instanceof NVEdge) {
-                        cypher = "MATCH (s),(t) WHERE id(s)="+element.source.id+" AND id(t)="+element.target.id;
-                        if(element.source.type == 'User' || element.target.type == 'User'){
-                            if(element.source.type == 'User')  cypher += " CREATE (s)-[r:WRITE { name:'undefined'}]->(t) RETURN r";
-                            if(element.target.type == 'User')  cypher += " CREATE (s)-[r:READ { name:'undefined'}]->(t) RETURN r";
-                        }else{
-                            cypher += " CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r";
-                        }
-                        console.log(cypher);
-                    }           
+                    if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND id(u)="+this.user.node.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";   
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE id(u)="+this.user.node.id+" CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
                     if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:'',preferedView:'0'});";
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
-                    if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" SET r.name ='"+element.name+"'";
                     if(element instanceof Branch) cypher = "MATCH (b) WHERE id(b)="+element.id+" SET b.name='"+element.name+"', b.color ='"+element.color+"'";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";  
-                    if(element instanceof User) cypher = "";
                     break;
                 case Action.delete:
                     if(element instanceof NVNode) {
@@ -613,7 +573,6 @@ export class GraphUI {
                     }
                     if(element instanceof NVEdge) cypher = "MATCH ()-[r]-() WHERE id(r)="+element.id+" delete r";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"= NULL RETURN n";
-                    if(element instanceof Branch) cypher = "MATCH (b),(n) WHERE id(b)="+element.id+" AND (b)-->(n) detach delete b,n";
                     break; 
             }
         }
@@ -659,8 +618,9 @@ export class GraphUI {
         
         //Récupération de tous les noeuds sur lesquels on a la vision
         var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
+        console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
-        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
+       var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
         this.graph = new Graph(1, 'graph');         
         reponse_users.forEach(u => {   
             var n = new NVNode(
@@ -671,8 +631,13 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
+<<<<<<< HEAD
             this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
             this.graph.nodes.push(n);
+=======
+            //this.graph.nodes.push(n);
+            this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
+>>>>>>> a40ec7b41ff87c5f4b329b1d12a29d1159314107
          });
        
             response.forEach(n => { // par chaque noeud
