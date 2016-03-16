@@ -49,6 +49,7 @@ export class GraphUI {
     private listAttribute = new Array<Attribute>();
     //branch Modal
     private branchmodalstate = false;
+    private usermodalstate = false;
     private branchnamecondition = false;
     private attribnamecondition = false;
     private branchmodal = Element.branch;
@@ -59,6 +60,8 @@ export class GraphUI {
     private edgemodal = Element.edge;
     //users
     private users = Array<User>();
+    private preferedView0 = false;
+    private preferedView1 = false;
     //navbar
     private branches = new Array<Branch>();
     private socket;
@@ -98,7 +101,7 @@ export class GraphUI {
         /**/     //hydratation
         /**/     var n = new NVNode(new Branch());
         /**/     n.image_path = user._node._image_path;
-        /**/     var u = new User(user._mail,user._id,n);
+        /**/     var u = new User(user._mail,user._id,user._preferedView, n);
         /**/     //add to users
         /**/     this.users_authentified.push(u);
         /**/ });
@@ -215,7 +218,18 @@ export class GraphUI {
         /**/     toAddAttribut.map((k) => {
         /**/     var Nattribute = new Attribute(attribute._name,attribute._value);      
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
+        // if(this.user.preferedView == 1)
+        // {
+        //    var node  = new NVNode(new Branch(
+        //                     this.graph.nodes[this.graph.nodes.indexOf(k)].branch.name,
+        //                     "456456",
+        //                     n[3].metadata.id), n[1].metadata.id+10,attribute._name+" : "+attribute._value,null,null,null, "attribut");
+        //                     this.graph.nodes.push(node);
+        //                     this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes[this.graph.nodes.indexOf(k)],node))
+        //                     this.redraw();
+        // }
         /**/     });  
+        /**/
         /**/ });
         /**/ // Del attribute broadcast
         /**/ this.socket.on('del attr clt', (node,attribute) => {
@@ -286,7 +300,7 @@ export class GraphUI {
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
     }
 
@@ -326,7 +340,7 @@ export class GraphUI {
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .call(this.force.drag)
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         nodes.exit().remove();
         
@@ -477,6 +491,20 @@ export class GraphUI {
         this.socket.emit('up branch srv',this.branch);
     }
 
+    public show_profile()
+    {
+        console.log(this.user.preferedView)
+        this.preferedView0 = this.user.preferedView == 0;
+        this.preferedView1 = this.user.preferedView == 1;
+        this.usermodalstate = true;
+        
+    }
+    public update_user(user: User)
+    { 
+        this.user = user;
+        this.socket.emit('up user srv', this.user);
+        this.usermodalstate = false;
+    }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
         this.query(Action.delete,branch)
@@ -567,7 +595,7 @@ export class GraphUI {
                     }           
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE id(u)="+this.user.node.id+" CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
-                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:''});";
+                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:'',preferedView:'0'});";
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
@@ -612,17 +640,19 @@ export class GraphUI {
         var auth_user = this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
         //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
-           auth_user =this.query(Action.create,new User(mail))
+           auth_user =this.query(Action.create,new User(mail,0))
         }
+       
         //hydrate le user
         this.user = new User(
-            auth_user[0][0].data.mail,auth_user[0][0].metadata.id,new NVNode(
+            auth_user[0][0].data.mail,auth_user[0][0].data.preferedView,auth_user[0][0].metadata.id,new NVNode(
                 this.userBranch,
                 auth_user[0][0].metadata.id,
                 auth_user[0][0].data.mail,
                 [new Attribute('name',auth_user[0][0].data.name),
                 new Attribute('firstname',auth_user[0][0].data.firstname)],null,
                 this.authentication.getPicture()));
+                
         //broadcast la conenxion à tous les utilisateurs
         this.socket.emit('broadcast users srv',this.user);
         this.users_authentified.push(this.user);
@@ -641,34 +671,51 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
-            this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
+            this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
             this.graph.nodes.push(n);
          });
-         
-         
-        response.forEach(n => { // par chaque noeud
-                this.listAttribute = new Array<Attribute>();
-                n[0].forEach(nameAttribut => {
-                    if(nameAttribut != "name")
-                        {
-                            var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
-                            this.listAttribute.push(att);
-                        }
-                }); 
+       
+            response.forEach(n => { // par chaque noeud
+                    this.listAttribute = new Array<Attribute>();
+                    n[0].forEach(nameAttribut => {
+                        if(nameAttribut != "name")
+                            {
+                                var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
+                                this.listAttribute.push(att);
+                            }
+                    }); 
 
-                if(!this.found(this.graph.nodes,n[1].metadata.id)){
-                this.graph.nodes.push(new NVNode(
-                    new Branch(
-                        n[3].data.name,
-                        n[3].data.color,
-                        n[3].metadata.id),
-                    n[1].metadata.id,
-                    n[1].data.name,
-                    this.listAttribute
-                    )
-                );
-            }
-        });
+                    if(!this.found(this.graph.nodes,n[1].metadata.id)){
+                    this.graph.nodes.push(new NVNode(
+                        new Branch(
+                            n[3].data.name,
+                            n[3].data.color,
+                            n[3].metadata.id),
+                        n[1].metadata.id,
+                        n[1].data.name,
+                        this.listAttribute
+                        )
+                    );
+                }
+            });   
+         if(this.user.preferedView == 1){
+             response.forEach(n => { // par chaque noeud
+                    this.listAttribute = new Array<Attribute>();
+                    console.log(n);
+                    n[0].forEach(nameAttribut => {
+                        if(nameAttribut != "name")
+                            {
+                                var node  =
+                                 new NVNode(new Branch(
+                            n[3].data.name,
+                            "456456",
+                            n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,null, "attribut");
+                            this.graph.nodes.push(node);
+                            this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
+                            }
+                    });    
+            });
+         }
         // hydratation des arcs
         response.forEach(r => {
            r[2].forEach(e => {
