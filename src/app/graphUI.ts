@@ -80,7 +80,7 @@ export class GraphUI {
         ///////////////////////
         //navbar branches
         var b = new Array<Branch>();
-        this.graph.nodes.forEach(n => {  
+        this.graph.nodes.forEach(n => { 
             b.push(n.branch);
         });
         b.forEach(br =>{
@@ -265,7 +265,7 @@ export class GraphUI {
             .enter().append("svg:marker")    // This section adds in the arrows
             .attr("id", String)
             .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 17)
+            .attr("refX", 28)
             .attr("refY", 0)
             .attr("markerWidth", 3)
             .attr("markerHeight", 4)
@@ -286,7 +286,7 @@ export class GraphUI {
             .style("stroke-opacity", 0.3)
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke-width","5")
+            .style("stroke-width","2")
             .style("stroke","#999");
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
@@ -553,9 +553,9 @@ export class GraphUI {
         //ajouter a la base de données récup l'id  
         if(source != target){
             if (source.type == "User" || target.type == "User")  {
-                var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");  
+                var edge = new NVEdge(2264, 'undefined', source, target,"WRITE");  
             }else{
-                var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");  
+                var edge = new NVEdge(2264, 'undefined', source, target,"CUSTOM");  
             }
             this.socket.emit('add edge srv', edge, source, target);
         }       
@@ -655,12 +655,13 @@ export class GraphUI {
         this.users_authentified.push(this.user);
         
         //Récupération de tous les noeuds sur lesquels on a la vision
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
+
+        var req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.id+" RETURN keys(n),n,r,b";
+        var response = this.query(Action.read,null,req)
         console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
-       var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
-        this.graph = new Graph(1, 'graph');
-               
+        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
+        this.graph = new Graph(1, 'graph');         
         reponse_users.forEach(u => {   
             var n = new NVNode(
                         this.userBranch,
@@ -670,34 +671,34 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
-                        
+     
             this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
-            this.graph.nodes.push(n);
+           // this.graph.nodes.push(n);
          });
        
-            response.forEach(n => { // par chaque noeud
-                    this.listAttribute = new Array<Attribute>();
-                    n[0].forEach(nameAttribut => {
-                        if(nameAttribut != "name")
-                            {
-                                var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
-                                this.listAttribute.push(att);
-                            }
-                    }); 
+        response.forEach(n => { // par chaque noeud
+                this.listAttribute = new Array<Attribute>();
+                n[0].forEach(nameAttribut => {
+                    if(nameAttribut != "name")
+                        {
+                            var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
+                            this.listAttribute.push(att);
+                        }
+                }); 
 
-                    if(!this.found(this.graph.nodes,n[1].metadata.id)){
-                    this.graph.nodes.push(new NVNode(
-                        new Branch(
-                            n[3].data.name,
-                            n[3].data.color,
-                            n[3].metadata.id),
-                        n[1].metadata.id,
-                        n[1].data.name,
-                        this.listAttribute
-                        )
-                    );
-                }
-            });   
+                if(!this.found(this.graph.nodes,n[1].metadata.id)){
+                this.graph.nodes.push(new NVNode(
+                    new Branch(
+                        n[3].data.name,
+                        n[3].data.color,
+                        n[3].metadata.id),
+                    n[1].metadata.id,
+                    n[1].data.name,
+                    this.listAttribute
+                    )
+                );
+            }
+        });   
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
                     this.listAttribute = new Array<Attribute>();
@@ -720,14 +721,12 @@ export class GraphUI {
          }
         // hydratation des arcs
         response.forEach(r => {
-           r[2].forEach(e => {
-               if(!this.found(this.graph.edges,e.metadata.id)){
-                    var source = this.found(this.graph.nodes,e.start.split("/")[e.start.split("/").length - 1]);
-                    var target = this.found(this.graph.nodes,e.end.split("/")[e.end.split("/").length - 1]);
-                    if(source && target) this.graph.edges.push(new NVEdge(e.metadata.id,e.data.name,source,target,e.metadata.type));
-               }
-            });
+            var source = this.found(this.graph.nodes,r[2].start.split("/")[r[2].start.split("/").length - 1]);
+            var target = this.found(this.graph.nodes,r[2].end.split("/")[r[2].end.split("/").length - 1]);
+            var edge = new NVEdge(r[2].metadata.id,r[2].data.name,source,target,r[2].metadata.type);
+            this.graph.edges.push(edge);
         }); 
+        console.log(this.graph.edges,this.graph.nodes);
     }
 }
 bootstrap(GraphUI);
