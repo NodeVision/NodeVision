@@ -207,7 +207,7 @@ export class GraphUI {
         /**/     //update to graph
         /**/     var toRenameE = this.graph.edges.filter((k) => { return (k.id === edge._id) });
         /**/     toRenameE.map((k) => {
-        /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = Nname;
+        /**/        this.graph.edges[this.graph.edges.indexOf(k)].name = name;
         /**/     });
         /**/ });
         /**/ // Add attribute broadcast
@@ -286,7 +286,7 @@ export class GraphUI {
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .on("click", dbclick)
-            .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"});
+            .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"; console.log(n.image_path);});
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
             .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
@@ -472,6 +472,7 @@ export class GraphUI {
     }
     /** Création d'un noeud */
     public add_node() {
+        this.node.image_path = "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png";
         this.socket.emit('add node srv',this.user,this.node);
     }
     /** Suppression d'un noeud */
@@ -702,13 +703,15 @@ export class GraphUI {
         response.forEach(n => { // par chaque noeud
                 this.listAttribute = new Array<Attribute>();
                 n[0].forEach(nameAttribut => {
-                    if(nameAttribut != "name")
+                    if(nameAttribut != "name" && nameAttribut != "image_path")
                         {
                             var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
                             this.listAttribute.push(att);
                         }
                 });
-
+                console.log("iiiiiiii");
+                
+                console.log(n);
                 if(!this.found(this.graph.nodes,n[1].metadata.id)){
                 this.graph.nodes.push(new NVNode(
                     new Branch(
@@ -717,7 +720,7 @@ export class GraphUI {
                         n[3].metadata.id),
                     n[1].metadata.id,
                     n[1].data.name,
-                    this.listAttribute
+                    this.listAttribute, null, n[1].data.image_path
                     )
                 );
             }
@@ -729,7 +732,7 @@ export class GraphUI {
                     n[0].forEach(nameAttribut => {
                         if(this.graph.nodes.find(x => x.name == nameAttribut+" : "+n[1].data[nameAttribut]) == null)
                         {
-                        if(nameAttribut != "name")
+                        if(nameAttribut != "name" && nameAttribut != "image_path")
                             {
                                 var node  =
                                  new NVNode(new Branch(

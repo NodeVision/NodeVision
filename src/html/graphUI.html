@@ -19,7 +19,7 @@
               </li>
             </ul>
           </li>
-        </ul>
+       </ul>
 
         <ul class="nav navbar-nav">
           <li data-toggle="modal" data-target="#notifmodal"><a><span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications</a></li>
@@ -29,21 +29,56 @@
         <li><a (click)="authentication.logout()">Log Out</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right" *ng-for="#user of users_authentified">
-        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle">
+        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle" (click)="show_profile();">
       </ul>
     </div>
   </nav>
+
+ <div class="modal fade in" *ng-if="usermodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{usermodal}}" style="display: block;">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                <div class="modal-header">
+                     <h3>Profil</h3>
+                 </div><div class="modal-body">
+                 <form class="form-horizontal">
+                     <div class="form-group">
+                         <label class="col-md-3 control-label">Change view to :</label>
+                         <div *ng-if="preferedView1" class="row">
+                             <div class="col-md-8">
+                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; show_profile();"/>
+                             </div>
+                         </div>
+                        <div *ng-if="preferedView0" class="row">
+                            <div class="col-md-8">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;show_profile();">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+           <div class="modal-footer">
+                 <button class="btn btn-success btn-lg" (click)="update_user(user)" type="button">Save</button>
+                 <button class="btn btn-default btn-lg" type="button" (click)="usermodalstate=false;">Close</button>
+             </div>
+         </div>
+     </div>
+ </div>
   <!-- MODAL NODE -->
   <div class="modal fade in" *ng-if="nodemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{nodemodal}}" style="display:block; padding-left:15px;">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-5">
+                <div class="col-md-2">
+                <img title="{{node.name}}" src="{{node.image_path}}" width="45" height="45" class="img-circle">
+                </div>
+                <div class="col-md-10">
               <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{node.name}}</h3>
               <input #node_name *ng-if="title_state" class="form-control" value="{{node.name}}" placeholder="Node Name" (keyup.enter)="update_node(node_name.value);" (blur)="update_node(node_name.value);">
+                </div>
             </div>
-            <div class="col-md-10">
+            <div class="col-md-7">
               <div class="btn-group pull-right" role="group">
                 <button class="btn btn-info btn-lg" type="button" (click)="add_attribute()">
                   <img src="src/lib/img/add_attribute.png">
@@ -58,7 +93,7 @@
                   <img src="src/lib/img/delete_node.png">
                 </button>
                 <button class="btn btn-warning btn-lg" type="button" data-toggle="modal" data-target="#sharemodal" (click)="nodemodalstate=false;">
-                  <img src="src/lib/img/share_node.png">
+                 <img src="src/lib/img/share_node.png">
                 </button>
               </div>
             </div>

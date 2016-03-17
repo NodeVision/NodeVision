@@ -45,11 +45,11 @@ class Server {
             // Création d'un noeud
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
-                var n = new NVNode(b, node._id, node._name, node._node_attributs);
-                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
+                var n = new NVNode(b, node._id, node._name, node._node_attributs,null,node._image_path);
+                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
                 response.then(
                     (val) => {
-                        var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>());
+                        var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>(),null,val.data[0][1].data.image_path);
                         var Nedge = new NVEdge(val.data[0][0].metadata.id, val.data[0][0].data.name, n, Nnode);
                         socket.broadcast.emit('add node clt', Nnode, Nedge);
                         socket.emit('add node clt', Nnode, Nedge);
@@ -131,7 +131,7 @@ class Server {
 
 			// Création d'une branche
             socket.on('add branch srv', (branch, user) => {
-                var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n");
+                var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined', image_path:'https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png' }) < -[r:WRITE] - u RETURN b, n");
                 response.then(
                     (val) => {
                         socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
