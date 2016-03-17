@@ -682,7 +682,6 @@ export class GraphUI {
 
         var req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.id+" RETURN keys(n),n,r,b";
         var response = this.query(Action.read,null,req)
-        console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
         this.graph = new Graph(1, 'graph');
@@ -725,9 +724,10 @@ export class GraphUI {
         });
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
+                 
                     this.listAttribute = new Array<Attribute>();
                     n[0].forEach(nameAttribut => {
-                        if(this.graph.nodes.find(x => x.id == n[1].metadata.id+10) == null)
+                        if(this.graph.nodes.find(x => x.name == nameAttribut+" : "+n[1].data[nameAttribut]) == null)
                         {
                         if(nameAttribut != "name")
                             {
@@ -745,13 +745,10 @@ export class GraphUI {
          }
         // hydratation des arcs
         response.forEach(r => {
-           r[2].forEach(e => {
-               if(!this.found(this.graph.edges,e.metadata.id)){
-                    var source = this.found(this.graph.nodes,e.start.split("/")[e.start.split("/").length - 1]);
-                    var target = this.found(this.graph.nodes,e.end.split("/")[e.end.split("/").length - 1]);
-                    if(source && target) this.graph.edges.push(new NVEdge(e.metadata.id,e.data.name,source,target,e.metadata.type));
-               }
-            });
+                    var source = this.found(this.graph.nodes,r[2].start.split("/")[r[2].start.split("/").length - 1]);
+                    var target = this.found(this.graph.nodes,r[2].end.split("/")[r[2].end.split("/").length - 1]);
+                    var edge = new NVEdge(r[2].metadata.id,r[2].data.name,source,target,r[2].metadata.type);
+                    this.graph.edges.push(edge);
         });
     }
 }
