@@ -487,9 +487,9 @@ export class GraphUI {
         //ajouter a la base de données récup l'id  
         if(source != target){
             if (source.type == "User" || target.type == "User")  {
-                var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");  
+                var edge = new NVEdge(2264, 'undefined', source, target,"WRITE");  
             }else{
-                var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");  
+                var edge = new NVEdge(2264, 'undefined', source, target,"CUSTOM");  
             }
             this.socket.emit('add edge srv', edge, source, target);
         }       

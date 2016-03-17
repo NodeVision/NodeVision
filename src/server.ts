@@ -191,7 +191,6 @@ class Server {
 
 			// Suppression d'un arc
             socket.on('del edge srv', (edge) => {
-            	console.log(edge);
                  var response = this.neo4j.query("MATCH ()-[r]-() WHERE id(r)="+edge._id+" delete r");
                  response.then(    
                     () => {
