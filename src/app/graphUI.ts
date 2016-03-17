@@ -292,12 +292,12 @@ export class GraphUI {
             .data(this.graph.nodes)
             .enter().append("g")
             .attr("class", "node")
-            .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
+            .on("click", dbclick)
+            .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"});
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
             .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
@@ -308,8 +308,30 @@ export class GraphUI {
         this.nodes.append("text")
             .attr("x", 12)
             .attr("dy", ".35em")
-            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .attr("fill", (n: NVNode) => { return n.type == "User" ? "#fff" : "#"+n.branch.color; })
             .text((n: NVNode) => { return n.name; });
+            
+        function dbclick() {
+            d3.selectAll("g").select("image").transition()
+                .duration(750)
+                .attr("width", 20)
+                .attr("height", 20);
+            d3.selectAll("g").select("text").transition()
+                .duration(750)
+                .attr("x", 12)
+                .style("font", "14px sans-serif")
+                .style("stroke", "none");
+            d3.select(this).select("text").transition()
+                .duration(750)
+                .attr("x", 22)
+                .style("stroke", "yellow")
+                .style("stroke-width", ".5px")
+                .style("font", "23px sans-serif");
+            d3.select(this).select("image").transition()
+                .duration(750)
+                .attr("width", 30)
+                .attr("height", 30);
+        }
     }
 
     /** Rechargement du graphique à chaque modification */
@@ -349,12 +371,11 @@ export class GraphUI {
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         nodes.append("title").text((n: NVNode) => { return n.name; });
         nodes.append("image")
-            .attr("xlink:href", "https://github.com/favicon.ico")
+            .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
             .attr("x", -8)
             .attr("y", -8)
-            .attr("width", 16)
-            .attr("height", 16);
-
+            .attr("width", 20)
+            .attr("height", 20);
         nodes.append("text")
             .attr("x", 12)
             .attr("dy", ".35em")
@@ -385,7 +406,7 @@ export class GraphUI {
         }
         this.nodes.call(this.force.drag);
     }
-    /** This is a description of the  function. */
+    /** Used to drag and drop */
     public mousedown(n: NVNode) {
         this.node = n;
         if (d3.event.shiftKey) {
@@ -510,7 +531,6 @@ export class GraphUI {
 
     public show_profile()
     {
-        console.log(this.user.preferedView)
         this.preferedView0 = this.user.preferedView == 0;
         this.preferedView1 = this.user.preferedView == 1;
         this.usermodalstate = true;
@@ -619,7 +639,6 @@ export class GraphUI {
         if (auth_user.length == 0){
            auth_user =this.query(Action.create,new User(mail,0,null,null,null,null,this.authentication.getPicture()))
         }
-       console.log(auth_user);
        
         //hydrate le user
         this.user = new User(
@@ -643,7 +662,6 @@ export class GraphUI {
         this.graph = new Graph(1, 'graph');
                
         reponse_users.forEach(u => {   
-                    console.log("img "+u[0].data.image_path);
             var n = new NVNode(
                         this.userBranch,
                         u[0].metadata.id,
@@ -683,8 +701,9 @@ export class GraphUI {
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
                     this.listAttribute = new Array<Attribute>();
-                    console.log(n);
                     n[0].forEach(nameAttribut => {
+                        if(this.graph.nodes.find(x => x.id == n[1].metadata.id+10) == null)
+                        {
                         if(nameAttribut != "name")
                             {
                                 var node  =
@@ -694,7 +713,8 @@ export class GraphUI {
                             n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,null, "attribut");
                             this.graph.nodes.push(node);
                             this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
-                            }
+                        }
+                    }
                     });    
             });
          }
