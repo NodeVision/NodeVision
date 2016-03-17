@@ -191,7 +191,7 @@ class Server {
 
 			// Suppression d'un arc
             socket.on('del edge srv', (edge) => {
-                 var response = this.neo4j.query("MATCH ()-[r]-() WHERE id(r)="+edge._id+" delete r");
+                 var response = this.neo4j.query("MATCH ()-[r]->() WHERE id(r)="+edge._id+" delete r");
                  response.then(    
                     () => {
                         socket.broadcast.emit('del edge clt', edge);
@@ -220,7 +220,17 @@ class Server {
             });
 
             socket.on('add attr srv', (node, attribute) => {
-                socket.broadcast.emit('add attr clt', node, attribute);
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('add attr clt', node, attribute);
+                        socket.emit('add attr clt', node, attribute);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la création de l'attribut");
+                    }
+                );
             });
 
             socket.on('del attr srv', (node, attribute) => {

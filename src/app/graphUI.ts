@@ -415,8 +415,6 @@ export class GraphUI {
     //Création d'un nouvel attribut d'un noeud
     public add_attribute(){
         var NewAttribute = new Attribute('attribut'+(this.node.attributes.length+1),'');
-        var response = this.query(Action.create, NewAttribute);
-        this.node.attributes.push(NewAttribute);
         this.socket.emit('add attr srv', this.node, NewAttribute);
     }
     
@@ -684,7 +682,6 @@ export class GraphUI {
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
                     this.listAttribute = new Array<Attribute>();
-                    console.log(n);
                     n[0].forEach(nameAttribut => {
                         if(nameAttribut != "name")
                             {
