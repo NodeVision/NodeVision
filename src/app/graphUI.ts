@@ -655,7 +655,7 @@ export class GraphUI {
                         u[0].metadata.labels[0])
      
             this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
-            this.graph.nodes.push(n);
+           // this.graph.nodes.push(n);
          });
        
         response.forEach(n => { // par chaque noeud
