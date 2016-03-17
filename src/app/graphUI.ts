@@ -49,6 +49,7 @@ export class GraphUI {
     private listAttribute = new Array<Attribute>();
     //branch Modal
     private branchmodalstate = false;
+    private usermodalstate = false;
     private branchnamecondition = false;
     private attribnamecondition = false;
     private branchmodal = Element.branch;
@@ -59,6 +60,8 @@ export class GraphUI {
     private edgemodal = Element.edge;
     //users
     private users = Array<User>();
+    private preferedView0 = false;
+    private preferedView1 = false;
     //navbar
     private branches = new Array<Branch>();
     private socket;
@@ -98,7 +101,7 @@ export class GraphUI {
         /**/     //hydratation
         /**/     var n = new NVNode(new Branch());
         /**/     n.image_path = user._node._image_path;
-        /**/     var u = new User(user._mail,user._id,n);
+        /**/     var u = new User(user._mail,user._id,user._preferedView, n);
         /**/     //add to users
         /**/     this.users_authentified.push(u);
         /**/ });
@@ -214,7 +217,18 @@ export class GraphUI {
         /**/     toAddAttribut.map((k) => {
         /**/     var Nattribute = new Attribute(attribute._name,attribute._value);      
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
+        // if(this.user.preferedView == 1)
+        // {
+        //    var node  = new NVNode(new Branch(
+        //                     this.graph.nodes[this.graph.nodes.indexOf(k)].branch.name,
+        //                     "456456",
+        //                     n[3].metadata.id), n[1].metadata.id+10,attribute._name+" : "+attribute._value,null,null,null, "attribut");
+        //                     this.graph.nodes.push(node);
+        //                     this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes[this.graph.nodes.indexOf(k)],node))
+        //                     this.redraw();
+        // }
         /**/     });  
+        /**/
         /**/ });
         /**/ // Del attribute broadcast
         /**/ this.socket.on('del attr clt', (node,attribute) => {
@@ -276,17 +290,26 @@ export class GraphUI {
             .style("stroke","#999");
         this.nodes = this.svg.selectAll(".node")
             .data(this.graph.nodes)
-            .enter().append("circle")
+            .enter().append("g")
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
-            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .call(this.force.drag)
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
+        this.nodes.append("image")
+            .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
+            .attr("x", -8)
+            .attr("y", -8)
+            .attr("width", 20)
+            .attr("height", 20);
+        this.nodes.append("text")
+            .attr("x", 12)
+            .attr("dy", ".35em")
+            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .text((n: NVNode) => { return n.name; });
     }
 
     /** Rechargement du graphique à chaque modification */
@@ -316,17 +339,27 @@ export class GraphUI {
         links.exit().remove();
     
         var nodes = this.nodes.data(this.force.nodes());
-        nodes.enter().append("circle")
+        nodes.enter().append("g")
             .attr("class", "node")
             .attr("r", 10)
             .attr("id", (n: NVNode) => { return n.id })
-            .style('fill', (n: NVNode) => { return "#"+n.branch.color })
-            .style('stroke', (n: NVNode) => { return "#"+n.branch.color })
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .call(this.force.drag)
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = true });
-        this.nodes.append("title").text((n: NVNode) => { return n.name; });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
+        nodes.append("title").text((n: NVNode) => { return n.name; });
+        nodes.append("image")
+            .attr("xlink:href", "https://github.com/favicon.ico")
+            .attr("x", -8)
+            .attr("y", -8)
+            .attr("width", 16)
+            .attr("height", 16);
+
+        nodes.append("text")
+            .attr("x", 12)
+            .attr("dy", ".35em")
+            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .text((n: NVNode) => { return n.name; });
         nodes.exit().remove();
         
         this.links = this.svg.selectAll(".link");
@@ -340,8 +373,7 @@ export class GraphUI {
             .attr("y1", (e: NVEdge) => { return e.source.y; })
             .attr("x2", (e: NVEdge) => { return e.target.x; })
             .attr("y2", (e: NVEdge) => { return e.target.y; });
-        this.nodes.attr("cx", (n: NVNode) => { return n.x; })
-            .attr("cy", (n: NVNode) => { return n.y; });
+       this.nodes.attr("transform", function(n:NVNode) { return "translate(" + n.x + "," + n.y + ")"; });
     }
     /** This is a description of the  function. */
     public mouseupNode(n: NVNode) {
@@ -476,6 +508,20 @@ export class GraphUI {
         this.socket.emit('up branch srv',this.branch);
     }
 
+    public show_profile()
+    {
+        console.log(this.user.preferedView)
+        this.preferedView0 = this.user.preferedView == 0;
+        this.preferedView1 = this.user.preferedView == 1;
+        this.usermodalstate = true;
+        
+    }
+    public update_user(user: User)
+    { 
+        this.user = user;
+        this.socket.emit('up user srv', this.user);
+        this.usermodalstate = false;
+    }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
         console.log(branch);
@@ -529,7 +575,7 @@ export class GraphUI {
                     if(element instanceof NVNode)cypher = "MATCH (n),(b),(u) WHERE id(n)="+this.node.id+" AND id(b)="+this.node.branch.id+" AND id(u)="+this.user.node.id+" CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";   
                     if(element instanceof Branch) cypher = "MATCH (u) WHERE id(u)="+this.user.node.id+" CREATE (b:Branch {name:'"+this.branch.name+"',color:'"+this.branch.color+"'})-[re:BELONG]->(n:Node {name:'undefined'})<-[r:WRITE]-u RETURN b, n";
                     if(element instanceof Attribute) cypher = "MATCH (n) WHERE id(n)="+this.node.id+" SET n."+element.name+"='"+element.value+"' RETURN  n";
-                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:''});";
+                    if(element instanceof User) cypher = "CREATE (u:User {mail:'"+element.mail+"',name:'',firstname:'',image_path:'"+element.img_path+"',preferedView:'0'});";
                     break;
                 case Action.update:
                     if(element instanceof NVNode) cypher = "MATCH (n) WHERE id(n)="+element.id+" SET n.name ='"+element.name+"'";
@@ -571,22 +617,26 @@ export class GraphUI {
         var auth_user = this.query(Action.read,null,"MATCH (u:User) WHERE u.mail = '"+mail+"' RETURN u");
         //si le noeud existe,si il n'existe pas créer le noeud, sinon le récupérer
         if (auth_user.length == 0){
-           auth_user =this.query(Action.create,new User(mail))
+           auth_user =this.query(Action.create,new User(mail,0,null,null,null,null,this.authentication.getPicture()))
         }
+       console.log(auth_user);
+       
         //hydrate le user
         this.user = new User(
-            auth_user[0][0].data.mail,auth_user[0][0].metadata.id,new NVNode(
+            auth_user[0][0].data.mail,auth_user[0][0].data.preferedView,auth_user[0][0].metadata.id,new NVNode(
                 this.userBranch,
                 auth_user[0][0].metadata.id,
                 auth_user[0][0].data.mail,
                 [new Attribute('name',auth_user[0][0].data.name),
                 new Attribute('firstname',auth_user[0][0].data.firstname)],null,
-                this.authentication.getPicture()));
+                auth_user[0][0].data.image_path),null,null,auth_user[0][0].data.image_path);
+                
         //broadcast la conenxion à tous les utilisateurs
         this.socket.emit('broadcast users srv',this.user);
         this.users_authentified.push(this.user);
         
         //Récupération de tous les noeuds sur lesquels on a la vision
+<<<<<<< HEAD
         var req = "MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b";
         req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = 1083 RETURN keys(n),n,r,b";
         var response = this.query(Action.read,null,req)
@@ -594,7 +644,16 @@ export class GraphUI {
         //Récupération de tous les utilisateurs qui ne sont pas nous même
        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
         this.graph = new Graph(1, 'graph');         
+=======
+        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
+        console.log(response);
+        //Récupération de tous les utilisateurs qui ne sont pas nous même
+       var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
+        this.graph = new Graph(1, 'graph');
+               
+>>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
         reponse_users.forEach(u => {   
+                    console.log("img "+u[0].data.image_path);
             var n = new NVNode(
                         this.userBranch,
                         u[0].metadata.id,
@@ -603,21 +662,27 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
+<<<<<<< HEAD
             //this.graph.nodes.push(n);
             this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
+=======
+                        
+            this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
+            this.graph.nodes.push(n);
+>>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
          });
-         
-         
-        response.forEach(n => { // par chaque noeud
-                this.listAttribute = new Array<Attribute>();
-                n[0].forEach(nameAttribut => {
-                    if(nameAttribut != "name")
-                        {
-                            var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
-                            this.listAttribute.push(att);
-                        }
-                }); 
+       
+            response.forEach(n => { // par chaque noeud
+                    this.listAttribute = new Array<Attribute>();
+                    n[0].forEach(nameAttribut => {
+                        if(nameAttribut != "name")
+                            {
+                                var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
+                                this.listAttribute.push(att);
+                            }
+                    }); 
 
+<<<<<<< HEAD
                 if(!this.found(this.graph.nodes,n[1].metadata.id)){
                 this.graph.nodes.push(new NVNode(
                     new Branch(
@@ -633,6 +698,39 @@ export class GraphUI {
         });
 
 
+=======
+                    if(!this.found(this.graph.nodes,n[1].metadata.id)){
+                    this.graph.nodes.push(new NVNode(
+                        new Branch(
+                            n[3].data.name,
+                            n[3].data.color,
+                            n[3].metadata.id),
+                        n[1].metadata.id,
+                        n[1].data.name,
+                        this.listAttribute
+                        )
+                    );
+                }
+            });   
+         if(this.user.preferedView == 1){
+             response.forEach(n => { // par chaque noeud
+                    this.listAttribute = new Array<Attribute>();
+                    console.log(n);
+                    n[0].forEach(nameAttribut => {
+                        if(nameAttribut != "name")
+                            {
+                                var node  =
+                                 new NVNode(new Branch(
+                            n[3].data.name,
+                            n[3].data.color,
+                            n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,null, "attribut");
+                            this.graph.nodes.push(node);
+                            this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
+                            }
+                    });    
+            });
+         }
+>>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
         // hydratation des arcs
         response.forEach(r => {
             var source = this.found(this.graph.nodes,r[2].start.split("/")[r[2].start.split("/").length - 1]);

@@ -29,10 +29,40 @@
                 <li><a (click)="authentication.logout()">Log Out</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right" *ng-for="#user of users_authentified">
-                <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle">
+                <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" (click)="show_profile();" class="img-circle">
             </ul>
         </div>
     </nav>
+<!--MODAL PROFIL-->
+<div class="modal fade in" *ng-if="usermodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{usermodal}}" style="display: block;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Profil</h3>
+                </div><div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-3 control-label">Prefered view :</label>
+                        <div *ng-if="preferedView1" class="row">
+                            <div class="col-md-8">
+                                <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; show_profile();"/>
+                            </div>
+                        </div>
+                        <div *ng-if="preferedView0" class="row">
+                            <div class="col-md-8">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;show_profile();">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success btn-lg" (click)="update_user(user)" type="button">Save</button>
+                <button class="btn btn-default btn-lg" type="button" (click)="usermodalstate=false;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- MODAL NODE -->
     <div class="modal fade in" *ng-if="nodemodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{nodemodal}}" style="display:block; padding-left:15px;" >
         <div class="modal-dialog" role="document">
