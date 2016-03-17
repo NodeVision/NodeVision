@@ -2,4 +2,7 @@
     background-color: #202020;
 }
 
+text {
+  pointer-events: none;
+}
 

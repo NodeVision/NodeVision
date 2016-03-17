@@ -36,7 +36,7 @@ class Server {
             socket.on('broadcast users srv',(user) => {
                 var b = new Branch();
                 var n = new NVNode(b);n.image_path = user._node._image_path;
-                var u = new User(user._mail,user._id,n);
+                var u = new User(user._mail,user._preferedView,user._id,n);
                 u.socket = socket.id;
                 this.users.push(u);
                 socket.broadcast.emit('broadcast users clt',u)
@@ -229,6 +229,20 @@ class Server {
 
             socket.on('up attr srv', (type, node, attribute, value, name) => {
                 socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+            });
+            socket.on('up user srv', (user) => {
+                console.log("user : " + user);
+                console.log("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
+                
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
+                response.then(
+                    console.log("Mise à jour de l'utilisateur effectuée")
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la mise à jour de l'utilisateur");
+                    }
+                );
+                
             });
 
             socket.on('disconnect', () => {
