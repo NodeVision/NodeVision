@@ -636,22 +636,13 @@ export class GraphUI {
         this.users_authentified.push(this.user);
         
         //Récupération de tous les noeuds sur lesquels on a la vision
-<<<<<<< HEAD
-        var req = "MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b";
-        req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = 1083 RETURN keys(n),n,r,b";
+
+        var req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = 1083 RETURN keys(n),n,r,b";
         var response = this.query(Action.read,null,req)
         console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
-       var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
+        var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
         this.graph = new Graph(1, 'graph');         
-=======
-        var response = this.query(Action.read,null,"MATCH (u:User)-[r:KNOWS|WRITE|READ|HIERARCHICAL|CUSTOM*]-(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.node.id+" RETURN keys(n),n,r,b")
-        console.log(response);
-        //Récupération de tous les utilisateurs qui ne sont pas nous même
-       var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
-        this.graph = new Graph(1, 'graph');
-               
->>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
         reponse_users.forEach(u => {   
                     console.log("img "+u[0].data.image_path);
             var n = new NVNode(
@@ -662,14 +653,9 @@ export class GraphUI {
                         new Attribute('firstname',u[0].data.firstname)],null,
                         u[0].data.image_path,
                         u[0].metadata.labels[0])
-<<<<<<< HEAD
-            //this.graph.nodes.push(n);
-            this.users.push(new User(u[0].data.mail,u[0].metadata.id,n));
-=======
-                        
+     
             this.users.push(new User(u[0].data.mail,u[0].data.preferedView,u[0].metadata.id,n));
             this.graph.nodes.push(n);
->>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
          });
        
             response.forEach(n => { // par chaque noeud
@@ -682,23 +668,6 @@ export class GraphUI {
                             }
                     }); 
 
-<<<<<<< HEAD
-                if(!this.found(this.graph.nodes,n[1].metadata.id)){
-                this.graph.nodes.push(new NVNode(
-                    new Branch(
-                        n[3].data.name,
-                        n[3].data.color,
-                        n[3].metadata.id),
-                    n[1].metadata.id,
-                    n[1].data.name,
-                    this.listAttribute
-                    )
-                );
-            }
-        });
-
-
-=======
                     if(!this.found(this.graph.nodes,n[1].metadata.id)){
                     this.graph.nodes.push(new NVNode(
                         new Branch(
@@ -730,7 +699,6 @@ export class GraphUI {
                     });    
             });
          }
->>>>>>> 22c717e9352ac8a12cb004e80548300b66c963d5
         // hydratation des arcs
         response.forEach(r => {
             var source = this.found(this.graph.nodes,r[2].start.split("/")[r[2].start.split("/").length - 1]);
