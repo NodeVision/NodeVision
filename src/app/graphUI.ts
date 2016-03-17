@@ -80,7 +80,7 @@ export class GraphUI {
         ///////////////////////
         //navbar branches
         var b = new Array<Branch>();
-        this.graph.nodes.forEach(n => {  
+        this.graph.nodes.forEach(n => { 
             b.push(n.branch);
         });
         b.forEach(br =>{
@@ -637,7 +637,7 @@ export class GraphUI {
         
         //Récupération de tous les noeuds sur lesquels on a la vision
 
-        var req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = 1083 RETURN keys(n),n,r,b";
+        var req = "MATCH (u:User)-[ru:KNOWS|WRITE|READ|CUSTOM]->(n:Node)-[r:HIERARCHICAL]-()<-[re:BELONG]-(b:Branch) WHERE id(u) = "+this.user.id+" RETURN keys(n),n,r,b";
         var response = this.query(Action.read,null,req)
         console.log(response);
         //Récupération de tous les utilisateurs qui ne sont pas nous même
@@ -658,29 +658,29 @@ export class GraphUI {
             this.graph.nodes.push(n);
          });
        
-            response.forEach(n => { // par chaque noeud
-                    this.listAttribute = new Array<Attribute>();
-                    n[0].forEach(nameAttribut => {
-                        if(nameAttribut != "name")
-                            {
-                                var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
-                                this.listAttribute.push(att);
-                            }
-                    }); 
+        response.forEach(n => { // par chaque noeud
+                this.listAttribute = new Array<Attribute>();
+                n[0].forEach(nameAttribut => {
+                    if(nameAttribut != "name")
+                        {
+                            var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
+                            this.listAttribute.push(att);
+                        }
+                }); 
 
-                    if(!this.found(this.graph.nodes,n[1].metadata.id)){
-                    this.graph.nodes.push(new NVNode(
-                        new Branch(
-                            n[3].data.name,
-                            n[3].data.color,
-                            n[3].metadata.id),
-                        n[1].metadata.id,
-                        n[1].data.name,
-                        this.listAttribute
-                        )
-                    );
-                }
-            });   
+                if(!this.found(this.graph.nodes,n[1].metadata.id)){
+                this.graph.nodes.push(new NVNode(
+                    new Branch(
+                        n[3].data.name,
+                        n[3].data.color,
+                        n[3].metadata.id),
+                    n[1].metadata.id,
+                    n[1].data.name,
+                    this.listAttribute
+                    )
+                );
+            }
+        });   
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
                     this.listAttribute = new Array<Attribute>();
@@ -706,6 +706,7 @@ export class GraphUI {
             var edge = new NVEdge(r[2].metadata.id,r[2].data.name,source,target,r[2].metadata.type);
             this.graph.edges.push(edge);
         }); 
+        console.log(this.graph.edges,this.graph.nodes);
     }
 }
 bootstrap(GraphUI);
