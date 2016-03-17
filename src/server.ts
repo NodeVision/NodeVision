@@ -41,6 +41,7 @@ class Server {
                 this.users.push(u);
                 socket.broadcast.emit('broadcast users clt',u)
             });
+
             // Création d'un noeud
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
@@ -128,6 +129,7 @@ class Server {
                 
             });
 
+			// Création d'une branche
             socket.on('add branch srv', (branch, user) => {
                 var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n");
                 response.then(
@@ -142,34 +144,79 @@ class Server {
                 );
             });
 
+			// Suppression d'une branche
             socket.on('del branch srv', (branch) => {
-                socket.broadcast.emit('del branch clt', branch);
+                 var response = this.neo4j.query("MATCH (b),(n) WHERE id(b)="+branch._id+" AND (b)-->(n) detach delete b,n");
+                 response.then(    
+                    () => {
+                        socket.broadcast.emit('del branch clt', branch);
+                        socket.emit('del branch clt', branch);
+                    }
+                ).catch(
+                    function() { 
+                        console.log("Erreur dans la suppression de la branche");
+                    }
+                );
             });
             
+            // Mise à jour d'une branche
             socket.on('up branch srv', (branch) => {
                 var response = this.neo4j.query("MATCH (b) WHERE id(b)=" + branch._id + " SET b.name='" + branch._name + "', b.color ='" + branch._color + "'");
                 response.then(
-                    (val) => {
+                    () => {
                         socket.broadcast.emit('up branch clt', branch);
                         socket.emit('up branch clt', branch);
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans la création de la branche");
+                        console.log("Erreur dans l'update de la branche");
                     }
                 );
             });
 
-            socket.on('add edge srv', (edge, source, target) => {
-                socket.broadcast.emit('add edge clt', edge, source, target);
+			// Création d'un arc
+            socket.on('add edge srv', (edge) => {
+                var response = this.neo4j.query("MATCH (s),(t) WHERE id(s)="+edge.source._id+" AND id(t)="+edge.target._id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('add edge clt', edge, val.data[0][0].metadata.id);
+                        socket.emit('add edge clt', edge, val.data[0][0].metadata.id);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la création de l'arc");
+                    }
+                );
             });
 
-            socket.on('del edge srv', (source, target) => {
-                socket.broadcast.emit('del edge clt', source, target);
+			// Suppression d'un arc
+            socket.on('del edge srv', (edge) => {
+                 var response = this.neo4j.query("MATCH ()-[r]-() WHERE id(r)="+edge._id+" delete r");
+                 response.then(    
+                    () => {
+                        socket.broadcast.emit('del edge clt', edge);
+                        socket.emit('del edge clt', edge);
+                    }
+                ).catch(
+                    function() { 
+                        console.log("Erreur dans la suppression de l'arc");
+                    }
+                );
             });
 
-            socket.on('up edge srv', (name, edge) => {
-                socket.broadcast.emit('up edge clt', name, edge);
+			// Mise à jour d'un arc
+            socket.on('up edge srv', (edge) => {
+            	var response = this.neo4j.query("MATCH ()-[r]-() WHERE id(r)="+edge._id+" SET r.name ='"+edge._name+"'");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('up edge clt', edge);
+                        socket.emit('up edge clt', edge);
+                    }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans l'update de l'arc");
+                    }
+                );
             });
 
             socket.on('add attr srv', (node, attribute) => {
