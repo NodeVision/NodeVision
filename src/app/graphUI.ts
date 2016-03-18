@@ -113,7 +113,7 @@ export class GraphUI {
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
-        /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs);
+        /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs, null,node._image_path);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
         /**/     var e = new NVEdge(edge._id,edge.name,ns,nt);
         /**/     //add to graph
@@ -143,13 +143,15 @@ export class GraphUI {
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toRenameN.map((k) => {
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = node._name;
+                    this.graph.nodes[this.graph.nodes.indexOf(k)].image_path = node._image_path;
         /**/     });
         /**/ });
         /**/ // Add branch broadcast
-        /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node) => {
+        /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node, image_path) => {
         /**/     //hydratation
+        console.log(image_path);
         /**/     var b = new Branch(name_branch,color_branch,id_branch);
-        /**/     var n = new NVNode(b,id_node,'undefined', Array<Attribute>());
+        /**/     var n = new NVNode(b,id_node,'undefined', Array<Attribute>(),null,image_path);
         /**/     // add to graph
         /**/     this.branches.push(b);
         /**/     this.graph.nodes.push(n);
@@ -289,7 +291,8 @@ export class GraphUI {
             .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"; console.log(n.image_path);});
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
+            .attr("xlink:href", (n: NVNode) => {return n.image_path})
+            .attr("class", "img-circle")
             .attr("x", -8)
             .attr("y", -8)
             .attr("width", 20)
@@ -330,7 +333,7 @@ export class GraphUI {
             .enter().append("svg:marker")    // This section adds in the arrows
             .attr("id", String)
             .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 17)
+            .attr("refX", 28)
             .attr("refY", 0)
             .attr("markerWidth", 3)
             .attr("markerHeight", 4)
@@ -341,12 +344,15 @@ export class GraphUI {
 
         this.links = this.svg.selectAll(".link");
         var links = this.links.data(this.force.links());
-        links.enter().insert("line", ".node").attr("class", "link").attr("marker-end", "url(#end)")
-            .on("click", (e: NVEdge) => { this.edge = e})
-            .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
+        links.data(this.graph.edges)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("marker-end", "url(#end)")
             .style("stroke-opacity", 0.3)
-            .style("stroke-width","5")
-            .style("stroke","#999")
+            .on("click", (e: NVEdge) => { this.edge = e })
+            .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
+            .style("stroke-width","2")
+            .style("stroke","#999");
         links.exit().remove();
 
         var nodes = this.nodes.data(this.force.nodes());
@@ -360,7 +366,7 @@ export class GraphUI {
             .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
         nodes.append("title").text((n: NVNode) => { return n.name; });
         nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => {return n.type=="attribut" ? "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png" : n.type == "User" ? n.image_path : "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png"})
+            .attr("xlink:href", (n: NVNode) => {return n.image_path})
             .attr("x", -8)
             .attr("y", -8)
             .attr("width", 20)
@@ -491,6 +497,13 @@ export class GraphUI {
     public update_node(node_name:string) {
         this.node.name = node_name;
         this.title_state = false;
+        this.socket.emit('up node srv', this.node);
+    }
+    public update_node_image(img_path:string) {
+        console.log("IMAGE OUESH")
+        console.log(img_path);
+        
+        this.node.image_path = img_path;
         this.socket.emit('up node srv', this.node);
     }
     /** This is a description of the  function. */

@@ -70,10 +70,11 @@
         <div class="modal-header">
           <div class="row">
             <div class="col-md-5">
-                <div class="col-md-2">
-                <img title="{{node.name}}" src="{{node.image_path}}" width="45" height="45" class="img-circle">
+                <div class="col-md-4 imgWrap">
+                <img title="{{node.name}}" src="{{node.image_path}}" width="75" height="75"  alt="lol" class="img-circle">
+                <p class="imgModifier" data-toggle="modal" data-target="#imagemodal">Modifier</p>
                 </div>
-                <div class="col-md-10">
+                <div class="col-md-8">
               <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{node.name}}</h3>
               <input #node_name *ng-if="title_state" class="form-control" value="{{node.name}}" placeholder="Node Name" (keyup.enter)="update_node(node_name.value);" (blur)="update_node(node_name.value);">
                 </div>
@@ -207,6 +208,29 @@
       </div>
     </div>
   </div>
+  <!--MODAL IMAGE NODE-->
+<div class="modal fade " id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Image du noeud</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <label class="col-sm-12 control-label">url :</label>
+                    </div>
+                    <div *ng-if="node != null" class="col-sm-10">
+                        <input #url class="form-control" value="{{node.image_path}}" typename="text" (blur)="update_node_image(url.value);">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
   <!-- MODAL SHARE NODE -->
   <div class="modal fade " id="sharemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">

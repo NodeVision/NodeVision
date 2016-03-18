@@ -115,7 +115,9 @@ class Server {
 
             // Mise à jour d'un noeud et de ses enfants coté serveur
             socket.on('up node srv', (node) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "'");
+                console.log("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
+                console.log(node);
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
                 response.then(
                     () => {
                         socket.broadcast.emit('up node clt', node);
@@ -134,8 +136,8 @@ class Server {
                 var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined', image_path:'https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png' }) < -[r:WRITE] - u RETURN b, n");
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
-                        socket.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
+                        socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id,val.data[0][1].data.image_path);
+                        socket.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id,val.data[0][1].data.image_path);
                     }
                 ).catch(
                     function() {
@@ -241,9 +243,7 @@ class Server {
                 socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
             });
             socket.on('up user srv', (user) => {
-                console.log("user : " + user);
-                console.log("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
-                
+                             
                 var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
                 response.then(
                     console.log("Mise à jour de l'utilisateur effectuée")
