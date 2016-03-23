@@ -211,7 +211,6 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-<<<<<<< HEAD
                 <div class="row">
                     <div class="col-md-6">
                         <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{edge.name}}</h3>
@@ -228,17 +227,16 @@
             </div>
             <div class="modal-body">
                 <div class="form-group row" *ng-for="#w of edge.weights">
-                        <div class="col-md-5"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
-                        <div class="col-md-5"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
-                        <div class="col-md-2">
-                            <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_weight(w)" ></span>
-                        </div> 
-                    </div>
+                    <div class="col-md-5"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
+                    <div class="col-md-5"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
+                    <div class="col-md-2">
+                        <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_weight(w)" ></span>
+                    </div> 
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-danger" type= "button" (click)="delete_edge()">Delete edge</button>
                 <button class="btn btn-default" type= "button" (click)="edgemodalstate=false;">Close</button>
-=======
                 <h4 class="modal-title" id="myModalLabel">Image du noeud</h4>
             </div>
             <div class="modal-body">
@@ -253,7 +251,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
->>>>>>> c39b8435f76fea410bdb808fc5788c214f47c051
             </div>
         </div>
     </div>
@@ -316,12 +313,3 @@
   {{notif}} <a data-toggle="modal" data-target="#detaillogmodal">Détails</a>
 </div>
 </div>
-<!--
-    <li class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
-            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
-        <ul class="dropdown-menu">
-
-        </ul>
-    </li>
-    -->
