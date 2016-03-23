@@ -115,8 +115,6 @@ class Server {
 
             // Mise à jour d'un noeud et de ses enfants coté serveur
             socket.on('up node srv', (node) => {
-                console.log("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
-                console.log(node);
                 var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
                 response.then(
                     () => {
@@ -171,7 +169,7 @@ class Server {
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans l'update de la branche");
+                        console.log("Erreur dans la mise à jour de la branche");
                     }
                 );
             });
@@ -216,7 +214,7 @@ class Server {
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans l'update de l'arc");
+                        console.log("Erreur dans la mise à jour de l'arc");
                     }
                 );
             });
@@ -236,11 +234,38 @@ class Server {
             });
 
             socket.on('del attr srv', (node, attribute) => {
-                socket.broadcast.emit('del attr clt', node, attribute);
+            	var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('del attr clt', node, attribute);
+                        socket.emit('del attr clt', node, attribute);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la suppression de l'attribut");
+                    }
+                );
             });
 
             socket.on('up attr srv', (type, node, attribute, value, name) => {
-                socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+            	if(type=="value"){
+            		var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+name+"='"+value+"' RETURN  n");
+            	}else if(type=="name"){
+					this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+					var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+name+"='"+value+"' RETURN  n");
+            	}
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+                        socket.emit('up attr clt', type, node, attribute, value, name);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la mise à jour de l'attribut");
+                    }
+                );
+                
+                
             });
             socket.on('up user srv', (user) => {
                              
