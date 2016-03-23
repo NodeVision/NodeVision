@@ -6,3 +6,43 @@ text {
   pointer-events: none;
 }
 
+.imgWrap {
+  position: relative;
+  width:60;
+  height:60;
+}
+
+.imgModifier {
+    text-align: center;
+    padding-top:25px;
+  position: absolute;
+  top: 1px;
+  bottom: 0;
+  left: 18px;
+  right: 25px;
+  height: 73px;
+  background: rgba(29, 106, 154, 0.72);
+  color: #fff;
+    -moz-border-radius: 150px;
+    -webkit-border-radius: 150px;
+    border-radius: 150px;
+  visibility: hidden;
+  opacity: 0;
+
+  /*remove comment if you want a gradual transition between states
+  -webkit-transition: visibility opacity 0.2s;
+  */
+}
+.imgWrap:hover .imgModifier {
+  visibility: visible;
+  opacity: 1;
+}
+
+#r {
+      position: fixed;
+      top: 52px;
+      right: 0;
+      width: 350px;
+      height: 100%;
+      padding: 10px;
+    }

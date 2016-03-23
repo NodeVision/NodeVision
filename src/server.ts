@@ -45,11 +45,11 @@ class Server {
             // Création d'un noeud
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
-                var n = new NVNode(b, node._id, node._name, node._node_attributs);
-                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
+                var n = new NVNode(b, node._id, node._name, node._node_attributs,null,node._image_path);
+                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
                 response.then(
                     (val) => {
-                        var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>());
+                        var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>(),null,val.data[0][1].data.image_path);
                         var Nedge = new NVEdge(val.data[0][0].metadata.id, val.data[0][0].data.name, n, Nnode);
                         socket.broadcast.emit('add node clt', Nnode, Nedge);
                         socket.emit('add node clt', Nnode, Nedge);
@@ -115,7 +115,7 @@ class Server {
 
             // Mise à jour d'un noeud et de ses enfants coté serveur
             socket.on('up node srv', (node) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "'");
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
                 response.then(
                     () => {
                         socket.broadcast.emit('up node clt', node);
@@ -131,11 +131,11 @@ class Server {
 
 			// Création d'une branche
             socket.on('add branch srv', (branch, user) => {
-                var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined' }) < -[r:WRITE] - u RETURN b, n");
+                var response = this.neo4j.query("MATCH(u) WHERE id(u) = " + user._node._id + " CREATE (b:Branch {name: '" + branch._name + "', color: '" + branch._color + "' }) - [re:BELONG] ->(n:Node {name: 'undefined', image_path:'https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_spiderman.png' }) < -[r:WRITE] - u RETURN b, n");
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
-                        socket.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id);
+                        socket.broadcast.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id,val.data[0][1].data.image_path);
+                        socket.emit('add branch clt', val.data[0][0].metadata.id, val.data[0][0].data.name, val.data[0][0].data.color, val.data[0][1].metadata.id,val.data[0][1].data.image_path);
                     }
                 ).catch(
                     function() {
@@ -169,7 +169,7 @@ class Server {
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans l'update de la branche");
+                        console.log("Erreur dans la mise à jour de la branche");
                     }
                 );
             });
@@ -191,7 +191,7 @@ class Server {
 
 			// Suppression d'un arc
             socket.on('del edge srv', (edge) => {
-                 var response = this.neo4j.query("MATCH ()-[r]-() WHERE id(r)="+edge._id+" delete r");
+                 var response = this.neo4j.query("MATCH ()-[r]->() WHERE id(r)="+edge._id+" delete r");
                  response.then(    
                     () => {
                         socket.broadcast.emit('del edge clt', edge);
@@ -214,26 +214,61 @@ class Server {
                     }
                 ).catch(
                     function() {
-                        console.log("Erreur dans l'update de l'arc");
+                        console.log("Erreur dans la mise à jour de l'arc");
                     }
                 );
             });
 
             socket.on('add attr srv', (node, attribute) => {
-                socket.broadcast.emit('add attr clt', node, attribute);
+                var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('add attr clt', node, attribute);
+                        socket.emit('add attr clt', node, attribute);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la création de l'attribut");
+                    }
+                );
             });
 
             socket.on('del attr srv', (node, attribute) => {
-                socket.broadcast.emit('del attr clt', node, attribute);
+            	var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('del attr clt', node, attribute);
+                        socket.emit('del attr clt', node, attribute);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la suppression de l'attribut");
+                    }
+                );
             });
 
             socket.on('up attr srv', (type, node, attribute, value, name) => {
-                socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+            	if(type=="value"){
+            		var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+name+"='"+value+"' RETURN  n");
+            	}else if(type=="name"){
+					this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+					var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+name+"='"+value+"' RETURN  n");
+            	}
+                response.then(
+                    (val) => {
+                        socket.broadcast.emit('up attr clt', type, node, attribute, value, name);
+                        socket.emit('up attr clt', type, node, attribute, value, name);
+					 }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans la mise à jour de l'attribut");
+                    }
+                );
+                
+                
             });
             socket.on('up user srv', (user) => {
-                console.log("user : " + user);
-                console.log("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
-                
+                             
                 var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + user._node._id + " SET n.preferedView =" + user._preferedView);
                 response.then(
                     console.log("Mise à jour de l'utilisateur effectuée")

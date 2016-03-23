@@ -1,8 +1,10 @@
 ﻿import {PreferencePopup} from './preferencepopup';
 import {Status} from '../enum';
-export class Popup {
+import {User} from './user';
+export class Log {
     public _type: Status;
     public _message: string;
+    public _user: User;
     public _details: string;
     public _preference: PreferencePopup;
     constructor(type: Status, message: string, details: string, preference: PreferencePopup) {
