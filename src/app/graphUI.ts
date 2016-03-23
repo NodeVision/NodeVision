@@ -5,12 +5,14 @@ import {NVNode} from './model/node';
 import {NVEdge} from './model/edge';
 import {Graph} from './model/graph';
 import {Group} from './model/group';
+import {Log} from './model/log';
 import {Notification} from './model/notification';
 import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
 import {Action} from './enum';
 import {AuthApp} from './connexionUI';
+
 @View({
     templateUrl: 'src/html/graphUI.html',
     directives: [CORE_DIRECTIVES]
@@ -64,6 +66,9 @@ export class GraphUI {
     //navbar
     private branches = new Array<Branch>();
     private socket;
+    
+    //notifs
+    private notifs = new Array<Log>();
     //administration
     private notifications = new Array<Notification>();
     constructor() {
@@ -112,6 +117,7 @@ export class GraphUI {
         /**/ // Add node broadcast
         /**/ this.socket.on('add node clt', (node, edge) => {
         /**/     //hydratation
+        /**/     //this.notifs.push("le noeud "+node._name+" a été créé.");
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
         /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs, null,node._image_path);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
@@ -125,10 +131,12 @@ export class GraphUI {
         /**/ // Delete node broadcast
         /**/ this.socket.on('del node clt', (id_node,del_branch?:boolean,id_branch?) => {
         /**/     //del to graph
+                var nodeToDelete = this.graph.nodes.find(x => x.id == id_node).name;
         /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === id_node) });
         /**/      toSpliceN.map((k) => {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
         /**/     });
+        
         /**/     var toSpliceE = this.graph.edges.filter((l) => { return (l.source.id === id_node) || (l.target.id === id_node); });
         /**/     toSpliceE.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
         /**/     if(del_branch){
@@ -136,6 +144,7 @@ export class GraphUI {
         /**/        toSpliceB.map((b) => { this.branches.splice(this.branches.indexOf(b), 1); });
         /**/     }
         /**/     this.redraw();
+                 //this.notifs.push("le noeud "+nodeToDelete+" a été supprimé.");
         /**/ });
         /**/ // Update node broadcast
         /**/ this.socket.on('up node clt', (node) => {

@@ -259,6 +259,34 @@
     </div>
   </div>
 </div>
+<div class="modal fade " id="detaillogmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Détail de log</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <h2 class="col-sm-12 control-label">Titre</h2>
+                    </div>
+                    <div class="col-sm-10">
+                        <label class="form-control" value="MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);" typename="text">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id = "r">    
+<div *ng-for="#notif of notifs" class="alert alert-warning alert-dismissible" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  {{notif}} <a data-toggle="modal" data-target="#detaillogmodal">Détails</a>
+</div>
+</div>
 <!--
     <li class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
