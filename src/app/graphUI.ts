@@ -158,7 +158,6 @@ export class GraphUI {
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node, image_path) => {
         /**/     //hydratation
-        console.log(image_path);
         /**/     var b = new Branch(name_branch,color_branch,id_branch);
         /**/     var n = new NVNode(b,id_node,'undefined', Array<Attribute>(),null,image_path);
         /**/     // add to graph
@@ -449,8 +448,6 @@ export class GraphUI {
 
     /** Supression d'un attribut d'un noeud */
     public delete_attribute(attribute: Attribute) {
-        this.node.attributes.splice(this.node.attributes.indexOf(attribute), 1);
-        this.query(Action.delete, attribute);
         this.socket.emit('del attr srv', this.node, attribute);
     }
 
@@ -459,12 +456,12 @@ export class GraphUI {
         var good_name = name.replace(/\s/g, "_").replace(/["\""]/g, "_").replace(/["\'"]/g, "_");
         var toUpdateAttribute = this.node.attributes.filter((k) => { return (k.name == attribute.name) });
         if(attribute.name == good_name){
+        //Mise à jour de la valeur de l'attribut
             toUpdateAttribute.map((k) => {
-                this.node.attributes[this.node.attributes.indexOf(k)].value = value;
-                var response = this.query(Action.update, this.node.attributes[this.node.attributes.indexOf(k)]);
                 this.socket.emit('up attr srv', "value", this.node, this.node.attributes[this.node.attributes.indexOf(k)], value, good_name);
             });
         }else{
+        //Mise à jour du nom de l'attribut
             var creation = true;
             this.node.attributes.forEach(element => {
                 if (element.name == good_name && creation){
@@ -473,14 +470,9 @@ export class GraphUI {
                 }
             });
             if(creation){
-
                 toUpdateAttribute.map((k) => {
                     var NewAttribute = new Attribute(good_name,value);
-                    this.node.attributes.push(NewAttribute);
-                    this.query(Action.create, NewAttribute);
-                    this.query(Action.delete, this.node.attributes[this.node.attributes.indexOf(k)]);
                     this.socket.emit('up attr srv', "name", this.node, this.node.attributes[this.node.attributes.indexOf(k)],value, good_name);
-                    this.node.attributes.splice(this.node.attributes.indexOf(k), 1);
                 });
             }
         }
@@ -509,9 +501,6 @@ export class GraphUI {
         this.socket.emit('up node srv', this.node);
     }
     public update_node_image(img_path:string) {
-        console.log("IMAGE OUESH")
-        console.log(img_path);
-        
         this.node.image_path = img_path;
         this.socket.emit('up node srv', this.node);
     }
@@ -558,7 +547,6 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
-        this.query(Action.delete,branch)
         //trouver le noeud parent le plus élevé et faire this.delete_node_and_sons
         var nodesbranch = Array<NVNode>();
         this.graph.nodes.forEach(element => {
@@ -603,7 +591,6 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public update_edge(edgename:string) {
-        console.log(edgename);
         this.edge.name = edgename;
         this.title_state = false;
         console.log(this.edge);
