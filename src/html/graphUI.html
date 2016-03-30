@@ -42,12 +42,12 @@
                          <label class="col-md-3 control-label">Change view to :</label>
                          <div *ng-if="preferedView1" class="row">
                              <div class="col-md-8">
-                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; show_profile();"/>
+                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; redraw();show_profile();"/>
                              </div>
                          </div>
                         <div *ng-if="preferedView0" class="row">
                             <div class="col-md-8">
-                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;show_profile();">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1; redraw();show_profile();">
                             </div>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-default" (click)="nodemodalstate=false;">Close</button>
+          <button class="btn btn-default" (click)="nodemodalstate=false;">Close</button>
         </div>
       </div>
     </div>
@@ -139,14 +139,14 @@
             <div class="form-group">
               <label class="col-sm-3 control-label">Color :</label>
               <div class="col-sm-3">
-                <input #color class="form-control" type="text" id="color" placeholder="color" value="{{branch.color}}" (blur)="branch.color = color.value"></input>
-                
+                <input #color class="form-control" type="color" id="color" placeholder="color" value="#{{branch.color}}" (blur)="branch.color = color.value.replace('#', '')">
+                </input>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value)" type="button">Create</button>
+          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value.replace('#', ''))" type="button">Create</button>
           <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
           <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
         </div>
@@ -291,15 +291,25 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="myModalLabel">Détail de log</h4>
+                <h4 class="modal-title" id="myModalLabel">Détail de l'évenement</h4>
             </div>
             <div class="modal-body">
-                <div class="form-group row">
-                    <div class="col-sm-2">
-                        <h2 class="col-sm-12 control-label">Titre</h2>
+                <div class="form-group">
+                    <div class="row">
+                        <div class ="col-md-2">
+                            <label>Message :</label>
+                        </div>
+                        <div class="col-md-10">
+                            <label>{{detailLogShown._message}}</label>
+                        </div>
                     </div>
-                    <div class="col-sm-10">
-                        <label class="form-control" value="MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);" typename="text">
+                    <div class="row">
+                        <div class ="col-md-2">
+                            <label>Requête :</label>
+                        </div>
+                        <div class="col-md-10">
+                            <label>{{detailLogShown._details}}</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -312,6 +322,6 @@
 <div id = "r">    
 <div *ng-for="#notif of notifs" class="alert alert-warning alert-dismissible" role="alert">
   <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  {{notif}} <a data-toggle="modal" data-target="#detaillogmodal">Détails</a>
+  {{notif._message}} <a data-toggle="modal" data-target="#detaillogmodal" (click)="show_detail_log(notif._message)">Détails</a>
 </div>
 </div>
