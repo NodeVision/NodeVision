@@ -233,22 +233,24 @@ export class GraphUI {
         /**/     });
         /**/ });
         /**/ // Add attribute broadcast
-        /**/ this.socket.on('add attr clt', (node, attribute) => {
+        /**/ this.socket.on('add attr clt', (node, attribute, user, query) => {
         /**/     // add to graph
         /**/     var toAddAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toAddAttribut.map((k) => {
         /**/     var Nattribute = new Attribute(attribute._name,attribute._value);
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
         /**/     });
+        this.notifs.push(new Log(Status.warning,"un attribut à été ajouté au noeud "+node._name+" par "+user._node._name, user, query));
         /**/ });
         /**/ // Del attribute broadcast
-        /**/ this.socket.on('del attr clt', (node,attribute) => {
+        /**/ this.socket.on('del attr clt', (node,attribute, user, query) => {
         /**/     // del to graph
         /**/     var toDelAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toDelAttribut.map((k) => {
         /**/        var toSplice = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name === attribute._name) });
         /**/        toSplice.map((l) => { this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1); });
         /**/     });
+        this.notifs.push(new Log(Status.warning,"un attribut à été supprimé au noeud "+node._name+" par "+user._node._name, user, query));
         /**/ });
         /**/ // Update attribute broadcast
         /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
@@ -311,8 +313,7 @@ export class GraphUI {
             .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"; console.log(n.image_path);});
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => { console.log(n.image_path);
-                return n.image_path})
+            .attr("xlink:href", (n: NVNode) => {return n.image_path})
             .attr("class", "img-circle")
             .attr("x", -8)
             .attr("y", -8)
@@ -384,10 +385,25 @@ export class GraphUI {
             .on("mousedown", (n: NVNode) => { this.mousedown(n) })
             .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
             .call(this.force.drag)
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
+            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" })
+            .on("click", dbclick);
+        nodes.append("title").remove().text((n: NVNode) => { return n.name; });
+        nodes.append("image").remove()
+           .attr("xlink:href", (n: NVNode) => {return n.image_path})
+           .attr("class", "img-circle")
+            .attr("x", -8)
+            .attr("y", -8)
+            .attr("width", 20)
+            .attr("height", 20);
+        nodes.append("text").remove()
+            .attr("x", 12)
+            .attr("dy", ".35em")
+            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
+            .text((n: NVNode) => { return n.name; });
         nodes.append("title").text((n: NVNode) => { return n.name; });
         nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => {return n.image_path})
+           .attr("xlink:href", (n: NVNode) => {return n.image_path})
+           .attr("class", "img-circle")
             .attr("x", -8)
             .attr("y", -8)
             .attr("width", 20)
@@ -399,6 +415,28 @@ export class GraphUI {
             .text((n: NVNode) => { return n.name; });
         nodes.exit().remove();
 
+function dbclick() {
+            d3.selectAll("g").select("image").transition()
+                .duration(750)
+                .attr("width", 20)
+                .attr("height", 20);
+            d3.selectAll("g").select("text").transition()
+                .duration(750)
+                .attr("x", 12)
+                .style("font", "14px sans-serif")
+                .style("stroke", "none");
+            d3.select(this).select("text").transition()
+                .duration(750)
+                .attr("x", 22)
+                .style("stroke", "yellow")
+                .style("stroke-width", ".5px")
+                .style("font", "23px sans-serif");
+            d3.select(this).select("image").transition()
+                .duration(750)
+                .attr("width", 30)
+                .attr("height", 30);
+        }
+        
         this.links = this.svg.selectAll(".link");
         this.nodes = this.svg.selectAll(".node");
         this.force.start();
@@ -456,12 +494,12 @@ export class GraphUI {
     //Création d'un nouvel attribut d'un noeud
     public add_attribute(){
         var NewAttribute = new Attribute('attribut'+(this.node.attributes.length+1),'');
-        this.socket.emit('add attr srv', this.node, NewAttribute);
+        this.socket.emit('add attr srv', this.node, NewAttribute, this.user);
     }
 
     /** Supression d'un attribut d'un noeud */
     public delete_attribute(attribute: Attribute) {
-        this.socket.emit('del attr srv', this.node, attribute);
+        this.socket.emit('del attr srv', this.node, attribute, this.user);
     }
 
     /** Mise à jour d'un attribut d'un noeud */
