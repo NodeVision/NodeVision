@@ -9,10 +9,10 @@
             <ul class="dropdown-menu">
               <li *ng-for="#branch of branches">
                   <div class="col-md-5">{{branch.name}}</div>
-                  <div class="col-md-7 pull-right">
-                    <span class="glyphicon glyphicon-trash pull-right" aria-hidden="true" (click)="delete_branch(branch)"></span>
-                    <span class="glyphicon glyphicon-pencil pull-right" aria-hidden="true" (click)="show_update_branch(branch)"></span>
-                    <span class="glyphicon glyphicon-eye-open pull-right" aria-hidden="true" (click)="show_branch(branch)"></span>
+                  <div class="col-md-7">
+                    <span class="glyphicon glyphicon-trash" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="delete_branch(branch)"></span>
+                    <span class="glyphicon glyphicon-pencil" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="show_update_branch(branch)"></span>
+                    <span class="glyphicon glyphicon-eye-open" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="show_branch(branch)"></span>
                   </div>
               </li>
             </ul>

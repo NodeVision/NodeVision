@@ -28,7 +28,7 @@ export class GraphUI {
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = 1000;
-    private height: number = 1000;
+    private height: number = 700;
     //User
     private user : User;
     private userBranch = new Branch('Users','#ffffff',-1);
@@ -96,7 +96,7 @@ export class GraphUI {
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
-        this.init_graph();
+        this.draw();
 
 
         //Création de la socket client
@@ -127,7 +127,7 @@ export class GraphUI {
         /**/     this.graph.nodes.push(nt);
         /**/     //this.nodes[0].push(nt);
         /**/     this.graph.edges.push(e);
-        /**/     this.redraw();
+        /**/     this.draw();
         /**/ });
         /**/ // Delete node broadcast
         /**/ this.socket.on('del node clt', (id_node,del_branch?:boolean,id_branch?) => {
@@ -144,7 +144,7 @@ export class GraphUI {
         /**/        var toSpliceB = this.branches.filter((b) => { return (b.id === id_branch); });
         /**/        toSpliceB.map((b) => { this.branches.splice(this.branches.indexOf(b), 1); });
         /**/     }
-        /**/     this.redraw();
+        /**/     this.draw();
                  //this.notifs.push("le noeud "+nodeToDelete+" a été supprimé.");
         /**/ });
         /**/ // Update node broadcast
@@ -164,7 +164,7 @@ export class GraphUI {
         /**/     // add to graph
         /**/     this.branches.push(b);
         /**/     this.graph.nodes.push(n);
-        /**/     this.redraw();
+        /**/     this.draw();
         /**/ });
         /**/ // Del branch broadcast
         /**/ this.socket.on('del branch clt', (branch) => {
@@ -188,7 +188,7 @@ export class GraphUI {
         /**/    nodesbranch.forEach(element => {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         /**/    });
-        /**/    this.redraw();
+        /**/    this.draw();
         /**/ });
         /**/ // Update branch broadcast
         /**/ this.socket.on('up branch clt', (branch) => {
@@ -198,14 +198,14 @@ export class GraphUI {
         /**/        this.branches[this.branches.indexOf(k)].name = branch._name;
         /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
-        /**/     this.redraw();
+        /**/     this.draw();
         /**/ });
         /**/ // Add edge broadcast
         /**/ this.socket.on('add edge clt', (edge, source, target) => {
         /**/     // add to graph
         /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));
         /**/      this.graph.edges.push(Nedge);
-        /**/      this.redraw();
+        /**/      this.draw();
         /**/ });
         /**/ // Del edge broadcast
         /**/ this.socket.on('del edge clt', (edge) => {
@@ -213,7 +213,7 @@ export class GraphUI {
         /**/      // del to graph 
         /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === edge.source._id) && (l.target.id === edge.target._id); });
         /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-        /**/      this.redraw();
+        /**/      this.draw();
         /**/ });
         /**/ // Update edge broadcast
         /**/ this.socket.on('up edge clt', (edge) => {
@@ -261,7 +261,8 @@ export class GraphUI {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     }
     /** Fonction d'initialisation du graphique */
-    public init_graph() {
+    public draw() {
+        this.svg.selectAll("*").remove();
         this.svg.append("svg:defs").selectAll("marker")
             .data(["end"])      // Different link/path types can be defined here
             .enter().append("svg:marker")    // This section adds in the arrows
@@ -337,63 +338,6 @@ export class GraphUI {
                 .attr("height", 30);
         }
     }
-
-    /** Rechargement du graphique à chaque modification */
-    public redraw() {
-        this.svg.append("svg:defs").selectAll("marker")
-            .data(["end"])      // Different link/path types can be defined here
-            .enter().append("svg:marker")    // This section adds in the arrows
-            .attr("id", String)
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 28)
-            .attr("refY", 0)
-            .attr("markerWidth", 3)
-            .attr("markerHeight", 4)
-            .attr("orient", "auto")
-            .style("fill", "#999")
-            .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5");
-
-        this.links = this.svg.selectAll(".link");
-        var links = this.links.data(this.force.links());
-        links.data(this.graph.edges)
-            .enter().append("line")
-            .attr("class", "link")
-            .attr("marker-end", "url(#end)")
-            .style("stroke-opacity", 0.3)
-            .on("click", (e: NVEdge) => { this.edge = e })
-            .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke-width","2")
-            .style("stroke","#999");
-        links.exit().remove();
-
-        var nodes = this.nodes.data(this.force.nodes());
-        nodes.enter().append("g")
-            .attr("class", "node")
-            .attr("r", 10)
-            .attr("id", (n: NVNode) => { return n.id })
-            .on("mousedown", (n: NVNode) => { this.mousedown(n) })
-            .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .call(this.force.drag)
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
-        nodes.append("title").text((n: NVNode) => { return n.name; });
-        nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => {return n.image_path})
-            .attr("x", -8)
-            .attr("y", -8)
-            .attr("width", 20)
-            .attr("height", 20);
-        nodes.append("text")
-            .attr("x", 12)
-            .attr("dy", ".35em")
-            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
-            .text((n: NVNode) => { return n.name; });
-        nodes.exit().remove();
-
-        this.links = this.svg.selectAll(".link");
-        this.nodes = this.svg.selectAll(".node");
-        this.force.start();
-    }
     /** Fonction lors du clic sur un noeud de l'utilisateur */
     public tick() {
 
@@ -407,7 +351,7 @@ export class GraphUI {
     public mouseupNode(n: NVNode) {
         if (this.new_link) {
             this.add_edge(this.node, n);
-            this.redraw();
+            this.draw();
             this.svg.on("mousemove", null);
             this.new_link = false;
         }
