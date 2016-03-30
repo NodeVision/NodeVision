@@ -198,6 +198,7 @@ export class GraphUI {
         /**/        this.branches[this.branches.indexOf(k)].name = branch._name;
         /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
+        /**/     this.redraw();
         /**/ });
         /**/ // Add edge broadcast
         /**/ this.socket.on('add edge clt', (edge, source, target) => {
@@ -513,6 +514,7 @@ export class GraphUI {
     }
     /** Création d'une nouvelle branche */
     public add_branch(name: string, color: string) {
+        console.log(color)
         if(name != ""){
             this.branch.name = name;
             this.branch.color = color;

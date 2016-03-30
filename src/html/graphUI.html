@@ -140,14 +140,14 @@
             <div class="form-group">
               <label class="col-sm-3 control-label">Color :</label>
               <div class="col-sm-3">
-                <input #color class="form-control" type="color" id="color" placeholder="color" value="{{branch.color}}" (blur)="branch.color = color.value">
+                <input #color class="form-control" type="color" id="color" placeholder="color" value="#{{branch.color}}" (blur)="branch.color = color.value.replace('#', '')">
                 </input>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value)" type="button">Create</button>
+          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value.replace('#', ''))" type="button">Create</button>
           <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
           <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
         </div>
