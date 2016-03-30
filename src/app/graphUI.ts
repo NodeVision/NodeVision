@@ -206,15 +206,14 @@ export class GraphUI {
         /**/     this.draw();
         /**/ });
         /**/ // Add edge broadcast
-        /**/ this.socket.on('add edge clt', (edge, source, target) => {
+        /**/ this.socket.on('add edge clt', (edge) => {
         /**/     // add to graph
-        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));
+        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == edge.source._id), this.graph.nodes.find(x => x.id == edge.target._id),edge._type);
         /**/      this.graph.edges.push(Nedge);
         /**/      this.draw();
         /**/ });
         /**/ // Del edge broadcast
         /**/ this.socket.on('del edge clt', (edge) => {
-        /**/            
         /**/      // del to graph 
         /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === edge.source._id) && (l.target.id === edge.target._id); });
         /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
@@ -367,6 +366,9 @@ export class GraphUI {
             this.draw();
             this.svg.on("mousemove", null);
             this.new_link = false;
+            console.log("OK");
+        }else{
+                console.log("raté");
         }
         this.nodes.call(this.force.drag);
     }

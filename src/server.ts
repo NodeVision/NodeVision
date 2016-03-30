@@ -184,8 +184,8 @@ class Server {
                 var response = this.neo4j.query("MATCH (s),(t) WHERE id(s)="+edge.source._id+" AND id(t)="+edge.target._id+" CREATE (s)-[r:CUSTOM { name:'undefined'}]->(t) RETURN r");
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('add edge clt', edge, val.data[0][0].metadata.id);
-                        socket.emit('add edge clt', edge, val.data[0][0].metadata.id);
+                        socket.broadcast.emit('add edge clt', edge);
+                        socket.emit('add edge clt', edge);
 					 }
                 ).catch(
                     function() {
