@@ -608,6 +608,7 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public query(action:Action,element?:NVNode|NVEdge|Branch|User|Attribute,cypher?:string){
+        
         var response;
         if(!cypher){
             switch(action){
