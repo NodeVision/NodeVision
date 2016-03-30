@@ -98,7 +98,11 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
+        this.svg.on('contextmenu', () => { 
+            this.branchmodalstate = true;
+            this.branch = new Branch();
+            var cp = jQuery('#colorer').colorpicker();   
+    }).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
         this.init_graph();
 
 
@@ -724,14 +728,12 @@ function dbclick() {
         this.users_authentified.push(this.user);
 
         //Récupération de tous les noeuds sur lesquels on a la vision
-        var reqNode = "MATCH (u:User)-[ru:KNOWS|WRITE]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u)="+this.user.node.id+" RETURN n,b";
+        var reqNode = "MATCH (u:User)-[ru:KNOWS|WRITE]->(n:Node)<-[re:BELONG]-(b:Branch) WHERE id(u)="+this.user.node.id+" RETURN keys(n),n,b";
         var reqEdge = "MATCH (u:User)-->()-[r:HIERARCHICAL|CUSTOM]-() WHERE id(u)="+this.user.node.id+" RETURN r";
      
         var responseNode = this.query(Action.read,null,reqNode);
         var responseEdge = this.query(Action.read,null,reqEdge);
-        
-        console.log(responseNode);
-        
+console.log(responseNode);
 
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
@@ -742,20 +744,19 @@ function dbclick() {
                             
         responseNode.forEach(n => { // par chaque noeud
                 this.listAttribute = new Array<Attribute>();
-                for(var index in n[0].data) {
-                    var nameAttribut = n[0].data[index];
-                    if(nameAttribut != "name"  && nameAttribut != "image_path")
-                    {
-                        var att = new Attribute(nameAttribut,n[0].data[nameAttribut])
-                        this.listAttribute.push(att);
-                    }
-                }
-                 if(!this.found(this.graph.nodes,n[0].metadata.id)){
-                this.graph.nodes.push(new NVNode(
-                    new Branch(n[1].data.name,n[1].data.color,n[1].metadata.id),
-                    n[0].metadata.id,
-                    n[0].data.name,
-                    this.listAttribute, null, n[0].data.image_path)
+                 n[0].forEach(nameAttribut => {
+                    if(nameAttribut != "name" && nameAttribut != "image_path")
+                        {
+                            var att = new Attribute(nameAttribut,n[1].data[nameAttribut])
+                            this.listAttribute.push(att);
+                        }
+                });
+                 if(!this.found(this.graph.nodes,n[1].metadata.id)){
+                    this.graph.nodes.push(new NVNode(
+                        new Branch(n[2].data.name,n[2].data.color,n[2].metadata.id),
+                        n[1].metadata.id,
+                        n[1].data.name,
+                        this.listAttribute, null, n[1].data.image_path)
                 );
             }
         });   
@@ -767,9 +768,15 @@ function dbclick() {
                         if(this.graph.nodes.find(x => x.name == nameAttribut+" : "+n[1].data[nameAttribut]) == null)
                         {
                         if(nameAttribut != "name" && nameAttribut != "image_path"){
-                            var node  = new NVNode(new Branch(n[1].data.name,n[1].data.color,n[1].metadata.id), 
-                                            n[0].metadata.id+10,nameAttribut+" : "+n[0].data[nameAttribut],null,null,"https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
+
+                            var node  = new NVNode(new Branch(
+                                n[2].data.name,
+                                n[2].data.color,
+                                n[2].metadata.id), 
+                                            n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,"https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
+
                             this.graph.nodes.push(node);
+                            this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
                         }
                     }
                     });
