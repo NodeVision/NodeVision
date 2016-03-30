@@ -259,8 +259,8 @@ export class GraphUI {
         /**/     });
         if(this.user.preferedView == 1)
                 {
-                this.graph.nodes.splice(this.graph.nodes.findIndex(x => x.name == attribute._name), 1);
-                this.graph.edges.splice(this.graph.edges.findIndex(x => x.target.name == attribute._name), 1);
+                this.graph.nodes.splice(this.graph.nodes.findIndex(x => x.name == attribute._name+" : "+attribute._value), 1);
+                this.graph.edges.splice(this.graph.edges.findIndex(x => x.target.name == attribute._name+" : "+attribute._value), 1);
                 }
         /**/this.notifs.push(new Log(Status.warning,"un attribut à été supprimé au noeud "+node._name+" par "+user._node._name, user, query));
         this.draw();
