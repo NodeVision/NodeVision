@@ -212,6 +212,34 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
+<!--
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{edge.name}}</h3>
+                        <input #edge_name *ng-if="title_state" class="form-control" value="{{edge.name}}" placeholder="Edge Name"                                       
+                            (keyup.enter)="update_edge(edge_name.value);" 
+                            (blur)="update_edge(edge_name.value);"
+                            >
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class='pull-right'>{{"["+ edge.type +"]"}}</h3>
+                        <button class="btn btn-success btn-lg pull-right" type= "button">Add Weight</button>
+                    </div>  
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row" *ng-for="#w of edge.weights">
+                    <div class="col-md-5"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
+                    <div class="col-md-5"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
+                    <div class="col-md-2">
+                        <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_weight(w)" ></span>
+                    </div> 
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" type= "button" (click)="delete_edge()">Delete edge</button>
+                <button class="btn btn-default" type= "button" (click)="edgemodalstate=false;">Close</button>
+-->
                 <h4 class="modal-title" id="myModalLabel">Image du noeud</h4>
             </div>
             <div class="modal-body">
@@ -260,12 +288,31 @@
     </div>
   </div>
 </div>
-<!--
-    <li class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
-            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
-        <ul class="dropdown-menu">
-
-        </ul>
-    </li>
-    -->
+<div class="modal fade " id="detaillogmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Détail de log</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row">
+                    <div class="col-sm-2">
+                        <h2 class="col-sm-12 control-label">Titre</h2>
+                    </div>
+                    <div class="col-sm-10">
+                        <label class="form-control" value="MATCH (s:Node),(t:Node) WHERE s.name='n1' AND t.name='n2' CREATE (s)-[r:HIERARCHICAL]->(t);" typename="text">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id = "r">    
+<div *ng-for="#notif of notifs" class="alert alert-warning alert-dismissible" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  {{notif}} <a data-toggle="modal" data-target="#detaillogmodal">Détails</a>
+</div>
+</div>

@@ -14,7 +14,7 @@ export class User{
         
         constructor(
             mail: string,
-            preferedView:number,
+            preferedView?:number,
             id?:number,
             node?:NVNode,                      
             preferencepopup?:PreferencePopup,
