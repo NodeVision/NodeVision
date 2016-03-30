@@ -99,7 +99,7 @@ export class GraphUI {
         });
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
-        this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
+        this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height).style("fill","#FFFFFF");
         this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
         this.draw();
 
@@ -305,6 +305,7 @@ export class GraphUI {
     }
     /** Fonction d'initialisation du graphique */
     public draw() {
+
         this.svg.selectAll("*").remove();
         this.svg.append("svg:defs").selectAll("marker")
             .data(["end"])      // Different link/path types can be defined here
@@ -324,7 +325,29 @@ export class GraphUI {
             .links(this.graph.edges)
             .on("tick", () => this.tick())
             .start();
-        this.links = this.svg.selectAll(".link")
+           
+        var drag = d3.behavior.drag()
+            .origin(function(d) { return d; })
+            .on("dragstart", dragstarted)
+            .on("drag", dragged)
+            .on("dragend", dragended);
+        var zoom = d3.behavior.zoom()
+            .scaleExtent([80, 200])
+            .on("zoom", zoomed);
+            var slider = d3.select("body").append("div").attr("id", "slider").append("input")
+                .datum({})
+                .attr("type", "range")
+                .attr("value", 100)
+                .attr("min", zoom.scaleExtent()[0])
+                .attr("max", zoom.scaleExtent()[1])
+                .attr("step", 10)
+                .on("input", slided)
+
+            d3.select("body").select("div#slider").append("label")
+                .text("100%");
+    
+    var container = this.svg.append("g");
+     this.links = container.selectAll(".link")
             .data(this.graph.edges)
             .enter().append("line")
             .attr("class", "link")
@@ -341,7 +364,7 @@ export class GraphUI {
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
             .style("stroke-width","2")
             .style("stroke","#999");
-        this.nodes = this.svg.selectAll(".node")
+        this.nodes = container.selectAll(".node")
             .data(this.graph.nodes)
             .enter().append("g")
             .attr("class", "node")
@@ -364,7 +387,7 @@ export class GraphUI {
             .attr("dy", ".35em")
             .attr("fill", (n: NVNode) => { return n.type == "User" ? "#fff" : "#"+n.branch.color; })
             .text((n: NVNode) => { return n.name; });
-
+  
         function dbclick() {
             d3.selectAll("g").select("image").transition()
                 .duration(750)
@@ -385,6 +408,30 @@ export class GraphUI {
                 .duration(750)
                 .attr("width", 30)
                 .attr("height", 30);
+        }
+        
+        function zoomed() {
+            container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale / 100 + ")");
+            slider.property("value", d3.event.scale);
+        }
+        function slided(d) {
+            zoom.scale(d3.select(this).property("value"))
+                .event(container);
+            console.log(zoom.scaleExtent()[0]);
+            d3.select("body").select("div#slider").select("label").text(d3.select(this).property("value") + "%");
+        }
+        
+        function dragstarted(d) {
+            d3.event.sourceEvent.stopPropagation();
+            d3.select(this).classed("dragging", true);
+        }
+
+        function dragged(d) {
+            d3.select(this).attr("x", d.x = d3.event.x).attr("y", d.y = d3.event.y);
+        }
+
+        function dragended(d) {
+            d3.select(this).classed("dragging", false);
         }
     }
     /** Fonction lors du clic sur un noeud de l'utilisateur */

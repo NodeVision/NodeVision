@@ -46,3 +46,23 @@ text {
       height: 100%;
       padding: 10px;
     }
+    
+#slider{
+    position:fixed;
+    top:55px;
+    left:5px;
+    width: 200px;
+}
+
+#slider{
+    position:fixed;
+    top:55px;
+    left:5px;
+    width: 200px;
+}
+
+#slider label{
+    position: fixed;
+    left : 100px;
+    color: white;
+}
