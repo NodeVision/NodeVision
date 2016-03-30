@@ -33,6 +33,7 @@ export class GraphUI {
     //User
     private user : User;
     private userBranch = new Branch('Users','#ffffff',-1);
+    private selectedUserToShareWith;
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -45,6 +46,7 @@ export class GraphUI {
     //node Modal
     private nodemodalstate = false;
     private nodemodal = Element.node;
+    private sharemodalstate = false;
     //attribut
     private title_state = false;
     private node: NVNode;
@@ -208,15 +210,14 @@ export class GraphUI {
         /**/     this.draw();
         /**/ });
         /**/ // Add edge broadcast
-        /**/ this.socket.on('add edge clt', (edge, source, target) => {
+        /**/ this.socket.on('add edge clt', (edge) => {
         /**/     // add to graph
-        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));
+        /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == edge.source._id), this.graph.nodes.find(x => x.id == edge.target._id),edge._type);
         /**/      this.graph.edges.push(Nedge);
         /**/      this.draw();
         /**/ });
         /**/ // Del edge broadcast
         /**/ this.socket.on('del edge clt', (edge) => {
-        /**/            
         /**/      // del to graph 
         /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === edge.source._id) && (l.target.id === edge.target._id); });
         /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
@@ -263,6 +264,12 @@ export class GraphUI {
                 }
         /**/this.notifs.push(new Log(Status.warning,"un attribut à été supprimé au noeud "+node._name+" par "+user._node._name, user, query));
         this.draw();
+        /**/ });
+        /**/
+        /**/ // Notification partage ok
+        /**/ this.socket.on('ok share clt', (user) =>{
+        /**/    //TODO ADD NOTIF
+        /**/    console.log("share ok with " + user._mail);
         /**/ });
         /**/ // Update attribute broadcast
         /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
@@ -396,6 +403,9 @@ export class GraphUI {
             this.draw();
             this.svg.on("mousemove", null);
             this.new_link = false;
+            console.log("OK");
+        }else{
+                console.log("raté");
         }
         this.nodes.call(this.force.drag);
     }
@@ -426,8 +436,19 @@ export class GraphUI {
             .attr("y2",this.m[1]);
     }
 
-    public getUserToShare(mail : String){
-
+    // Selection d'un utilisateur avec qui partager un noeud
+    public getUserToShare(user : User){
+       this.selectedUserToShareWith = user;
+    }
+    
+    public show_share_node(){
+        this.nodemodalstate = false;
+        this.sharemodalstate = true;
+    }
+    
+    // Partage du noeud node avec selectedUserToShareWith
+    public shareNode(){
+        this.socket.emit('share node srv', this.node, this.selectedUserToShareWith);
     }
 
     //Création d'un nouvel attribut d'un noeud
@@ -613,6 +634,7 @@ export class GraphUI {
     }
     /** This is a description of the  function. */
     public query(action:Action,element?:NVNode|NVEdge|Branch|User|Attribute,cypher?:string){
+        
         var response;
         if(!cypher){
             switch(action){
@@ -728,6 +750,7 @@ export class GraphUI {
         });   
 
          if(this.user.preferedView == 1){
+
              responseNode.forEach(n => { // par chaque noeud
                     this.listAttribute = new Array<Attribute>();
                     n[0].forEach(nameAttribut => {
