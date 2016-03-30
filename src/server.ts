@@ -46,13 +46,14 @@ class Server {
             socket.on('add node srv', (user, node) => {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
                 var n = new NVNode(b, node._id, node._name, node._node_attributs,null,node._image_path);
+                var query = "MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
                 var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
                 response.then(
                     (val) => {
                         var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>(),null,val.data[0][1].data.image_path);
                         var Nedge = new NVEdge(val.data[0][0].metadata.id, val.data[0][0].data.name, n, Nnode);
-                        socket.broadcast.emit('add node clt', Nnode, Nedge);
-                        socket.emit('add node clt', Nnode, Nedge);
+                        socket.broadcast.emit('add node clt', Nnode, Nedge, user, query);
+                        socket.emit('add node clt', Nnode, Nedge,user, query);
                     }
                 ).catch(
                     function() {
@@ -62,14 +63,15 @@ class Server {
             });
 
             // Suppression d'un noeud
-            socket.on('del node srv', (node, NbNode) => {
+            socket.on('del node srv', (node, user, NbNode) => {
                 var del_branch = false;
-                if (NbNode > 1) { var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " detach delete n"); del_branch = false; }
-                else { var response = this.neo4j.query("MATCH (b),(n) WHERE id(b)=" + node._branch._id + " AND (b)-->(n) detach delete b,n"); del_branch = true; }
+                var query = "";
+                if (NbNode > 1) { var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " detach delete n"); del_branch = false; query = "MATCH (n) WHERE id(n)=" + node._id + " detach delete n"}
+                else { var response = this.neo4j.query("MATCH (b),(n) WHERE id(b)=" + node._branch._id + " AND (b)-->(n) detach delete b,n"); del_branch = true;query ="MATCH (b),(n) WHERE id(b)=" + node._branch._id + " AND (b)-->(n) detach delete b,n" }
                  response.then(    
                     () => {
-                        socket.broadcast.emit('del node clt', node._id, del_branch, node._branch._id);
-                        socket.emit('del node clt', node._id, del_branch, node._branch._id);
+                        socket.broadcast.emit('del node clt', node._id, user, query, del_branch, node._branch._id);
+                        socket.emit('del node clt', node._id, user, query, del_branch, node._branch._id);
                     }
                 ).catch(
                     function() { 
@@ -114,12 +116,15 @@ class Server {
             });
 
             // Mise à jour d'un noeud et de ses enfants coté serveur
-            socket.on('up node srv', (node) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)=" + node._id + " SET n.name ='" + node._name + "', n.image_path = '"+node._image_path+"'");
+            socket.on('up node srv', (user,node, node_name?, node_image?) => {
+                var query = "MATCH (n) WHERE id(n)=" + node._id;
+                query += node_name != null ? " SET n.name ='" + node_name+ "'" : "";
+                query += node_image != null ? ", n.image_path = '"+node_image+"'" : "";
+                var response = this.neo4j.query(query);
                 response.then(
                     () => {
-                        socket.broadcast.emit('up node clt', node);
-                        socket.emit('up node clt', node);
+                        socket.broadcast.emit('up node clt', node, user, query, node_name, node_image);
+                        socket.emit('up node clt', node, user,query, node_name, node_image);
                     }
                 ).catch(
                     function() {
@@ -219,12 +224,13 @@ class Server {
                 );
             });
 
-            socket.on('add attr srv', (node, attribute) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n");
+            socket.on('add attr srv', (node, attribute, user) => {
+                var query = "MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n";
+                var response = this.neo4j.query(query);
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('add attr clt', node, attribute);
-                        socket.emit('add attr clt', node, attribute);
+                        socket.broadcast.emit('add attr clt', node, attribute, user, query);
+                        socket.emit('add attr clt', node, attribute, user, query);
 					 }
                 ).catch(
                     function() {
@@ -233,12 +239,13 @@ class Server {
                 );
             });
 
-            socket.on('del attr srv', (node, attribute) => {
-            	var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+            socket.on('del attr srv', (node, attribute, user) => {
+                var query = "MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n";
+            	var response = this.neo4j.query(query);
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('del attr clt', node, attribute);
-                        socket.emit('del attr clt', node, attribute);
+                        socket.broadcast.emit('del attr clt', node, attribute, user, query);
+                        socket.emit('del attr clt', node, attribute, user, query);
 					 }
                 ).catch(
                     function() {
