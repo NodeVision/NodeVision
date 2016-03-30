@@ -47,7 +47,7 @@ class Server {
                 var b = new Branch(node._branch._name, node._branch._color, node._branch._id);
                 var n = new NVNode(b, node._id, node._name, node._node_attributs,null,node._image_path);
                 var query = "MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c";
-                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'undefined'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
+                var response = this.neo4j.query("MATCH (n),(b),(u) WHERE id(n)=" + node._id + " AND id(b)=" + node._branch._id + " AND id(u)=" + user._node._id + " CREATE n-[r:HIERARCHICAL { name:'hierarchical edge'}]->(c:Node {name:'undefined',image_path:'"+node._image_path+"'})<-[re:BELONG]-b, (u)-[rel:WRITE]->(c) RETURN r,c");
                 response.then(
                     (val) => {
                         var Nnode = new NVNode(b, val.data[0][1].metadata.id, val.data[0][1].data.name, Array<Attribute>(),null,val.data[0][1].data.image_path);
@@ -224,12 +224,13 @@ class Server {
                 );
             });
 
-            socket.on('add attr srv', (node, attribute) => {
-                var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n");
+            socket.on('add attr srv', (node, attribute, user) => {
+                var query = "MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n";
+                var response = this.neo4j.query(query);
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('add attr clt', node, attribute);
-                        socket.emit('add attr clt', node, attribute);
+                        socket.broadcast.emit('add attr clt', node, attribute, user, query);
+                        socket.emit('add attr clt', node, attribute, user, query);
 					 }
                 ).catch(
                     function() {
@@ -238,12 +239,13 @@ class Server {
                 );
             });
 
-            socket.on('del attr srv', (node, attribute) => {
-            	var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n");
+            socket.on('del attr srv', (node, attribute, user) => {
+                var query = "MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"= NULL RETURN n";
+            	var response = this.neo4j.query(query);
                 response.then(
                     (val) => {
-                        socket.broadcast.emit('del attr clt', node, attribute);
-                        socket.emit('del attr clt', node, attribute);
+                        socket.broadcast.emit('del attr clt', node, attribute, user, query);
+                        socket.emit('del attr clt', node, attribute, user, query);
 					 }
                 ).catch(
                     function() {

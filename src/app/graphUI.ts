@@ -29,7 +29,7 @@ export class GraphUI {
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
     private width: number = 1000;
-    private height: number = 1000;
+    private height: number = 700;
     //User
     private user : User;
     private userBranch = new Branch('Users','#ffffff',-1);
@@ -98,13 +98,8 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg.on('contextmenu', () => { 
-            this.branchmodalstate = true;
-            this.branch = new Branch();
-            var cp = jQuery('#colorer').colorpicker();   
-    }).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
-        this.init_graph();
-
+        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
+        this.draw();
 
         //Création de la socket client
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,14 +128,13 @@ export class GraphUI {
         /**/     this.graph.nodes.push(nt);
         /**/     //this.nodes[0].push(nt);
         /**/     this.graph.edges.push(e);
-        /**/     this.redraw();
-                 this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été créé par "+user._node._name, user, query));
-        
+        /**/     this.draw();
+        /**/     this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été créé par "+user._node._name, user, query));
         /**/ });
         /**/ // Delete node broadcast
         /**/ this.socket.on('del node clt', (id_node,user, query,del_branch?:boolean,id_branch?) => {
         /**/     //del to graph        
-                var nodeToDelete = this.graph.nodes.find(x => x.id == id_node).name;
+        /**/     var nodeToDelete = this.graph.nodes.find(x => x.id == id_node).name;
         /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === id_node) });
         /**/      toSpliceN.map((k) => {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(k), 1);
@@ -152,20 +146,18 @@ export class GraphUI {
         /**/        var toSpliceB = this.branches.filter((b) => { return (b.id === id_branch); });
         /**/        toSpliceB.map((b) => { this.branches.splice(this.branches.indexOf(b), 1); });
         /**/     }
-        /**/     this.redraw();
-                 this.notifs.push(new Log(Status.warning,"le noeud "+nodeToDelete+" a été supprimé par "+user._node._name, user, query));
-                 //this.notifs.push("le noeud "+nodeToDelete+" a été supprimé.");
+        /**/     this.draw();
+        /**/     this.notifs.push(new Log(Status.warning,"le noeud "+nodeToDelete+" a été supprimé par "+user._node._name, user, query));
         /**/ });
         /**/ // Update node broadcast
         /**/ this.socket.on('up node clt', (node, user, query, node_name?, node_image?) => {
         /**/     //update to graph
-
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
-        var nodeAfter : NVNode;
+        /**/     var nodeAfter : NVNode;
         /**/     toRenameN.map((k) => {
-        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = node_name != null ? node_name : this.graph.nodes[this.graph.nodes.indexOf(k)].name;
-                    this.graph.nodes[this.graph.nodes.indexOf(k)].image_path = node_image != null ? node_image : this.graph.nodes[this.graph.nodes.indexOf(k)].image_path;
-                nodeAfter = this.graph.nodes[this.graph.nodes.indexOf(k)];    
+        /**/     this.graph.nodes[this.graph.nodes.indexOf(k)].name = node_name != null ? node_name : this.graph.nodes[this.graph.nodes.indexOf(k)].name;
+        /**/     this.graph.nodes[this.graph.nodes.indexOf(k)].image_path = node_image != null ? node_image : this.graph.nodes[this.graph.nodes.indexOf(k)].image_path;
+        /**/     nodeAfter = this.graph.nodes[this.graph.nodes.indexOf(k)];    
         /**/     });
         /**/     this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été modifié par "+user._node._name, user, query, node, nodeAfter));
         /**/ });
@@ -177,7 +169,7 @@ export class GraphUI {
         /**/     // add to graph
         /**/     this.branches.push(b);
         /**/     this.graph.nodes.push(n);
-        /**/     this.redraw();
+        /**/     this.draw();
         /**/ });
         /**/ // Del branch broadcast
         /**/ this.socket.on('del branch clt', (branch) => {
@@ -201,7 +193,7 @@ export class GraphUI {
         /**/    nodesbranch.forEach(element => {
         /**/        this.graph.nodes.splice(this.graph.nodes.indexOf(element), 1);
         /**/    });
-        /**/    this.redraw();
+        /**/    this.draw();
         /**/ });
         /**/ // Update branch broadcast
         /**/ this.socket.on('up branch clt', (branch) => {
@@ -211,22 +203,22 @@ export class GraphUI {
         /**/        this.branches[this.branches.indexOf(k)].name = branch._name;
         /**/        this.branches[this.branches.indexOf(k)].color = branch._color;
         /**/     });
-        /**/     this.redraw();
+        /**/     this.draw();
         /**/ });
         /**/ // Add edge broadcast
         /**/ this.socket.on('add edge clt', (edge, source, target) => {
         /**/     // add to graph
         /**/      var Nedge = new NVEdge(edge._id, edge._name, this.graph.nodes.find(x => x.id == source._id), this.graph.nodes.find(x => x.id == target._id));
         /**/      this.graph.edges.push(Nedge);
-        /**/      this.redraw();
+        /**/      this.draw();
         /**/ });
         /**/ // Del edge broadcast
         /**/ this.socket.on('del edge clt', (edge) => {
-                    
+        /**/            
         /**/      // del to graph 
         /**/      var toSplice = this.graph.edges.filter((l) => { return (l.source.id === edge.source._id) && (l.target.id === edge.target._id); });
         /**/      toSplice.map((l) => { this.graph.edges.splice(this.graph.edges.indexOf(l), 1); });
-        /**/      this.redraw();
+        /**/      this.draw();
         /**/ });
         /**/ // Update edge broadcast
         /**/ this.socket.on('up edge clt', (edge) => {
@@ -237,22 +229,24 @@ export class GraphUI {
         /**/     });
         /**/ });
         /**/ // Add attribute broadcast
-        /**/ this.socket.on('add attr clt', (node, attribute) => {
+        /**/ this.socket.on('add attr clt', (node, attribute, user, query) => {
         /**/     // add to graph
         /**/     var toAddAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toAddAttribut.map((k) => {
         /**/     var Nattribute = new Attribute(attribute._name,attribute._value);
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
         /**/     });
+        /**/this.notifs.push(new Log(Status.warning,"un attribut à été ajouté au noeud "+node._name+" par "+user._node._name, user, query));
         /**/ });
         /**/ // Del attribute broadcast
-        /**/ this.socket.on('del attr clt', (node,attribute) => {
+        /**/ this.socket.on('del attr clt', (node,attribute, user, query) => {
         /**/     // del to graph
         /**/     var toDelAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
         /**/     toDelAttribut.map((k) => {
         /**/        var toSplice = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name === attribute._name) });
         /**/        toSplice.map((l) => { this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1); });
         /**/     });
+        /**/this.notifs.push(new Log(Status.warning,"un attribut à été supprimé au noeud "+node._name+" par "+user._node._name, user, query));
         /**/ });
         /**/ // Update attribute broadcast
         /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
@@ -274,7 +268,8 @@ export class GraphUI {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     }
     /** Fonction d'initialisation du graphique */
-    public init_graph() {
+    public draw() {
+        this.svg.selectAll("*").remove();
         this.svg.append("svg:defs").selectAll("marker")
             .data(["end"])      // Different link/path types can be defined here
             .enter().append("svg:marker")    // This section adds in the arrows
@@ -298,6 +293,13 @@ export class GraphUI {
             .enter().append("line")
             .attr("class", "link")
             .attr("marker-end", "url(#end)")
+            .style("stroke-dasharray", (e : NVEdge) => {
+                if(e.type == "CUSTOM"){ 
+                    return ("3, 3")
+                }else{
+                    return ("0, 0")
+                }
+            })
             .style("stroke-opacity", 0.3)
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
@@ -315,8 +317,7 @@ export class GraphUI {
             .on("dblclick",(n: NVNode) => { this.nodemodalstate = n.type != "attribut"; console.log(n.image_path);});
         this.nodes.append("title").text((n: NVNode) => { return n.name; });
         this.nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => { console.log(n.image_path);
-                return n.image_path})
+            .attr("xlink:href", (n: NVNode) => {return n.image_path})
             .attr("class", "img-circle")
             .attr("x", -8)
             .attr("y", -8)
@@ -350,63 +351,6 @@ export class GraphUI {
                 .attr("height", 30);
         }
     }
-
-    /** Rechargement du graphique à chaque modification */
-    public redraw() {
-        this.svg.append("svg:defs").selectAll("marker")
-            .data(["end"])      // Different link/path types can be defined here
-            .enter().append("svg:marker")    // This section adds in the arrows
-            .attr("id", String)
-            .attr("viewBox", "0 -5 10 10")
-            .attr("refX", 28)
-            .attr("refY", 0)
-            .attr("markerWidth", 3)
-            .attr("markerHeight", 4)
-            .attr("orient", "auto")
-            .style("fill", "#999")
-            .append("svg:path")
-            .attr("d", "M0,-5L10,0L0,5");
-
-        this.links = this.svg.selectAll(".link");
-        var links = this.links.data(this.force.links());
-        links.data(this.graph.edges)
-            .enter().append("line")
-            .attr("class", "link")
-            .attr("marker-end", "url(#end)")
-            .style("stroke-opacity", 0.3)
-            .on("click", (e: NVEdge) => { this.edge = e })
-            .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
-            .style("stroke-width","2")
-            .style("stroke","#999");
-        links.exit().remove();
-
-        var nodes = this.nodes.data(this.force.nodes());
-        nodes.enter().append("g")
-            .attr("class", "node")
-            .attr("r", 10)
-            .attr("id", (n: NVNode) => { return n.id })
-            .on("mousedown", (n: NVNode) => { this.mousedown(n) })
-            .on("mouseup", (n: NVNode) => { this.mouseupNode(n) })
-            .call(this.force.drag)
-            .on("dblclick", (n: NVNode) => { this.nodemodalstate = n.type != "attribut" });
-        nodes.append("title").text((n: NVNode) => { return n.name; });
-        nodes.append("image")
-            .attr("xlink:href", (n: NVNode) => {return n.image_path})
-            .attr("x", -8)
-            .attr("y", -8)
-            .attr("width", 20)
-            .attr("height", 20);
-        nodes.append("text")
-            .attr("x", 12)
-            .attr("dy", ".35em")
-            .attr("fill", (n: NVNode) => { return "#"+n.branch.color; })
-            .text((n: NVNode) => { return n.name; });
-        nodes.exit().remove();
-
-        this.links = this.svg.selectAll(".link");
-        this.nodes = this.svg.selectAll(".node");
-        this.force.start();
-    }
     /** Fonction lors du clic sur un noeud de l'utilisateur */
     public tick() {
 
@@ -420,7 +364,7 @@ export class GraphUI {
     public mouseupNode(n: NVNode) {
         if (this.new_link) {
             this.add_edge(this.node, n);
-            this.redraw();
+            this.draw();
             this.svg.on("mousemove", null);
             this.new_link = false;
         }
@@ -460,12 +404,12 @@ export class GraphUI {
     //Création d'un nouvel attribut d'un noeud
     public add_attribute(){
         var NewAttribute = new Attribute('attribut'+(this.node.attributes.length+1),'');
-        this.socket.emit('add attr srv', this.node, NewAttribute);
+        this.socket.emit('add attr srv', this.node, NewAttribute, this.user);
     }
 
     /** Supression d'un attribut d'un noeud */
     public delete_attribute(attribute: Attribute) {
-        this.socket.emit('del attr srv', this.node, attribute);
+        this.socket.emit('del attr srv', this.node, attribute, this.user);
     }
 
     /** Mise à jour d'un attribut d'un noeud */
@@ -567,6 +511,7 @@ export class GraphUI {
         this.user = user;
         this.socket.emit('up user srv', this.user);
         this.usermodalstate = false;
+        window.location.reload();
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
@@ -578,9 +523,9 @@ export class GraphUI {
         //ajouter a la base de données récup l'id
         if(source != target){
             if (source.type == "User" || target.type == "User")  {
-                var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");
+                var edge = new NVEdge(2264, 'write edge', source, target,"WRITE");
             }else{
-                var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");
+                var edge = new NVEdge(2264, 'custom edge', source, target,"CUSTOM");
             }
             this.socket.emit('add edge srv', edge, source, target);
         }
@@ -592,6 +537,7 @@ export class GraphUI {
         this.socket.emit('del edge srv', this.edge);
     }
     /** This is a description of the  function. */
+
     public update_edge(edgename:string) {
         this.edge.name = edgename;
         this.title_state = false;
@@ -696,7 +642,6 @@ export class GraphUI {
      
         var responseNode = this.query(Action.read,null,reqNode);
         var responseEdge = this.query(Action.read,null,reqEdge);
-console.log(responseNode);
 
         //Récupération de tous les utilisateurs qui ne sont pas nous même
         var reponse_users = this.query(Action.read,null,"MATCH (u:User) WHERE id(u) <> "+this.user.node.id+" RETURN u");
