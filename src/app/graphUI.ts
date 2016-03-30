@@ -511,6 +511,7 @@ export class GraphUI {
         this.user = user;
         this.socket.emit('up user srv', this.user);
         this.usermodalstate = false;
+        window.location.reload();
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {
@@ -536,6 +537,7 @@ export class GraphUI {
         this.socket.emit('del edge srv', this.edge);
     }
     /** This is a description of the  function. */
+
     public update_edge(edgename:string) {
         this.edge.name = edgename;
         this.title_state = false;

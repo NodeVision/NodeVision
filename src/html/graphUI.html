@@ -27,7 +27,7 @@
         <li><a (click)="authentication.logout()">Log Out</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right" *ng-for="#user of users_authentified">
-        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle" (click)="show_profile();">
+        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle" (click)="show_profile();" onMouseOver="this.style.cursor='pointer'">
       </ul>
     </div>
   </nav>
@@ -42,21 +42,21 @@
                          <label class="col-md-3 control-label">Change view to :</label>
                          <div *ng-if="preferedView1" class="row">
                              <div class="col-md-8">
-                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; redraw();show_profile();"/>
+                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0;draw();show_profile();"/>
                              </div>
                          </div>
                         <div *ng-if="preferedView0" class="row">
                             <div class="col-md-8">
-                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1; redraw();show_profile();">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;draw();show_profile();">
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-           <div class="modal-footer">
+            <div class="modal-footer">
                  <button class="btn btn-success btn-lg" (click)="update_user(user)" type="button">Save</button>
                  <button class="btn btn-default btn-lg" type="button" (click)="usermodalstate=false;">Close</button>
-             </div>
+             </div> 
          </div>
      </div>
  </div>
