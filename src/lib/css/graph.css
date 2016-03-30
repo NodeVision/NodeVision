@@ -33,9 +33,16 @@ text {
   -webkit-transition: visibility opacity 0.2s;
   */
 }
-
-
 .imgWrap:hover .imgModifier {
   visibility: visible;
   opacity: 1;
 }
+
+#r {
+      position: fixed;
+      top: 52px;
+      right: 0;
+      width: 350px;
+      height: 100%;
+      padding: 10px;
+    }

@@ -12,13 +12,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "angular2": "2.0.0-alpha.44",
+    "angular2": "^2.0.0-alpha.44",
+    "bootstrap": "^3.3.6",
     "es6-shim": "^0.33.13",
-    "express": "^4.10.2",
+    "express": "^4.13.4",
+    "karma": "^0.13.22",
     "neo4j-io": "^1.0.4",
-    "requirejs": "^2.1.22",
-    "socket.io": "^1.4.4",
-    "systemjs": "0.19.2"
+    "requirejs": "^2.2.0",
+    "socket.io": "^1.4.5",
+    "systemjs": "^0.19.2"
   },
   "devDependencies": {
     "jasmine-core": "2.4.1",

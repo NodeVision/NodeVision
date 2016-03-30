@@ -9,10 +9,10 @@
             <ul class="dropdown-menu">
               <li *ng-for="#branch of branches">
                   <div class="col-md-5">{{branch.name}}</div>
-                  <div class="col-md-7 pull-right">
-                    <span class="glyphicon glyphicon-trash pull-right" aria-hidden="true" (click)="delete_branch(branch)"></span>
-                    <span class="glyphicon glyphicon-pencil pull-right" aria-hidden="true" (click)="show_update_branch(branch)"></span>
-                    <span class="glyphicon glyphicon-eye-open pull-right" aria-hidden="true" (click)="show_branch(branch)"></span>
+                  <div class="col-md-7">
+                    <span class="glyphicon glyphicon-trash" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="delete_branch(branch)"></span>
+                    <span class="glyphicon glyphicon-pencil" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="show_update_branch(branch)"></span>
+                    <span class="glyphicon glyphicon-eye-open" onMouseOver="this.style.cursor='pointer'" aria-hidden="true" (click)="show_branch(branch)"></span>
                   </div>
               </li>
             </ul>
@@ -27,11 +27,10 @@
         <li><a (click)="authentication.logout()">Log Out</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right" *ng-for="#user of users_authentified">
-        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle" (click)="show_profile();">
+        <img title="{{user.mail}}" src="{{user.node.image_path}}" width="45" height="45" class="img-circle" (click)="show_profile();" onMouseOver="this.style.cursor='pointer'">
       </ul>
     </div>
   </nav>
-
  <div class="modal fade in" *ng-if="usermodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{usermodal}}" style="display: block;">
          <div class="modal-dialog" role="document">
              <div class="modal-content">
@@ -43,21 +42,21 @@
                          <label class="col-md-3 control-label">Change view to :</label>
                          <div *ng-if="preferedView1" class="row">
                              <div class="col-md-8">
-                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0; show_profile();"/>
+                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0;draw();show_profile();"/>
                              </div>
                          </div>
                         <div *ng-if="preferedView0" class="row">
                             <div class="col-md-8">
-                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;show_profile();">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;draw();show_profile();">
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-           <div class="modal-footer">
+            <div class="modal-footer">
                  <button class="btn btn-success btn-lg" (click)="update_user(user)" type="button">Save</button>
                  <button class="btn btn-default btn-lg" type="button" (click)="usermodalstate=false;">Close</button>
-             </div>
+             </div> 
          </div>
      </div>
  </div>
@@ -116,7 +115,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-default" (click)="nodemodalstate=false;">Close</button>
+          <button class="btn btn-default" (click)="nodemodalstate=false;">Close</button>
         </div>
       </div>
     </div>
@@ -140,13 +139,14 @@
             <div class="form-group">
               <label class="col-sm-3 control-label">Color :</label>
               <div class="col-sm-3">
-                <input #color class="form-control" type="text" id="color" placeholder="color" value="{{branch.color}}" (blur)="branch.color = color.value"></input>
+                <input #color class="form-control" type="color" id="color" placeholder="color" value="#{{branch.color}}" (blur)="branch.color = color.value.replace('#', '')">
+                </input>
               </div>
             </div>
           </form>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value)" type="button">Create</button>
+          <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) == -1" (click)="add_branch(name.value, color.value.replace('#', ''))" type="button">Create</button>
           <button class="btn btn-success btn-lg" *ng-if="branches.indexOf(branch) != -1" (click)="update_branch()" type="button">Save</button>
           <button class="btn btn-default btn-lg" type="button" (click)="branchmodalstate=false;branchnamecondition=false;">Close</button>
         </div>
@@ -211,6 +211,34 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
+<!--
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 *ng-if="!title_state" (dblclick)="title_state=true;">{{edge.name}}</h3>
+                        <input #edge_name *ng-if="title_state" class="form-control" value="{{edge.name}}" placeholder="Edge Name"                                       
+                            (keyup.enter)="update_edge(edge_name.value);" 
+                            (blur)="update_edge(edge_name.value);"
+                            >
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class='pull-right'>{{"["+ edge.type +"]"}}</h3>
+                        <button class="btn btn-success btn-lg pull-right" type= "button">Add Weight</button>
+                    </div>  
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row" *ng-for="#w of edge.weights">
+                    <div class="col-md-5"><input #attribute_name class="form-control" value="{{attribute.name}}" typename="text" (blur) = "update_attribute(attribute,attribute_name.value, attribute_value.value)"></div>
+                    <div class="col-md-5"><input #attribute_value class="form-control" value="{{attribute.value}}" typename="text" (blur) = "update_attribute(attribute, attribute_name.value, attribute_value.value)"></div> 
+                    <div class="col-md-2">
+                        <span class="glyphicon glyphicon-trash" aria-hidden="true" (click)="delete_weight(w)" ></span>
+                    </div> 
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" type= "button" (click)="delete_edge()">Delete edge</button>
+                <button class="btn btn-default" type= "button" (click)="edgemodalstate=false;">Close</button>
+-->
                 <h4 class="modal-title" id="myModalLabel">Image du noeud</h4>
             </div>
             <div class="modal-body">
@@ -260,12 +288,41 @@
     </div>
   </div>
 </div>
-<!--
-    <li class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" role= "button" aria-haspopup="true" aria-expanded="false">
-            <span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications<span class="caret" > </span></a>
-        <ul class="dropdown-menu">
-
-        </ul>
-    </li>
-    -->
+<div class="modal fade " id="detaillogmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Détail de l'évenement</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="row">
+                        <div class ="col-md-2">
+                            <label>Message :</label>
+                        </div>
+                        <div class="col-md-10">
+                            <label>{{detailLogShown._message}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class ="col-md-2">
+                            <label>Requête :</label>
+                        </div>
+                        <div class="col-md-10">
+                            <label>{{detailLogShown._details}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id = "r">    
+<div *ng-for="#notif of notifs" class="alert alert-warning alert-dismissible" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  {{notif._message}} <a data-toggle="modal" data-target="#detaillogmodal" (click)="show_detail_log(notif._message)">Détails</a>
+</div>
+</div>
