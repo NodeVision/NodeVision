@@ -293,6 +293,13 @@ export class GraphUI {
             .enter().append("line")
             .attr("class", "link")
             .attr("marker-end", "url(#end)")
+            .style("stroke-dasharray", (e : NVEdge) => {
+                if(e.type == "CUSTOM"){ 
+                    return ("3, 3")
+                }else{
+                    return ("0, 0")
+                }
+            })
             .style("stroke-opacity", 0.3)
             .on("click", (e: NVEdge) => { this.edge = e })
             .on("dblclick", (e: NVEdge) => { this.edgemodalstate = true })
@@ -515,9 +522,9 @@ export class GraphUI {
         //ajouter a la base de données récup l'id
         if(source != target){
             if (source.type == "User" || target.type == "User")  {
-                var edge = new NVEdge(2264, 'undfined', source, target,"WRITE");
+                var edge = new NVEdge(2264, 'write edge', source, target,"WRITE");
             }else{
-                var edge = new NVEdge(2264, 'undfined', source, target,"CUSTOM");
+                var edge = new NVEdge(2264, 'custom edge', source, target,"CUSTOM");
             }
             this.socket.emit('add edge srv', edge, source, target);
         }
