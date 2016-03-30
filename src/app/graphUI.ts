@@ -25,8 +25,8 @@ export class GraphUI {
     private mail = this.authentication.getMail();
     //Container
     private url = "http://5.196.66.87/db/data/";//http://5.196.66.87
-    private width: number = 900;
-    private height: number = 500;
+    private width: number = 1000;
+    private height: number = 1000;
     //User
     private user : User;
     private userBranch = new Branch('Users','#ffffff',-1);
