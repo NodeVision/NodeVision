@@ -10,6 +10,7 @@ import {Notification} from './model/notification';
 import {Attribute} from './model/attribute';
 import {PreferencePopup} from './model/preferencepopup';
 import {Element} from './enum';
+import {Status} from './enum';
 import {Action} from './enum';
 import {AuthApp} from './connexionUI';
 
@@ -51,6 +52,8 @@ export class GraphUI {
     //branch Modal
     private branchmodalstate = false;
     private usermodalstate = false;
+    private detaillogmodalstate = false;
+    private detailLogShown = new Log(Status.warning, "", null,"");
     private branchnamecondition = false;
     private attribnamecondition = false;
     private branchmodal = Element.branch;
@@ -115,9 +118,8 @@ export class GraphUI {
         /**/     this.users_authentified.slice(this.users_authentified.findIndex(u => u.id == user._id))
         /**/ });
         /**/ // Add node broadcast
-        /**/ this.socket.on('add node clt', (node, edge) => {
+        /**/ this.socket.on('add node clt', (node, edge,user, query) => {
         /**/     //hydratation
-        /**/     //this.notifs.push("le noeud "+node._name+" a été créé.");
         /**/     var b = new Branch(node._branch._name,node._branch._color,node._branch._id);
         /**/     var nt = new NVNode(b,node._id,node._name,node._node_attributs, null,node._image_path);
         /**/     var ns = this.graph.nodes.find(x => x.id == edge.source._id);
@@ -127,10 +129,12 @@ export class GraphUI {
         /**/     //this.nodes[0].push(nt);
         /**/     this.graph.edges.push(e);
         /**/     this.redraw();
+                 this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été créé par "+user._node._name, user, query));
+        
         /**/ });
         /**/ // Delete node broadcast
-        /**/ this.socket.on('del node clt', (id_node,del_branch?:boolean,id_branch?) => {
-        /**/     //del to graph
+        /**/ this.socket.on('del node clt', (id_node,user, query,del_branch?:boolean,id_branch?) => {
+        /**/     //del to graph        
                 var nodeToDelete = this.graph.nodes.find(x => x.id == id_node).name;
         /**/     var toSpliceN = this.graph.nodes.filter((k) => { return (k.id === id_node) });
         /**/      toSpliceN.map((k) => {
@@ -144,16 +148,21 @@ export class GraphUI {
         /**/        toSpliceB.map((b) => { this.branches.splice(this.branches.indexOf(b), 1); });
         /**/     }
         /**/     this.redraw();
+                 this.notifs.push(new Log(Status.warning,"le noeud "+nodeToDelete+" a été supprimé par "+user._node._name, user, query));
                  //this.notifs.push("le noeud "+nodeToDelete+" a été supprimé.");
         /**/ });
         /**/ // Update node broadcast
-        /**/ this.socket.on('up node clt', (node) => {
+        /**/ this.socket.on('up node clt', (node, user, query, node_name?, node_image?) => {
         /**/     //update to graph
+
         /**/     var toRenameN = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        var nodeAfter : NVNode;
         /**/     toRenameN.map((k) => {
-        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = node._name;
-                    this.graph.nodes[this.graph.nodes.indexOf(k)].image_path = node._image_path;
+        /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].name = node_name != null ? node_name : this.graph.nodes[this.graph.nodes.indexOf(k)].name;
+                    this.graph.nodes[this.graph.nodes.indexOf(k)].image_path = node_image != null ? node_image : this.graph.nodes[this.graph.nodes.indexOf(k)].image_path;
+                nodeAfter = this.graph.nodes[this.graph.nodes.indexOf(k)];    
         /**/     });
+        /**/     this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été modifié par "+user._node._name, user, query, node, nodeAfter));
         /**/ });
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node, image_path) => {
@@ -486,7 +495,7 @@ export class GraphUI {
     public delete_node() {
         var NbNode = 0;
         this.graph.nodes.forEach((n:NVNode) => { if(n.branch.id == this.node.branch.id){ NbNode++ } })
-        this.socket.emit('del node srv', this.node, NbNode);
+        this.socket.emit('del node srv', this.node, this.user, NbNode);
     }
     /** Suppression d'un noeud ainsi que ses fils */
     public delete_node_and_sons() {
@@ -496,13 +505,11 @@ export class GraphUI {
     }
     /** Mise à jour d'un noeud */
     public update_node(node_name:string) {
-        this.node.name = node_name;
         this.title_state = false;
-        this.socket.emit('up node srv', this.node);
+        this.socket.emit('up node srv', this.user,this.node, node_name, null);
     }
     public update_node_image(img_path:string) {
-        this.node.image_path = img_path;
-        this.socket.emit('up node srv', this.node);
+        this.socket.emit('up node srv', this.user,this.node, null, img_path);
     }
     /** This is a description of the  function. */
     public show_branch(branch: Branch) {
@@ -538,6 +545,12 @@ export class GraphUI {
         this.preferedView1 = this.user.preferedView == 1;
         this.usermodalstate = true;
 
+    }
+    
+    public show_detail_log(message : string)
+    {
+        this.detailLogShown = this.notifs.find(x => x._message == message);
+        console.log(this.detailLogShown);
     }
     public update_user(user: User)
     {
@@ -747,7 +760,7 @@ export class GraphUI {
                                  new NVNode(new Branch(
                             n[3].data.name,
                             n[3].data.color,
-                            n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,null, "attribut");
+                            n[3].metadata.id), n[1].metadata.id+10,nameAttribut+" : "+n[1].data[nameAttribut],null,null,"https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
                             this.graph.nodes.push(node);
                             this.graph.edges.push(new NVEdge(n[1].metadata.id*2,"",this.graph.nodes.find(x => x.id == n[1].metadata.id),node))
                         }
