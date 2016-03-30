@@ -30,6 +30,7 @@ export class GraphUI {
     //User
     private user : User;
     private userBranch = new Branch('Users','#ffffff',-1);
+    private selectedUserToShareWith;
     //Graph
     private graph: Graph;
     private force: d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>;
@@ -42,6 +43,7 @@ export class GraphUI {
     //node Modal
     private nodemodalstate = false;
     private nodemodal = Element.node;
+    private sharemodalstate = false;
     //attribut
     private title_state = false;
     private node: NVNode;
@@ -92,6 +94,7 @@ export class GraphUI {
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
         this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
         this.init_graph();
+      
 
         //Création de la socket client
         ///////////////////////////////////////////////////Ecoutes de la socket client //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +232,11 @@ export class GraphUI {
         /**/        toSplice.map((l) => { this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1); });
         /**/     });
         /**/ });
+        // Notification partage ok
+        this.socket.on('ok share clt', (user) =>{
+            //TODO ADD NOTIF
+            console.log("share ok with " + user._mail);
+        });
         /**/ // Update attribute broadcast
         /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
         /**/     // update to graph
@@ -427,8 +435,19 @@ export class GraphUI {
             .attr("y2",this.m[1]);
     }
 
-    public getUserToShare(mail : String){
-
+    // Selection d'un utilisateur avec qui partager un noeud
+    public getUserToShare(user : User){
+       this.selectedUserToShareWith = user;
+    }
+    
+    public show_share_node(){
+        this.nodemodalstate = false;
+        this.sharemodalstate = true;
+    }
+    
+    // Partage du noeud node avec selectedUserToShareWith
+    public shareNode(){
+        this.socket.emit('share node srv', this.node, this.selectedUserToShareWith);
     }
 
     //Création d'un nouvel attribut d'un noeud
@@ -710,7 +729,7 @@ export class GraphUI {
                         }
                 });
                 console.log("iiiiiiii");
-                
+
                 console.log(n);
                 if(!this.found(this.graph.nodes,n[1].metadata.id)){
                 this.graph.nodes.push(new NVNode(
@@ -727,7 +746,7 @@ export class GraphUI {
         });
          if(this.user.preferedView == 1){
              response.forEach(n => { // par chaque noeud
-                 
+
                     this.listAttribute = new Array<Attribute>();
                     n[0].forEach(nameAttribut => {
                         if(this.graph.nodes.find(x => x.name == nameAttribut+" : "+n[1].data[nameAttribut]) == null)

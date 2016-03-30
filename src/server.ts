@@ -218,6 +218,20 @@ class Server {
                     }
                 );
             });
+            
+            // Partage d'un noeud avec un utilisateur
+            socket.on('share node srv',(node, user) => {
+                var response = this.neo4j.query("MATCH (u),(n)-[r:HIERARCHICAL*]->(s) WHERE id(n)=" + node._id + " AND id(u)=" + user._id + " CREATE (u)-[w:WRITE]->(s) CREATE UNIQUE (u)-[x:WRITE]->(n) RETURN n,s");
+                response.then(
+                    (val) => {
+                        socket.emit('ok share clt', user);
+                    }
+                ).catch(
+                    function() {
+                        console.log("Erreur dans le partage d'un noeud avec un utilisateur");
+                    }
+                );       
+         });
 
             socket.on('add attr srv', (node, attribute) => {
                 var response = this.neo4j.query("MATCH (n) WHERE id(n)="+node._id+" SET n."+attribute._name+"='"+attribute._value+"' RETURN  n");

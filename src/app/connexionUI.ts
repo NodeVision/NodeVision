@@ -11,7 +11,7 @@ declare var Auth0Lock;
 })
 
 export class AuthApp {
-   
+
 
   lock = new Auth0Lock('9B7uUwnzc73tnd1YVu3oE7cesLWqciSA', 'nodevision.eu.auth0.com');
 
@@ -28,7 +28,7 @@ export class AuthApp {
       }
       localStorage.setItem('profile', JSON.stringify(profile));
       localStorage.setItem('id_token', id_token);
-      
+
 
       var user = JSON.parse(localStorage.getItem('profile'));
       var userConnected = new User(user.email);
@@ -37,24 +37,24 @@ export class AuthApp {
   }
 
   logout() {
-      
+
     localStorage.removeItem('profile');
     localStorage.removeItem('id_token');
     this.login();
   }
-  
+
   getPicture() : string {
-      
+
       return JSON.parse(localStorage.getItem('profile')).picture;
   }
-  
+
     getMail() : string {
-      
+
       return JSON.parse(localStorage.getItem('profile')).email;
   }
-  
+
   isConnected() : boolean {
-      
+
       return localStorage.getItem('profile') != null;
   }
 

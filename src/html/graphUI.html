@@ -91,7 +91,7 @@
                 <button class="btn btn-danger btn-lg" type="button" (click)="delete_node()">
                   <img src="src/lib/img/delete_node.png">
                 </button>
-                <button class="btn btn-warning btn-lg" type="button" data-toggle="modal" data-target="#sharemodal" (click)="nodemodalstate=false;">
+                <button class="btn btn-warning btn-lg" type="button" data-toggle="modal" data-target="#sharemodal" (click)="show_share_node()">
                  <img src="src/lib/img/share_node.png">
                 </button>
               </div>
@@ -230,25 +230,26 @@
     </div>
 </div>
   <!-- MODAL SHARE NODE -->
-  <div class="modal fade " id="sharemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal fade in" *ng-if="sharemodalstate" id="sharemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title" id="myModalLabel">Share a node</h4>
+          <h4 class="modal-title" id="myModalLabel">Share node {{node.name}}</h4>
         </div>
         <div class="modal-body">
           <div class="row">
             <div class="col-md-8">
               <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">USER SELECTED
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown"><span *ng-if="selectedUserToShareWith != null">{{selectedUserToShareWith.mail}}</span>
+                <span *ng-if="selectedUserToShareWith == null">Share this branch with</span>
                   <span class="caret"></span></button>
                 <ul class="dropdown-menu">
-                  <li *ng-for="#user of users"><a href="#">{{user.mail}}</a></li>
+                  <li *ng-for="#user of users"><a href="#" (click)="getUserToShare(user)">{{user.mail}}</a></li>
                 </ul>
               </div>
             </div>
             <div class="col-md-2">
-              <button class="btn btn-success btn-default" type="button">Save</button>
+              <button class="btn btn-success btn-default" type="button" (click)="shareNode()">Share</button>
             </div>
           </div>
         </div>
