@@ -95,7 +95,11 @@ export class GraphUI {
         //canvas du graph
         this.force = d3.layout.force().charge(-120).linkDistance(70).size([this.width, this.height]);
         this.svg = d3.select("body").append("svg").attr("width", this.width).attr("height", this.height);
-        this.svg.on('contextmenu', () => { this.branchmodalstate = true;this.branch = new Branch()}).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
+        this.svg.on('contextmenu', () => { 
+            this.branchmodalstate = true;
+            this.branch = new Branch();
+            var cp = jQuery('#colorer').colorpicker();   
+    }).on('mouseup',() => { if (d3.event.shiftKey){this.line.remove()}});
         this.init_graph();
 
 

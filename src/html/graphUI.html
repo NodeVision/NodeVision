@@ -31,7 +31,6 @@
       </ul>
     </div>
   </nav>
-
  <div class="modal fade in" *ng-if="usermodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{usermodal}}" style="display: block;">
          <div class="modal-dialog" role="document">
              <div class="modal-content">
@@ -141,6 +140,7 @@
               <label class="col-sm-3 control-label">Color :</label>
               <div class="col-sm-3">
                 <input #color class="form-control" type="text" id="color" placeholder="color" value="{{branch.color}}" (blur)="branch.color = color.value"></input>
+                
               </div>
             </div>
           </form>
