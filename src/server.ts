@@ -119,7 +119,7 @@ class Server {
             socket.on('up node srv', (user,node, node_name?, node_image?) => {
                 var query = "MATCH (n) WHERE id(n)=" + node._id;
                 query += node_name != null ? " SET n.name ='" + node_name+ "'" : "";
-                query += node_image != null ? ", n.image_path = '"+node_image+"'" : "";
+                query += node_image != null ? " SET n.image_path = '"+node_image+"'" : "";
                 var response = this.neo4j.query(query);
                 response.then(
                     () => {

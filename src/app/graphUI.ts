@@ -160,7 +160,9 @@ export class GraphUI {
         /**/     nodeAfter = this.graph.nodes[this.graph.nodes.indexOf(k)];    
         /**/     });
         /**/     this.notifs.push(new Log(Status.warning,"le noeud "+node._name+" a été modifié par "+user._node._name, user, query, node, nodeAfter));
+                 this.draw();
         /**/ });
+        
         /**/ // Add branch broadcast
         /**/ this.socket.on('add branch clt', (id_branch, name_branch, color_branch, id_node, image_path) => {
         /**/     //hydratation
@@ -232,11 +234,19 @@ export class GraphUI {
         /**/ this.socket.on('add attr clt', (node, attribute, user, query) => {
         /**/     // add to graph
         /**/     var toAddAttribut = this.graph.nodes.filter((k) => { return (k.id === node._id) });
+        var nodewithAttr : NVNode;
         /**/     toAddAttribut.map((k) => {
         /**/     var Nattribute = new Attribute(attribute._name,attribute._value);
+               nodewithAttr = this.graph.nodes[this.graph.nodes.indexOf(k)];
         /**/        this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(Nattribute);
         /**/     });
+        if(this.user.preferedView == 1)
+                {var nde = new NVNode(nodewithAttr.branch, node+10, attribute._name+" : "+attribute._value,null,null, "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
+                this.graph.nodes.push(nde);
+                this.graph.edges.push(new NVEdge(nodewithAttr.id*2,"",nodewithAttr,nde));
+                }
         /**/this.notifs.push(new Log(Status.warning,"un attribut à été ajouté au noeud "+node._name+" par "+user._node._name, user, query));
+        this.draw();
         /**/ });
         /**/ // Del attribute broadcast
         /**/ this.socket.on('del attr clt', (node,attribute, user, query) => {
@@ -246,7 +256,13 @@ export class GraphUI {
         /**/        var toSplice = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name === attribute._name) });
         /**/        toSplice.map((l) => { this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1); });
         /**/     });
+        if(this.user.preferedView == 1)
+                {
+                this.graph.nodes.splice(this.graph.nodes.findIndex(x => x.name == attribute._name), 1);
+                this.graph.edges.splice(this.graph.edges.findIndex(x => x.target.name == attribute._name), 1);
+                }
         /**/this.notifs.push(new Log(Status.warning,"un attribut à été supprimé au noeud "+node._name+" par "+user._node._name, user, query));
+        this.draw();
         /**/ });
         /**/ // Update attribute broadcast
         /**/ this.socket.on('up attr clt', (type, node, attribute, value, name) => {
@@ -256,14 +272,27 @@ export class GraphUI {
         /**/            var toUpdateAttribute = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.filter((l) => { return (l.name == attribute._name) });
         /**/            toUpdateAttribute.map((l) => {
         /**/                if(type == "value"){
-        /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].value = value;
+        /**/                    if(this.user.preferedView == 1)
+                {
+                                this.graph.nodes.find(n => n.name == this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].name+" : "+this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].value).name = this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].name +" : "+value;
+                }
+                                this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].value = value;
         /**/                }else if(type == "name"){
         /**/                    var NewAttribute = new Attribute(name,value);
+        if(this.user.preferedView == 1)
+                {
+        this.graph.nodes.splice(this.graph.nodes.findIndex(n => n.name == this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].name+" : "+this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].value),1);
+        this.graph.edges.splice(this.graph.edges.findIndex(x => x.target == this.graph.nodes.find(n => n.name == this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)].name+" : "+this.graph.nodes[this.graph.nodes.indexOf(k)].attributes[this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l)])),1);
+        var nde = new NVNode(toGetNode[0].branch, toGetNode[0].id+10, NewAttribute.name+" : "+NewAttribute.value,null,null, "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
+                this.graph.nodes.push(nde);
+                this.graph.edges.push(new NVEdge(toGetNode[0].id*2,"",toGetNode[0],nde));
+            }
         /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.push(NewAttribute);
         /**/                    this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.splice(this.graph.nodes[this.graph.nodes.indexOf(k)].attributes.indexOf(l), 1);
         /**/                }
         /**/            });
         /**/        });
+        this.draw();
         /**/ });
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     }
@@ -494,12 +523,42 @@ export class GraphUI {
 
     public show_profile()
     {
-
-        this.preferedView0 = this.user.preferedView == 0;
-        this.preferedView1 = this.user.preferedView == 1;
         this.usermodalstate = true;
-
     }
+    
+    public changePreferedView(preferedView: number) {
+        this.user.preferedView = preferedView;
+
+        if (preferedView == 1) {
+            this.graph.nodes.forEach(n => {
+                n.attributes.forEach(a => {
+                    var node = new NVNode(n.branch,
+                        n.id + 10, a.name + " : " + a.value, null, null, "https://dl.dropboxusercontent.com/u/19954023/marvel_force_chart_img/top_hulk.png", "attribut");
+
+                    this.graph.nodes.push(node);
+                    this.graph.edges.push(new NVEdge(n.id * 2, "", n, node))
+                });
+            });
+
+
+        } else {
+            var list = new Array<NVNode>();
+            this.graph.nodes.forEach(element => {
+
+
+                if (element.type == "attribut") {
+
+
+                    list.push(element);
+                }
+            });
+            list.forEach(e => {
+                this.graph.nodes.splice(this.graph.nodes.findIndex(x => x.name == e.name), 1);
+                this.graph.edges.splice(this.graph.edges.findIndex(x => x.target == e), 1);
+            });
+        }
+}
+    
     
     public show_detail_log(message : string)
     {
@@ -511,7 +570,7 @@ export class GraphUI {
         this.user = user;
         this.socket.emit('up user srv', this.user);
         this.usermodalstate = false;
-        window.location.reload();
+       // window.location.reload();
     }
     /** This is a description of the  function. */
     public delete_branch(branch: Branch) {

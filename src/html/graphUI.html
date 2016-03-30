@@ -18,7 +18,6 @@
             </ul>
           </li>
        </ul>
-
         <ul class="nav navbar-nav">
           <li data-toggle="modal" data-target="#notifmodal"><a><span class="badge" *ng-if="notifications.length>0">{{notifications.length}}</span> Notifications</a></li>
         </ul>
@@ -31,6 +30,7 @@
       </ul>
     </div>
   </nav>
+  <!-- MODAL USER -->
  <div class="modal fade in" *ng-if="usermodalstate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="{{usermodal}}" style="display: block;">
          <div class="modal-dialog" role="document">
              <div class="modal-content">
@@ -40,14 +40,14 @@
                  <form class="form-horizontal">
                      <div class="form-group">
                          <label class="col-md-3 control-label">Change view to :</label>
-                         <div *ng-if="preferedView1" class="row">
+                         <div *ng-if="user.preferedView == 1" class="row">
                              <div class="col-md-8">
-                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="user.preferedView = 0;draw();show_profile();"/>
+                                 <input class="btn btn-default btn-lg" type="button" id="view0" value="Attributes in modal form" (click)="changePreferedView(0);draw();show_profile();"/>
                              </div>
                          </div>
-                        <div *ng-if="preferedView0" class="row">
+                        <div *ng-if="user.preferedView == 0" class="row">
                             <div class="col-md-8">
-                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="user.preferedView = 1;draw();show_profile();">
+                                <input class="btn btn-default btn-lg" type="button" id="view1" value="Attributes as leaf" (click)="changePreferedView(1);draw();show_profile();">
                             </div>
                         </div>
                     </div>
